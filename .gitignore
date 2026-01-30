@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+
+# VS Code
+.vscode/
+
+# Data outputs (never commit datasets)
+data/raw/
+data/processed/
+data/features/
+
+# Keep directory placeholders
+!data/.gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/features/.gitkeep
+
+# Models (weights, checkpoints)
+models/
+!models/.gitkeep
+
+# Logs (only small summaries allowed)
+logs/
+!logs/.gitkeep
+!logs/final_report.json
+!logs/random_forest_report.txt
+
+# Generated content (Unity export)
+generated/
+!generated/.gitkeep
+!generated/example_unity_cards.json

@@ -1,0 +1,16 @@
+# Keep NumPy <2 to avoid datasets/arrow numpy-copy errors you hit before
+numpy<2
+
+pandas
+scikit-learn
+tqdm
+
+# Hugging Face stack pinned to versions that still support dataset loading scripts
+transformers==4.33.3
+datasets==2.14.7
+accelerate==0.23.0
+feyn #Qlattice
+huggingface-hub
+sentencepiece
+protobuf<5
+
