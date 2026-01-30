@@ -338,14 +338,11 @@ Totally normal. Either:
 4. Philippine Fake News Corpus (source repo): https://github.com/aaroncarlfernandez/Philippine-Fake-News-Corpus  
 
 **Models / Methods**
-5. Liu et al. (2019). *RoBERTa: A Robustly Optimized BERT Pretraining Approach.* arXiv:1907.11692 — https://arxiv.org/abs/1907.11692  
-6. Sanh et al. (2019). *DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter.* arXiv:1910.01108 — https://arxiv.org/abs/1910.01108  
-7. RoBERTa Tagalog base model (HF model card): https://huggingface.co/jcblaise/roberta-tagalog-base  
-8. DistilBERT multilingual cased (HF model card): https://huggingface.co/distilbert/distilbert-base-multilingual-cased  
-9. Breiman (2001). *Random Forests.* Machine Learning 45, 5–32. (Classic RF paper)  
-10. Broløs et al. (2021). *An Approach to Symbolic Regression Using Feyn.* arXiv:2104.05417 — https://arxiv.org/abs/2104.05417  
-11. Hamilton et al. (2017). *Inductive Representation Learning on Large Graphs (GraphSAGE).* arXiv:1706.02216 — https://arxiv.org/abs/1706.02216  
-12. Tian et al. (2020). *Rumor Detection on Social Media with Bi-Directional Graph Convolutional Networks (BiGCN).* AAAI — https://ojs.aaai.org/index.php/AAAI/article/view/5393
+5. RoBERTa Tagalog base model (HF model card): https://huggingface.co/jcblaise/roberta-tagalog-base  
+6. DistilBERT multilingual cased (HF model card): https://huggingface.co/distilbert/distilbert-base-multilingual-cased  
+7. Breiman (2001). *Random Forests.* Machine Learning 45, 5–32. (Classic RF paper)  
+8. Broløs et al. (2021). *An Approach to Symbolic Regression Using Feyn.* arXiv:2104.05417 — https://arxiv.org/abs/2104.05417  
+
 
 ---
 
