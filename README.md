@@ -334,12 +334,14 @@ Totally normal. Either:
 # References
 
 **Datasets**
+
 1. Fake News Filipino (Hugging Face dataset card): https://huggingface.co/datasets/jcblaise/fake_news_filipino  
 2. WELFake (Hugging Face dataset card): https://huggingface.co/datasets/davanstrien/WELFake  
 3. SEACrowd PH fake news corpus (HF dataset card): https://huggingface.co/datasets/SEACrowd/ph_fake_news_corpus  
 4. Philippine Fake News Corpus (source repo): https://github.com/aaroncarlfernandez/Philippine-Fake-News-Corpus  
 
 **Models / Methods**
+
 5. RoBERTa Tagalog base model (HF model card): https://huggingface.co/jcblaise/roberta-tagalog-base  
 6. DistilBERT multilingual cased (HF model card): https://huggingface.co/distilbert/distilbert-base-multilingual-cased  
 7. Breiman (2001). *Random Forests.* Machine Learning 45, 5–32. (Classic RF paper)  
