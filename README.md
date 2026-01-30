@@ -1,6 +1,6 @@
 # MINERVA (Fake News / Misinformation Detection Pipeline)
 
-Hey! 👋 This repo is our **MINERVA** project: a *reproducible* pipeline for detecting fake news / misinformation using:
+Hey! This repo is our **MINERVA** project: a *reproducible* pipeline for detecting fake news / misinformation using:
 
 - **RoBERTa (Tagalog specialist)**  
 - **DistilBERT (multilingual / Tagalog + English + code-switch-friendly)**  
@@ -43,7 +43,7 @@ python -c "import torch; print('torch', torch.__version__, 'cuda?', torch.cuda.i
 
 ## How the scripts connect (the “pipeline map”)
 
-Think of the repo like a mini factory 🏭:
+Think of the repo like a mini factory:
 
 ```
 01_download_dataset.py
@@ -85,7 +85,7 @@ python scripts\09_train_degnn.py
 
 ## Folder guide (what goes where)
 
-✅ These folders are **generated locally** when you run scripts:
+These folders are **generated locally** when you run scripts:
 
 - `data/raw/`  
   Downloaded datasets (CSV/ZIP extract). **Not committed** to GitHub.
@@ -115,6 +115,8 @@ python scripts\09_train_degnn.py
 - If you have GPU, install CUDA PyTorch separately (PyTorch has different wheels).
 
 ---
+
+# Script Files:
 
 ## `scripts/01_download_dataset.py`
 **What it does:**
