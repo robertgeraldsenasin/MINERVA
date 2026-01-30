@@ -9,7 +9,6 @@ Hey! 👋 This repo is our **MINERVA** project: a *reproducible* pipeline for de
 - **Qlattice** (turns features into an interpretable “equation-style” rule)  
 - **DE‑GNN (text graph model)** (optional “reasoning over similarity” layer)
 
-> 💡 Goal: build an **engineering-friendly system** (scripts + files + logs), not just a notebook.
 
 ---
 
