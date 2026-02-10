@@ -25,8 +25,9 @@ def main() -> None:
 
     df = pd.read_csv(IN_PATH)
 
-    # stratify by dataset+label
-    strat = df["dataset"].astype(str) + "_" + df["label"].astype(str)
+    # With JCBlaise-only corpus, stratifying by dataset is unnecessary.
+    # Stratify by label to preserve class balance across splits.
+    strat = df["label"].astype(int)
 
     train_df, temp_df = train_test_split(
         df,
@@ -35,9 +36,8 @@ def main() -> None:
         stratify=strat,
     )
 
-    # split temp into val and test
-    temp_strat = temp_df["dataset"].astype(
-        str) + "_" + temp_df["label"].astype(str)
+    # Split temp into val and test
+    temp_strat = temp_df["label"].astype(int)
     val_df, test_df = train_test_split(
         temp_df,
         test_size=(TEST_FRAC / (VAL_FRAC + TEST_FRAC)),

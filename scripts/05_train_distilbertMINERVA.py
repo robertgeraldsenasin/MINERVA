@@ -32,12 +32,17 @@ SEED = 42
 # If you are CPU-only, you can cap training size for practicality:
 MAX_TRAIN_SAMPLES = None  # e.g., 20000
 
+# Paper-aligned effective batch size (32); use grad accumulation for VRAM friendliness.
+PER_DEVICE_BATCH = 8
+GRAD_ACCUM = 4  # 8 * 4 = 32 effective batch
+
 
 def compute_metrics(pred):
     labels = pred.label_ids
     preds = pred.predictions.argmax(-1)
     precision, recall, f1, _ = precision_recall_fscore_support(
-        labels, preds, average="binary")
+        labels, preds, average="binary", zero_division=0
+    )
     acc = accuracy_score(labels, preds)
     return {"accuracy": acc, "precision": precision, "recall": recall, "f1": f1}
 
@@ -58,9 +63,9 @@ def main():
         train_df = train_df.sample(
             n=MAX_TRAIN_SAMPLES, random_state=SEED).reset_index(drop=True)
 
-    train_ds = Dataset.from_pandas(train_df)
-    val_ds = Dataset.from_pandas(val_df)
-    test_ds = Dataset.from_pandas(test_df)
+    train_ds = Dataset.from_pandas(train_df, preserve_index=False)
+    val_ds = Dataset.from_pandas(val_df, preserve_index=False)
+    test_ds = Dataset.from_pandas(test_df, preserve_index=False)
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     collator = DataCollatorWithPadding(tokenizer=tokenizer)
@@ -85,12 +90,15 @@ def main():
         evaluation_strategy="epoch",
         save_strategy="epoch",
         learning_rate=2e-5,
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=8,
+        per_device_train_batch_size=PER_DEVICE_BATCH,
+        per_device_eval_batch_size=PER_DEVICE_BATCH,
+        gradient_accumulation_steps=GRAD_ACCUM,
         num_train_epochs=3,
+        warmup_ratio=0.10,
         weight_decay=0.01,
         load_best_model_at_end=True,
         metric_for_best_model="f1",
+        greater_is_better=True,
         logging_dir=str(LOG_DIR),
         logging_steps=50,
         fp16=torch.cuda.is_available(),
