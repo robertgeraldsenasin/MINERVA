@@ -99,8 +99,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    import traceback
     try:
         main()
-    except Exception as e:
-        print("\n[FATAL]", repr(e))
-        sys.exit(1)
+    except Exception:
+        traceback.print_exc()
+        raise
