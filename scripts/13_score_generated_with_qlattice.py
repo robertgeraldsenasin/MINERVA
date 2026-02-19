@@ -11,7 +11,6 @@ from sklearn.metrics import f1_score, accuracy_score, precision_recall_fscore_su
 
 
 SAFE_FUNCS = {
-    # common math funcs Qlattice equations may use
     "log": np.log,
     "log1p": np.log1p,
     "exp": np.exp,
@@ -49,19 +48,14 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
 
 
 def extract_variable_names(expr: str) -> set[str]:
-    # crude but effective: capture tokens like r_pca_0, p_roberta_fake, digit_ratio
     tokens = set(re.findall(r"[A-Za-z_]\w*", expr))
-    # remove known safe functions and numpy
     tokens = {t for t in tokens if t not in SAFE_FUNCS}
-    # remove some common constants/words if they appear
     tokens -= {"e", "pi", "True", "False"}
     return tokens
 
 
 def eval_equation(expr: str, df: pd.DataFrame) -> np.ndarray:
     expr = expr.strip().replace("^", "**")
-
-    # Provide only numeric columns as variables
     local_vars = {c: df[c].to_numpy(
         dtype=float) for c in df.columns if pd.api.types.is_numeric_dtype(df[c])}
     local_vars.update(SAFE_FUNCS)
@@ -78,18 +72,12 @@ def eval_equation(expr: str, df: pd.DataFrame) -> np.ndarray:
         )
 
     out = np.asarray(out, dtype=float)
-    # Broadcast scalar to vector if needed
     if out.ndim == 0:
         out = np.full((len(df),), float(out))
     return out
 
 
 def calibrate_threshold(scores: np.ndarray, y_true: np.ndarray) -> tuple[float, str, float]:
-    """
-    Finds a threshold and direction that maximizes F1:
-      direction is either ">=" or "<="
-    Returns: (best_thr, best_dir, best_f1)
-    """
     mask = np.isfinite(scores)
     scores = scores[mask]
     y_true = y_true[mask].astype(int)
@@ -97,7 +85,6 @@ def calibrate_threshold(scores: np.ndarray, y_true: np.ndarray) -> tuple[float, 
     if len(scores) == 0:
         return 0.5, ">=", 0.0
 
-    # Candidate thresholds: quantiles
     qs = np.quantile(scores, np.linspace(0.01, 0.99, 199))
 
     best_thr = float(qs[0])
@@ -124,32 +111,21 @@ def calibrate_threshold(scores: np.ndarray, y_true: np.ndarray) -> tuple[float, 
 
 
 def difficulty_bins(margins: np.ndarray, k: int = 3) -> list[str]:
-    """
-    margins: larger => farther from boundary => easier
-    We label:
-      lowest margins => hard
-      middle => medium
-      highest => easy
-    """
     if k <= 1:
         return ["easy"] * len(margins)
 
-    # Use quantiles over positive margins
     m = np.asarray(margins, dtype=float)
-    # fallback if all equal
     if np.allclose(m, m[0]):
         return ["medium"] * len(m)
 
     cuts = np.quantile(m, np.linspace(0, 1, k + 1))
-    # Ensure strictly increasing cutpoints
     cuts = np.unique(cuts)
 
     labels = []
     for v in m:
-        # bucket index
         idx = int(np.searchsorted(cuts, v, side="right") - 1)
         idx = max(0, min(idx, len(cuts) - 2))
-        # map to difficulty (0=hard ... last=easy)
+
         if idx == 0:
             labels.append("hard")
         elif idx == (len(cuts) - 2):
@@ -160,7 +136,8 @@ def difficulty_bins(margins: np.ndarray, k: int = 3) -> list[str]:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(
+        description="MINERVA Script 13: Score generated samples with Qlattice equation and export simulator-ready subsets.")
 
     ap.add_argument(
         "--in_file", default="generated/gpt2_synthetic_samples.jsonl")
@@ -198,11 +175,9 @@ def main() -> None:
     if not eq:
         raise RuntimeError(f"Empty equation file: {eq_path}")
 
-    # Load generated data
     rows = read_jsonl(in_path)
     df = pd.DataFrame(rows)
 
-    # Ensure numeric feature columns exist
     needed_vars = extract_variable_names(eq)
     missing = needed_vars - set(df.columns)
     if missing:
@@ -213,18 +188,15 @@ def main() -> None:
             "or retrain Qlattice on a smaller feature set that matches what script 12 outputs."
         )
 
-    # Score generated
     scores = eval_equation(eq, df)
     df["qlattice_score"] = scores
 
-    # Calibrate threshold on val_tabular (recommended)
     thr = 0.5
     direction = ">="
     best_f1 = None
 
     if not args.no_calibrate and val_path.exists():
         val_df = pd.read_csv(val_path)
-        # ensure val has needed columns
         missing_val = needed_vars - set(val_df.columns)
         if missing_val:
             print(
@@ -234,7 +206,6 @@ def main() -> None:
             y_val = val_df["label"].to_numpy(dtype=int)
             thr, direction, best_f1 = calibrate_threshold(val_scores, y_val)
 
-            # Report calibration metrics
             if direction == ">=":
                 pred = (val_scores >= thr).astype(int)
                 margins = val_scores - thr
@@ -251,7 +222,6 @@ def main() -> None:
     df["qlattice_threshold"] = float(thr)
     df["qlattice_direction"] = direction
 
-    # Predict + margin
     if direction == ">=":
         df["qlattice_pred"] = (df["qlattice_score"] >= thr).astype(int)
         df["qlattice_margin"] = (df["qlattice_score"] - thr).astype(float)
@@ -259,29 +229,23 @@ def main() -> None:
         df["qlattice_pred"] = (df["qlattice_score"] <= thr).astype(int)
         df["qlattice_margin"] = (thr - df["qlattice_score"]).astype(float)
 
-    # Difficulty bins (based on margin among rows that match their own predicted class)
-    # Bigger margin = farther from boundary = easier
     df["difficulty_bin"] = difficulty_bins(
         df["qlattice_margin"].to_numpy(), k=args.difficulty_k)
 
-    # Write scored output
     out_scored = Path(args.out_scored)
     write_jsonl(out_scored, df.to_dict(orient="records"))
     print(f"[13] Scored -> {out_scored.resolve()} (rows={len(df)})")
 
-    # Filter final output (optional)
     final_df = df.copy()
 
     if args.target != "any" and "target_label" in final_df.columns:
         final_df = final_df[final_df["target_label"] == args.target]
 
-    # keep only those on the correct side of the boundary for the target label
     if args.target == "fake":
         final_df = final_df[final_df["qlattice_pred"] == 1]
     elif args.target == "real":
         final_df = final_df[final_df["qlattice_pred"] == 0]
 
-    # minimum margin away from boundary
     if args.min_margin > 0:
         final_df = final_df[final_df["qlattice_margin"] >= args.min_margin]
 

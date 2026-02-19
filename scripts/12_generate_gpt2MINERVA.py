@@ -22,7 +22,7 @@ FAKE_TOKEN = "<|label=fake|>"
 
 
 def lexical_features(text: str) -> dict:
-    # Matches the feature set used in 06_extract_features.py
+    """Lexical/cheap features used in MINERVA tabular layer."""
     if not isinstance(text, str):
         text = ""
     n_chars = len(text)
@@ -62,7 +62,8 @@ def encode_cls_and_prob(
     Returns:
       cls_embeddings: (N, H)
       p_fake: (N,)
-    Mirrors the approach used in 06_extract_features.py:
+
+    Implementation mirrors MINERVA feature extraction pattern:
       - output_hidden_states=True
       - CLS from last hidden state layer at position 0
       - p_fake = softmax(logits)[:, 1]
@@ -98,9 +99,10 @@ def encode_cls_and_prob(
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(
+        description="MINERVA Script 12: Generate GPT-2 samples + extract detector/tabular features for Qlattice scoring.")
 
-    # Keep backwards compatible positional args:
+    # Backward-compatible positional args:
     ap.add_argument("n", type=int, nargs="?", default=200)
     ap.add_argument("target", choices=[
                     "fake", "real"], nargs="?", default="fake")
@@ -236,7 +238,7 @@ def main() -> None:
             "target_label": args.target,
             "text": text,
 
-            # match 06_extract_features.py column naming:
+            # match MINERVA feature naming:
             "p_roberta_fake": float(r_p[i]),
             "p_distil_fake": float(d_p[i]),
             **feats,
@@ -257,11 +259,7 @@ def main() -> None:
         if args.write_all:
             return True
 
-        # Convert target into constraint on p(fake)
-        if args.target == "fake":
-            need_fake = True
-        else:
-            need_fake = False
+        need_fake = (args.target == "fake")
 
         if args.accept_mode == "roberta_only":
             pf = pr
