@@ -1,16 +1,28 @@
-# Keep NumPy <2 to avoid datasets/arrow numpy-copy errors you hit before
-numpy<2
+# MINERVA (Colab-tested on Python 3.11 runtime)
+# Why these pins:
+# - huggingface-hub<1.0.0: hub v1 removed HfFolder, which breaks older datasets/evaluate stacks.
+# - peft==0.10.0: avoids PEFT importing Cache classes that don't exist in Transformers 4.33.x.
+# - accelerate<1.0.0: Accelerate v1 changed Accelerator() args like dispatch_batches -> DataLoaderConfiguration.
 
+# Core DS stack
+numpy<2
 pandas
 scikit-learn
 tqdm
 
-# Hugging Face stack pinned to versions that still support dataset loading scripts
+# Hugging Face stack 
 transformers==4.33.3
 datasets==2.14.7
-accelerate==0.23.0
-feyn #Qlattice
-huggingface-hub
+tokenizers==0.13.3
+accelerate==0.34.2
+huggingface-hub<1.0.0
+peft==0.10.0
+evaluate>=0.4.0
+
+# NLP utilities
 sentencepiece
+safetensors
 protobuf<5
 
+# Qlattice / symbolic regression
+feyn
