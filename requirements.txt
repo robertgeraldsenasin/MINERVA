@@ -1,14 +1,12 @@
 # MINERVA (Colab-tested on Python 3.11 runtime)
-# Why these pins:
-# - huggingface-hub<1.0.0: hub v1 removed HfFolder, which breaks older datasets/evaluate stacks.
-# - peft==0.10.0: avoids PEFT importing Cache classes that don't exist in Transformers 4.33.x.
-# - accelerate<1.0.0: Accelerate v1 changed Accelerator() args like dispatch_batches -> DataLoaderConfiguration.
+
 
 # Core DS stack
 numpy<2
 pandas
 scikit-learn
 tqdm
+captum>=0.7.0
 
 # Hugging Face stack 
 transformers==4.33.3
@@ -26,3 +24,10 @@ protobuf<5
 
 # Qlattice / symbolic regression
 feyn
+
+#API
+fastapi>=0.110.0
+uvicorn>=0.27.0
+
+#plotting
+matplotlib>=3.7.0
