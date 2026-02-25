@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 import re
+import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -11,11 +12,19 @@ import torch
 from joblib import load as joblib_load
 from tqdm import tqdm
 from transformers import (
-    AutoTokenizer,
     AutoModelForCausalLM,
     AutoModelForSequenceClassification,
+    AutoTokenizer,
     set_seed,
 )
+
+# Allow importing repo-root modules when running
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from minerva_privacy import pseudonymize_texts  # noqa: E402
+
 
 REAL_TOKEN = "<|label=real|>"
 FAKE_TOKEN = "<|label=fake|>"
@@ -58,25 +67,15 @@ def encode_cls_and_prob(
     max_len: int = 256,
     device: torch.device | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Returns:
-      cls_embeddings: (N, H)
-      p_fake: (N,)
-
-    Implementation mirrors MINERVA feature extraction pattern:
-      - output_hidden_states=True
-      - CLS from last hidden state layer at position 0
-      - p_fake = softmax(logits)[:, 1]
-    """
+    """Return CLS embeddings and P(fake) per text."""
     if device is None:
         device = next(model.parameters()).device
-
     model.eval()
+
     all_emb = []
     all_p = []
-
     for i in tqdm(range(0, len(texts), batch_size), desc="Detector encoding"):
-        batch = texts[i:i + batch_size]
+        batch = texts[i: i + batch_size]
         enc = tokenizer(
             batch,
             truncation=True,
@@ -89,7 +88,6 @@ def encode_cls_and_prob(
         out = model(**enc, output_hidden_states=True, return_dict=True)
         logits = out.logits
         probs = torch.softmax(logits, dim=-1)[:, 1]  # P(fake)
-
         cls = out.hidden_states[-1][:, 0, :]  # CLS embedding
 
         all_emb.append(cls.detach().cpu().numpy())
@@ -100,7 +98,11 @@ def encode_cls_and_prob(
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="MINERVA Script 12: Generate GPT-2 samples + extract detector/tabular features for Qlattice scoring.")
+        description=(
+            "MINERVA Script 12: Generate GPT-2 samples and compute detector/tabular features "
+            "for Qlattice scoring."
+        )
+    )
 
     # Backward-compatible positional args:
     ap.add_argument("n", type=int, nargs="?", default=200)
@@ -114,10 +116,8 @@ def main() -> None:
     ap.add_argument("--roberta_dir", default="models/roberta_finetuned")
     ap.add_argument(
         "--distil_dir", default="models/distilbert_multilingual_finetuned")
-
     ap.add_argument("--pca_roberta", default="models/pca_roberta.joblib")
     ap.add_argument("--pca_distil", default="models/pca_distilbert.joblib")
-
     ap.add_argument(
         "--out_file", default="generated/gpt2_synthetic_samples.jsonl")
 
@@ -125,6 +125,18 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--temperature", type=float, default=0.9)
     ap.add_argument("--top_p", type=float, default=0.95)
+
+    # Safety: pseudonymize names
+    ap.add_argument(
+        "--no_pseudonymize",
+        action="store_true",
+        help="Disable name pseudonymization (NOT recommended for Unity/game exports).",
+    )
+    ap.add_argument(
+        "--placeholder_prefix",
+        default="Candidate",
+        help="Prefix for pseudonyms, e.g., 'Candidate' -> 'Candidate A'.",
+    )
 
     # Detector controls / filtering
     ap.add_argument(
@@ -157,10 +169,10 @@ def main() -> None:
             f"Missing generator dir: {gen_dir} (run 11_train_gpt2MINERVA.py)")
     if not ro_dir.exists():
         raise FileNotFoundError(
-            f"Missing RoBERTa dir: {ro_dir} (run 04_train_robertaMINERVA.py)")
+            f"Missing RoBERTa dir: {ro_dir} (select/export best detector seed first)")
     if not di_dir.exists():
         raise FileNotFoundError(
-            f"Missing DistilBERT dir: {di_dir} (run 05_train_distilbertMINERVA.py)")
+            f"Missing DistilBERT dir: {di_dir} (select/export best detector seed first)")
 
     out_path = Path(args.out_file)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -193,6 +205,13 @@ def main() -> None:
         cleaned = re.sub(r"\s+", " ", cleaned).strip()
         raw_texts.append(cleaned)
 
+    # --- Pseudonymize names BEFORE scoring (so explanations match the shown text) ---
+    pseudonymized = False
+    if not args.no_pseudonymize:
+        raw_texts, _ = pseudonymize_texts(
+            raw_texts, placeholder_prefix=args.placeholder_prefix)
+        pseudonymized = True
+
     # --- Load detectors ---
     ro_tok = AutoTokenizer.from_pretrained(str(ro_dir), use_fast=True)
     ro_model = AutoModelForSequenceClassification.from_pretrained(
@@ -204,15 +223,23 @@ def main() -> None:
 
     # --- Extract detector features (CLS + p_fake) ---
     r_emb, r_p = encode_cls_and_prob(
-        ro_model, ro_tok, raw_texts,
-        batch_size=args.det_batch, max_len=args.det_max_len, device=device
+        ro_model,
+        ro_tok,
+        raw_texts,
+        batch_size=args.det_batch,
+        max_len=args.det_max_len,
+        device=device,
     )
     d_emb, d_p = encode_cls_and_prob(
-        di_model, di_tok, raw_texts,
-        batch_size=args.det_batch, max_len=args.det_max_len, device=device
+        di_model,
+        di_tok,
+        raw_texts,
+        batch_size=args.det_batch,
+        max_len=args.det_max_len,
+        device=device,
     )
 
-    # --- PCA projection (optional, but recommended for Qlattice compatibility) ---
+    # --- PCA projection (optional; recommended for Qlattice compatibility) ---
     pca_r_path = Path(args.pca_roberta)
     pca_d_path = Path(args.pca_distil)
 
@@ -224,24 +251,25 @@ def main() -> None:
         r_pca = pca_r.transform(r_emb)
         d_pca = pca_d.transform(d_emb)
     else:
-        print("[WARN] PCA joblib files not found. "
-              "Outputs will not include r_pca_* / d_pca_* "
-              "and Qlattice equation may not be applicable if it references PCA features.")
+        print(
+            "[WARN] PCA joblib files not found. Outputs will not include r_pca_* / d_pca_* "
+            "and any Qlattice equation that references PCA features may not apply."
+        )
 
     # --- Build output table with consistent column names ---
     rows = []
     for i, text in enumerate(raw_texts):
         feats = lexical_features(text)
-
         row = {
             "id": f"gen_{i}",
             "target_label": args.target,
             "text": text,
-
             # match MINERVA feature naming:
             "p_roberta_fake": float(r_p[i]),
             "p_distil_fake": float(d_p[i]),
             **feats,
+            "pseudonymized": pseudonymized,
+            "placeholder_prefix": args.placeholder_prefix if pseudonymized else None,
         }
 
         if r_pca is not None and d_pca is not None:
@@ -258,8 +286,7 @@ def main() -> None:
     def accept_row(pr: float, pd_: float) -> bool:
         if args.write_all:
             return True
-
-        need_fake = (args.target == "fake")
+        need_fake = args.target == "fake"
 
         if args.accept_mode == "roberta_only":
             pf = pr
@@ -269,7 +296,8 @@ def main() -> None:
             if need_fake:
                 return (pr >= args.min_conf) and (pd_ >= args.min_conf)
             return (pr <= (1.0 - args.min_conf)) and (pd_ <= (1.0 - args.min_conf))
-        else:  # ensemble
+        else:
+            # ensemble
             wsum = max(1e-9, args.w_roberta + args.w_distil)
             pf = (args.w_roberta * pr + args.w_distil * pd_) / wsum
 
@@ -294,6 +322,8 @@ def main() -> None:
 
     print(f"[12] Generated: {len(df)} | Kept: {len(kept)}")
     print(f"[12] Saved -> {out_path.resolve()}")
+    if pseudonymized:
+        print("[12] Pseudonymization: ENABLED (placeholders like 'Candidate A').")
 
 
 if __name__ == "__main__":
