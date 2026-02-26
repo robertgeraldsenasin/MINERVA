@@ -10,7 +10,17 @@ import pandas as pd
 from sklearn.metrics import f1_score, accuracy_score, precision_recall_fscore_support
 
 
+def logreg(x):
+    """Vectorized logistic/sigmoid used by Qlattice 'logreg(...)' expressions."""
+    x = np.asarray(x, dtype=float)
+    # avoid overflow in exp for large magnitude values
+    x = np.clip(x, -60.0, 60.0)
+    return 1.0 / (1.0 + np.exp(-x))
+
+
 SAFE_FUNCS = {
+    "logreg": logreg,
+    "sigmoid": logreg,
     "log": np.log,
     "log1p": np.log1p,
     "exp": np.exp,
