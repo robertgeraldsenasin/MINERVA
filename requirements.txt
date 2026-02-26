@@ -7,7 +7,7 @@ scikit-learn
 tqdm
 joblib
 
-# Hugging Face stack (pin to stable 4.x to avoid breaking API changes)
+# Hugging Face stack 
 transformers==4.33.3
 datasets==2.14.7
 tokenizers==0.13.3
@@ -20,7 +20,7 @@ sentencepiece
 safetensors
 protobuf<5
 
-# Interpretability (optional but used in MINERVA explainability extensions)
+# Interpretability 
 captum>=0.7.0
 
 # Qlattice / symbolic regression
