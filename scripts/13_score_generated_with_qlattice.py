@@ -47,6 +47,94 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
 
+def _add_feature_aliases(df: pd.DataFrame) -> pd.DataFrame:
+    """Add compatibility aliases for PCA column names.
+
+    Some pipelines/equations use:
+      - r_pca_0 / d_pca_0 (underscored)
+    Others use:
+      - rpca0 / dpca0 (no underscores)
+
+    We create missing counterparts when possible, without overwriting existing columns.
+    """
+    # r_pca_<k> -> rpca<k>
+    for col in list(df.columns):
+        m = re.fullmatch(r"r_pca_(\d+)", col)
+        if m:
+            alias = f"rpca{m.group(1)}"
+            if alias not in df.columns:
+                df[alias] = df[col]
+        m = re.fullmatch(r"d_pca_(\d+)", col)
+        if m:
+            alias = f"dpca{m.group(1)}"
+            if alias not in df.columns:
+                df[alias] = df[col]
+
+    # rpca<k> -> r_pca_<k> (reverse)
+    for col in list(df.columns):
+        m = re.fullmatch(r"rpca(\d+)", col)
+        if m:
+            alias = f"r_pca_{m.group(1)}"
+            if alias not in df.columns:
+                df[alias] = df[col]
+        m = re.fullmatch(r"dpca(\d+)", col)
+        if m:
+            alias = f"d_pca_{m.group(1)}"
+            if alias not in df.columns:
+                df[alias] = df[col]
+
+    return df
+
+
+def _ensure_logreg_feature(
+    df: pd.DataFrame,
+    required_vars: set[str],
+    baseline_model_path: Path = Path("models/baseline_tfidf_logreg.joblib"),
+    text_col: str = "text",
+) -> pd.DataFrame:
+    """Ensure 'logreg' exists if required by the Qlattice equation.
+
+    'logreg' is defined as P(fake) from the baseline TF-IDF + Logistic Regression model (script 14).
+    """
+    if "logreg" not in required_vars:
+        return df
+
+    if "logreg" in df.columns:
+        return df
+
+    if text_col not in df.columns:
+        raise RuntimeError(
+            f"Qlattice equation requires 'logreg', but generated file has no '{text_col}' column to score. "
+            f"Columns present: {list(df.columns)[:30]}..."
+        )
+
+    if not baseline_model_path.exists():
+        raise RuntimeError(
+            "Qlattice equation requires 'logreg' but baseline model is missing. "
+            "Run: python scripts/14_train_baseline_tfidf_logreg.py "
+            f"(expected model at {baseline_model_path})."
+        )
+
+    try:
+        from joblib import load as joblib_load
+        baseline = joblib_load(str(baseline_model_path))
+        if not hasattr(baseline, "predict_proba"):
+            raise TypeError("Baseline model has no predict_proba().")
+        probs = baseline.predict_proba(df[text_col].astype(str).tolist())[:, 1]
+        df["logreg"] = probs.astype(float)
+        return df
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed computing 'logreg' feature from baseline model: {e}") from e
+
+
+def ensure_required_feature_columns(df: pd.DataFrame, required_vars: set[str]) -> pd.DataFrame:
+    """Best-effort feature harmonization so the Qlattice equation can be evaluated."""
+    df = _add_feature_aliases(df)
+    df = _ensure_logreg_feature(df, required_vars)
+    return df
+
+
 def extract_variable_names(expr: str) -> set[str]:
     tokens = set(re.findall(r"[A-Za-z_]\w*", expr))
     tokens = {t for t in tokens if t not in SAFE_FUNCS}
@@ -179,6 +267,7 @@ def main() -> None:
     df = pd.DataFrame(rows)
 
     needed_vars = extract_variable_names(eq)
+    df = ensure_required_feature_columns(df, needed_vars)
     missing = needed_vars - set(df.columns)
     if missing:
         raise RuntimeError(
