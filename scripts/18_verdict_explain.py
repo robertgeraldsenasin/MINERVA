@@ -15,7 +15,20 @@ import pandas as pd
 # -----------------------------------------------------------------------------
 # Qlattice equation evaluation (safe subset)
 
+
+def logreg(x):
+    """Logistic/sigmoid function used by Qlattice `logreg(·)` equations.
+
+    Qlattice sometimes wraps a linear expression with `logreg(...)` to
+    constrain outputs to (0,1). We implement it as a numerically-stable
+    sigmoid.
+    """
+    x = np.clip(x, -60, 60)
+    return 1.0 / (1.0 + np.exp(-x))
+
+
 SAFE_FUNCS = {
+    "logreg": logreg,
     "log": np.log,
     "log1p": np.log1p,
     "exp": np.exp,
