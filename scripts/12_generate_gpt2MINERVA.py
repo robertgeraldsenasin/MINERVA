@@ -27,6 +27,37 @@ except Exception:
     pseudonymize_text = None  # type: ignore
 
 
+def _pseudonymize_batch(texts: List[str]) -> List[str]:
+    """Apply privacy pseudonymization if enabled and normalize outputs to `List[str]`.
+
+    The project has had two compatible `pseudonymize_text` implementations over time:
+      - returning a plain `str` (older), or
+      - returning an object with a `.text` attribute (newer `PseudonymizationResult`).
+
+    Script 12 feeds its `candidates` into Hugging Face tokenizers; if candidates are not
+    strings, tokenization raises: `ValueError: text input must of type str ...`.
+    """
+    if pseudonymize_text is None:
+        return texts
+
+    out: List[str] = []
+    for t in texts:
+        try:
+            res = pseudonymize_text(t)  # type: ignore[misc]
+            if isinstance(res, str):
+                out.append(res)
+            elif hasattr(res, "text"):
+                out.append(getattr(res, "text"))
+            elif isinstance(res, tuple) and len(res) > 0 and isinstance(res[0], str):
+                # Support a legacy (text, mapping) return style if present.
+                out.append(res[0])
+            else:
+                out.append(str(res))
+        except Exception:
+            out.append(t)
+    return out
+
+
 # -----------------------------
 # Utilities
 # -----------------------------
@@ -367,7 +398,7 @@ def main() -> None:
         candidates = [_clean_generated_text(t) for t in decoded]
 
         if pseudonymize and pseudonymize_text is not None:
-            candidates = [pseudonymize_text(t) for t in candidates]
+            candidates = _pseudonymize_batch(candidates)
 
         # Detector probs for the TARGET label
         rob_p = _predict_prob(roberta_tok, roberta_model, candidates,
