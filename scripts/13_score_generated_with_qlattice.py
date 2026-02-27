@@ -1,47 +1,76 @@
-from __future__ import annotations
-
 import argparse
 import json
 import re
 from pathlib import Path
+from typing import Dict, List, Set
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import f1_score, accuracy_score, precision_recall_fscore_support
 
 
-def logreg(x):
-    """Vectorized logistic/sigmoid used by Qlattice 'logreg(...)' expressions."""
-    x = np.asarray(x, dtype=float)
-    # avoid overflow in exp for large magnitude values
+def _sigmoid(x: np.ndarray) -> np.ndarray:
+    # Numerically-stable sigmoid for arrays.
     x = np.clip(x, -60.0, 60.0)
     return 1.0 / (1.0 + np.exp(-x))
 
 
-SAFE_FUNCS = {
-    "logreg": logreg,
-    "sigmoid": logreg,
-    "log": np.log,
-    "log1p": np.log1p,
+SAFE_FUNCS: Dict[str, object] = {
     "exp": np.exp,
+    "log": np.log,
     "sqrt": np.sqrt,
     "tanh": np.tanh,
     "sin": np.sin,
     "cos": np.cos,
     "abs": np.abs,
-    "minimum": np.minimum,
-    "maximum": np.maximum,
-    "min": np.minimum,
-    "max": np.maximum,
-    "where": np.where,
-    "clip": np.clip,
-    "np": np,
+    # Feyn classification models often wrap equations in logreg(...)
+    "logreg": _sigmoid,
+    "sigmoid": _sigmoid,
 }
 
 
-def read_jsonl(path: Path) -> list[dict]:
-    rows = []
-    with open(path, "r", encoding="utf-8") as f:
+def sanitize_column_name(name: str) -> str:
+    # Keep only alphanumerics to match how equation terms are usually emitted (e.g., r_pca_0 -> rpca0).
+    out = re.sub(r"[^a-zA-Z0-9]+", "", name)
+    out = re.sub(r"^([0-9])", r"f\1", out)  # ensure valid python identifiers
+    return out
+
+
+def build_sanitized_view(df: pd.DataFrame) -> pd.DataFrame:
+    sanitized = pd.DataFrame(index=df.index)
+    for col in df.columns:
+        sanitized[sanitize_column_name(col)] = df[col]
+    return sanitized
+
+
+def extract_variable_names(expr: str) -> Set[str]:
+    # Extract identifier-like tokens, excluding known safe functions.
+    tokens = set(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", expr))
+    return {t for t in tokens if t not in SAFE_FUNCS}
+
+
+def eval_equation(expr: str, df_sanitized: pd.DataFrame) -> np.ndarray:
+    local_vars = {
+        col: df_sanitized[col].values for col in df_sanitized.columns}
+    # Ensure function names win if there is any collision
+    local_vars.update(SAFE_FUNCS)
+    try:
+        out = eval(expr, {"__builtins__": {}}, local_vars)
+    except Exception as e:
+        missing = sorted(list(extract_variable_names(
+            expr) - set(df_sanitized.columns)))
+        raise RuntimeError(
+            "Failed to evaluate Qlattice equation.\n"
+            f"Error: {repr(e)}\n"
+            f"Missing variables (if any): {missing}\n"
+            f"Equation: {expr}"
+        )
+    out = np.asarray(out, dtype=float)
+    return out
+
+
+def read_jsonl(path: Path) -> List[dict]:
+    rows: List[dict] = []
+    with path.open("r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -50,307 +79,90 @@ def read_jsonl(path: Path) -> list[dict]:
     return rows
 
 
-def write_jsonl(path: Path, rows: list[dict]) -> None:
+def write_jsonl(path: Path, rows: List[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
+    with path.open("w", encoding="utf-8") as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
 
-def _add_feature_aliases(df: pd.DataFrame) -> pd.DataFrame:
-    """Add compatibility aliases for PCA column names.
-
-    Some pipelines/equations use:
-      - r_pca_0 / d_pca_0 (underscored)
-    Others use:
-      - rpca0 / dpca0 (no underscores)
-
-    We create missing counterparts when possible, without overwriting existing columns.
-    """
-    # r_pca_<k> -> rpca<k>
-    for col in list(df.columns):
-        m = re.fullmatch(r"r_pca_(\d+)", col)
-        if m:
-            alias = f"rpca{m.group(1)}"
-            if alias not in df.columns:
-                df[alias] = df[col]
-        m = re.fullmatch(r"d_pca_(\d+)", col)
-        if m:
-            alias = f"dpca{m.group(1)}"
-            if alias not in df.columns:
-                df[alias] = df[col]
-
-    # rpca<k> -> r_pca_<k> (reverse)
-    for col in list(df.columns):
-        m = re.fullmatch(r"rpca(\d+)", col)
-        if m:
-            alias = f"r_pca_{m.group(1)}"
-            if alias not in df.columns:
-                df[alias] = df[col]
-        m = re.fullmatch(r"dpca(\d+)", col)
-        if m:
-            alias = f"d_pca_{m.group(1)}"
-            if alias not in df.columns:
-                df[alias] = df[col]
-
-    return df
-
-
-def _ensure_logreg_feature(
-    df: pd.DataFrame,
-    required_vars: set[str],
-    baseline_model_path: Path = Path("models/baseline_tfidf_logreg.joblib"),
-    text_col: str = "text",
-) -> pd.DataFrame:
-    """Ensure 'logreg' exists if required by the Qlattice equation.
-
-    'logreg' is defined as P(fake) from the baseline TF-IDF + Logistic Regression model (script 14).
-    """
-    if "logreg" not in required_vars:
-        return df
-
-    if "logreg" in df.columns:
-        return df
-
-    if text_col not in df.columns:
-        raise RuntimeError(
-            f"Qlattice equation requires 'logreg', but generated file has no '{text_col}' column to score. "
-            f"Columns present: {list(df.columns)[:30]}..."
-        )
-
-    if not baseline_model_path.exists():
-        raise RuntimeError(
-            "Qlattice equation requires 'logreg' but baseline model is missing. "
-            "Run: python scripts/14_train_baseline_tfidf_logreg.py "
-            f"(expected model at {baseline_model_path})."
-        )
-
-    try:
-        from joblib import load as joblib_load
-        baseline = joblib_load(str(baseline_model_path))
-        if not hasattr(baseline, "predict_proba"):
-            raise TypeError("Baseline model has no predict_proba().")
-        probs = baseline.predict_proba(df[text_col].astype(str).tolist())[:, 1]
-        df["logreg"] = probs.astype(float)
-        return df
-    except Exception as e:
-        raise RuntimeError(
-            f"Failed computing 'logreg' feature from baseline model: {e}") from e
-
-
-def ensure_required_feature_columns(df: pd.DataFrame, required_vars: set[str]) -> pd.DataFrame:
-    """Best-effort feature harmonization so the Qlattice equation can be evaluated."""
-    df = _add_feature_aliases(df)
-    df = _ensure_logreg_feature(df, required_vars)
-    return df
-
-
-def extract_variable_names(expr: str) -> set[str]:
-    tokens = set(re.findall(r"[A-Za-z_]\w*", expr))
-    tokens = {t for t in tokens if t not in SAFE_FUNCS}
-    tokens -= {"e", "pi", "True", "False"}
-    return tokens
-
-
-def eval_equation(expr: str, df: pd.DataFrame) -> np.ndarray:
-    expr = expr.strip().replace("^", "**")
-    local_vars = {c: df[c].to_numpy(
-        dtype=float) for c in df.columns if pd.api.types.is_numeric_dtype(df[c])}
-    local_vars.update(SAFE_FUNCS)
-
-    try:
-        out = eval(expr, {"__builtins__": {}}, local_vars)
-    except Exception as e:
-        missing = extract_variable_names(expr) - set(df.columns)
-        raise RuntimeError(
-            f"Failed to evaluate Qlattice equation.\n"
-            f"Error: {repr(e)}\n"
-            f"Missing variables (if any): {sorted(list(missing))}\n"
-            f"Equation: {expr}"
-        )
-
-    out = np.asarray(out, dtype=float)
-    if out.ndim == 0:
-        out = np.full((len(df),), float(out))
-    return out
-
-
-def calibrate_threshold(scores: np.ndarray, y_true: np.ndarray) -> tuple[float, str, float]:
-    mask = np.isfinite(scores)
-    scores = scores[mask]
-    y_true = y_true[mask].astype(int)
-
-    if len(scores) == 0:
-        return 0.5, ">=", 0.0
-
-    qs = np.quantile(scores, np.linspace(0.01, 0.99, 199))
-
-    best_thr = float(qs[0])
-    best_dir = ">="
-    best_f1 = -1.0
-
-    for thr in qs:
-        pred_ge = (scores >= thr).astype(int)
-        f1_ge = f1_score(y_true, pred_ge, zero_division=0)
-
-        pred_le = (scores <= thr).astype(int)
-        f1_le = f1_score(y_true, pred_le, zero_division=0)
-
-        if f1_ge > best_f1:
-            best_f1 = float(f1_ge)
-            best_thr = float(thr)
-            best_dir = ">="
-        if f1_le > best_f1:
-            best_f1 = float(f1_le)
-            best_thr = float(thr)
-            best_dir = "<="
-
-    return best_thr, best_dir, best_f1
-
-
-def difficulty_bins(margins: np.ndarray, k: int = 3) -> list[str]:
-    if k <= 1:
-        return ["easy"] * len(margins)
-
-    m = np.asarray(margins, dtype=float)
-    if np.allclose(m, m[0]):
-        return ["medium"] * len(m)
-
-    cuts = np.quantile(m, np.linspace(0, 1, k + 1))
-    cuts = np.unique(cuts)
-
-    labels = []
-    for v in m:
-        idx = int(np.searchsorted(cuts, v, side="right") - 1)
-        idx = max(0, min(idx, len(cuts) - 2))
-
-        if idx == 0:
-            labels.append("hard")
-        elif idx == (len(cuts) - 2):
-            labels.append("easy")
-        else:
-            labels.append("medium")
-    return labels
-
-
-def main() -> None:
-    ap = argparse.ArgumentParser(
-        description="MINERVA Script 13: Score generated samples with Qlattice equation and export simulator-ready subsets.")
-
+def main():
+    ap = argparse.ArgumentParser()
     ap.add_argument(
-        "--in_file", default="generated/gpt2_synthetic_samples.jsonl")
+        "--in_jsonl", default="generated/gpt2_synthetic_samples.jsonl")
     ap.add_argument("--equation", default="models/qlattice_equation.txt")
-    ap.add_argument("--calib_val", default="data/features/val_tabular.csv")
-
+    ap.add_argument("--target", default="fake", choices=["fake", "real"])
+    ap.add_argument("--min_margin", type=float, default=0.05)
     ap.add_argument(
         "--out_scored", default="generated/gpt2_synthetic_scored.jsonl")
     ap.add_argument(
         "--out_final", default="generated/gpt2_synthetic_final.jsonl")
-
-    ap.add_argument("--target", choices=["fake", "real", "any"], default="any",
-                    help="Filter final output by target_label field in the JSONL (if present).")
-    ap.add_argument("--min_margin", type=float, default=0.0,
-                    help="Minimum margin from Qlattice boundary for inclusion in final set.")
-    ap.add_argument("--difficulty_k", type=int, default=3,
-                    help="Number of difficulty bins (default 3 => hard/medium/easy).")
-
-    ap.add_argument("--no_calibrate", action="store_true",
-                    help="If set, skip calibration and use threshold=0.5, direction='>='.")
-
     args = ap.parse_args()
 
-    in_path = Path(args.in_file)
-    eq_path = Path(args.equation)
-    val_path = Path(args.calib_val)
-
+    in_path = Path(args.in_jsonl)
     if not in_path.exists():
-        raise FileNotFoundError(f"Missing {in_path}. Run script 12 first.")
-    if not eq_path.exists():
         raise FileNotFoundError(
-            f"Missing {eq_path}. Run 08_train_qlattice.py first.")
-
-    eq = eq_path.read_text(encoding="utf-8").strip()
-    if not eq:
-        raise RuntimeError(f"Empty equation file: {eq_path}")
-
-    rows = read_jsonl(in_path)
-    df = pd.DataFrame(rows)
-
-    needed_vars = extract_variable_names(eq)
-    df = ensure_required_feature_columns(df, needed_vars)
-    missing = needed_vars - set(df.columns)
-    if missing:
-        raise RuntimeError(
-            "Generated JSONL is missing feature columns required by the Qlattice equation.\n"
-            f"Missing: {sorted(list(missing))}\n\n"
-            "Fix: re-run script 12 with PCA files present (models/pca_roberta.joblib and models/pca_distilbert.joblib),\n"
-            "or retrain Qlattice on a smaller feature set that matches what script 12 outputs."
+            f"Missing generated file: {in_path}\n"
+            f"Fix: run scripts/12_generate_gpt2MINERVA.py first."
         )
 
-    scores = eval_equation(eq, df)
-    df["qlattice_score"] = scores
+    eq_path = Path(args.equation)
+    if not eq_path.exists():
+        raise FileNotFoundError(
+            f"Missing Qlattice equation file: {eq_path}\n"
+            f"Fix: run scripts/08_train_qlattice.py first."
+        )
 
-    thr = 0.5
-    direction = ">="
-    best_f1 = None
+    rows = read_jsonl(in_path)
+    if not rows:
+        raise RuntimeError(f"Input JSONL is empty: {in_path}")
 
-    if not args.no_calibrate and val_path.exists():
-        val_df = pd.read_csv(val_path)
-        missing_val = needed_vars - set(val_df.columns)
-        if missing_val:
-            print(
-                "[WARN] Val tabular missing columns required by equation; skipping calibration.")
-        else:
-            val_scores = eval_equation(eq, val_df)
-            y_val = val_df["label"].to_numpy(dtype=int)
-            thr, direction, best_f1 = calibrate_threshold(val_scores, y_val)
+    df = pd.DataFrame(rows)
+    eq = eq_path.read_text(encoding="utf-8").strip()
+    if not eq:
+        raise RuntimeError(f"Equation file is empty: {eq_path}")
 
-            if direction == ">=":
-                pred = (val_scores >= thr).astype(int)
-                margins = val_scores - thr
-            else:
-                pred = (val_scores <= thr).astype(int)
-                margins = thr - val_scores
+    # Build sanitized view for both (a) missing-variable checks and (b) evaluation.
+    sdf = build_sanitized_view(df)
 
-            acc = accuracy_score(y_val, pred)
-            p, r, f1, _ = precision_recall_fscore_support(
-                y_val, pred, average="binary", zero_division=0)
-            print(
-                f"[13][CALIB] thr={thr:.6f} dir={direction} acc={acc:.4f} p={p:.4f} r={r:.4f} f1={f1:.4f}")
+    needed = extract_variable_names(eq)
+    missing = sorted(list(needed - set(sdf.columns)))
+    if missing:
+        raise RuntimeError(
+            "Input JSONL is missing feature columns required by the Qlattice equation (after sanitization).\n"
+            f"Missing: {missing}\n\n"
+            "Notes:\n"
+            " - Qlattice equations typically use names like rpca0/dpca10 (underscores removed).\n"
+            " - Your JSONL should contain the corresponding r_pca_* / d_pca_* columns.\n\n"
+            "Fix:\n"
+            " - Ensure PCA files exist: models/pca_roberta.joblib and models/pca_distilbert.joblib\n"
+            " - Re-run scripts/12_generate_gpt2MINERVA.py so it outputs PCA columns\n"
+            " - Or retrain Qlattice on a feature set that matches your generated JSONL."
+        )
 
-    df["qlattice_threshold"] = float(thr)
-    df["qlattice_direction"] = direction
+    scores = eval_equation(eq, sdf)
+    if scores.shape[0] != len(df):
+        raise RuntimeError(
+            f"Equation output has wrong length: got {scores.shape[0]} expected {len(df)}")
 
-    if direction == ">=":
-        df["qlattice_pred"] = (df["qlattice_score"] >= thr).astype(int)
-        df["qlattice_margin"] = (df["qlattice_score"] - thr).astype(float)
-    else:
-        df["qlattice_pred"] = (df["qlattice_score"] <= thr).astype(int)
-        df["qlattice_margin"] = (thr - df["qlattice_score"]).astype(float)
+    # Interpret as probability of FAKE (typical when equation uses logreg()).
+    p_fake = np.clip(scores, 0.0, 1.0)
 
-    df["difficulty_bin"] = difficulty_bins(
-        df["qlattice_margin"].to_numpy(), k=args.difficulty_k)
+    df["p_qlattice_fake"] = p_fake.astype(float)
+    df["score_margin"] = np.abs(df["p_qlattice_fake"] - 0.5).astype(float)
 
-    out_scored = Path(args.out_scored)
-    write_jsonl(out_scored, df.to_dict(orient="records"))
-    print(f"[13] Scored -> {out_scored.resolve()} (rows={len(df)})")
+    # Write scored JSONL (all rows)
+    scored_rows = df.to_dict(orient="records")
+    write_jsonl(Path(args.out_scored), scored_rows)
+    print(f"[13] Scored -> {args.out_scored} (rows={len(scored_rows)})")
 
-    final_df = df.copy()
-
-    if args.target != "any" and "target_label" in final_df.columns:
-        final_df = final_df[final_df["target_label"] == args.target]
-
-    if args.target == "fake":
-        final_df = final_df[final_df["qlattice_pred"] == 1]
-    elif args.target == "real":
-        final_df = final_df[final_df["qlattice_pred"] == 0]
-
-    if args.min_margin > 0:
-        final_df = final_df[final_df["qlattice_margin"] >= args.min_margin]
-
-    out_final = Path(args.out_final)
-    write_jsonl(out_final, final_df.to_dict(orient="records"))
-    print(f"[13] Final -> {out_final.resolve()} (rows={len(final_df)})")
+    # Filter to target + margin
+    keep = df[df.get("target", args.target) == args.target].copy(
+    ) if "target" in df.columns else df.copy()
+    keep = keep[keep["score_margin"] >= args.min_margin].copy()
+    final_rows = keep.to_dict(orient="records")
+    write_jsonl(Path(args.out_final), final_rows)
+    print(f"[13] Final -> {args.out_final} (rows={len(final_rows)})")
 
 
 if __name__ == "__main__":
