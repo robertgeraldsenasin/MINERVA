@@ -5,10 +5,22 @@ import sys
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.preprocessing import StandardScaler
+
+# Allow importing repo-root modules when running `python scripts/...`
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from minerva_degnn import (  # noqa: E402
+    GraphSAGE,
+    DegnnArtifacts,
+    build_knn_graph_edges,
+    save_artifacts,
+    _l2_normalize,
+)
 
 FEAT_DIR = Path("data/features")
 TRAIN = FEAT_DIR / "train_tabular.csv"
@@ -22,6 +34,8 @@ LOG_DIR.mkdir(exist_ok=True)
 
 OUT_MODEL = MODEL_DIR / "degnn.pt"
 OUT_PREDS = FEAT_DIR / "degnn_preds.csv"
+OUT_ARTIFACTS = MODEL_DIR / "degnn_artifacts.joblib"
+OUT_NODE_NPZ = FEAT_DIR / "degnn_node_repr.npz"
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -33,33 +47,6 @@ DROPOUT = 0.2
 
 # Safety: graph building on very large corpora is expensive.
 MAX_NODES = 20000  # set None to disable
-
-
-class GraphSAGE(nn.Module):
-    def __init__(self, in_dim: int, hidden: int, out_dim: int):
-        super().__init__()
-        self.lin_self1 = nn.Linear(in_dim, hidden)
-        self.lin_neigh1 = nn.Linear(in_dim, hidden)
-        self.lin_self2 = nn.Linear(hidden, hidden)
-        self.lin_neigh2 = nn.Linear(hidden, hidden)
-        self.out = nn.Linear(hidden, out_dim)
-
-    def sage_layer(self, x, edge_index, lin_self, lin_neigh):
-        src, dst = edge_index  # src -> dst
-        neigh_sum = torch.zeros_like(x)
-        neigh_sum.index_add_(0, dst, x[src])
-        deg = torch.zeros(x.size(0), device=x.device)
-        deg.index_add_(0, dst, torch.ones(dst.size(0), device=x.device))
-        neigh_mean = neigh_sum / deg.clamp(min=1).unsqueeze(1)
-        h = lin_self(x) + lin_neigh(neigh_mean)
-        return F.relu(h)
-
-    def forward(self, x, edge_index):
-        h = self.sage_layer(x, edge_index, self.lin_self1, self.lin_neigh1)
-        h = F.dropout(h, p=DROPOUT, training=self.training)
-        h = self.sage_layer(h, edge_index, self.lin_self2, self.lin_neigh2)
-        h = F.dropout(h, p=DROPOUT, training=self.training)
-        return self.out(h)
 
 
 def f1_binary(y_true, y_pred):
@@ -89,9 +76,29 @@ def main():
             n=MAX_NODES, random_state=42).reset_index(drop=True)
         print(f"[INFO] Subsampled to {len(all_df)} nodes for DE-GNN.")
 
-    feature_cols = [c for c in all_df.columns if c not in {
-        "id", "label", "dataset", "lang", "split"}]
-    X = all_df[feature_cols].values.astype(np.float32)
+    # -------------------------
+    # Feature schema
+    # -------------------------
+    exclude = {"id", "label", "dataset", "lang", "split"}
+    feature_cols = [c for c in all_df.columns if c not in exclude]
+    if not feature_cols:
+        raise RuntimeError("No feature columns found in tabular files.")
+
+    # Build graph edges using *semantic-ish* features only (avoid char_len dominating cosine).
+    # This approximates "contextual similarity" graphs when explicit repost/reply graphs aren't available.
+    edge_cols = [
+        c for c in feature_cols
+        if c.startswith("r_pca_")
+        or c.startswith("d_pca_")
+        or c in {"p_roberta_fake", "p_distil_fake"}
+    ]
+    if len(edge_cols) < 4:
+        # Fallback: at least use whatever we have.
+        edge_cols = feature_cols.copy()
+        print("[WARN] Could not identify PCA/prob columns for edge construction; using ALL features for kNN graph.")
+
+    X_node = all_df[feature_cols].values.astype(np.float32)
+    X_edge = all_df[edge_cols].values.astype(np.float32)
     y = all_df["label"].values.astype(np.int64)
 
     # masks
@@ -100,24 +107,23 @@ def main():
     val_mask = split == "val"
     test_mask = split == "test"
 
-    # Build kNN graph on features
-    nn_model = NearestNeighbors(n_neighbors=KNN_K + 1, metric="cosine")
-    nn_model.fit(X)
-    neigh = nn_model.kneighbors(X, return_distance=False)
+    # -------------------------
+    # Scaling (critical for cosine kNN)
+    # -------------------------
+    scaler_node = StandardScaler()
+    X_node_scaled = scaler_node.fit_transform(X_node).astype(np.float32)
 
-    # Build directed edges i -> neighbor
-    src = []
-    dst = []
-    for i in range(neigh.shape[0]):
-        for j in neigh[i, 1:]:  # skip self
-            src.append(i)
-            dst.append(j)
-            src.append(j)
-            dst.append(i)  # make undirected by adding both
+    scaler_edge = StandardScaler()
+    X_edge_scaled = scaler_edge.fit_transform(X_edge).astype(np.float32)
+    X_edge_norm = _l2_normalize(X_edge_scaled).astype(np.float32)
 
-    edge_index = torch.tensor([src, dst], dtype=torch.long, device=DEVICE)
+    # -------------------------
+    # Build kNN graph
+    # -------------------------
+    edge_index_np = build_knn_graph_edges(X_edge_norm, k=KNN_K)
+    edge_index = torch.tensor(edge_index_np, dtype=torch.long, device=DEVICE)
 
-    x_t = torch.tensor(X, dtype=torch.float32, device=DEVICE)
+    x_t = torch.tensor(X_node_scaled, dtype=torch.float32, device=DEVICE)
     y_t = torch.tensor(y, dtype=torch.long, device=DEVICE)
     train_idx = torch.tensor(np.where(train_mask)[
                              0], dtype=torch.long, device=DEVICE)
@@ -126,7 +132,11 @@ def main():
     test_idx = torch.tensor(
         np.where(test_mask)[0], dtype=torch.long, device=DEVICE)
 
-    model = GraphSAGE(in_dim=x_t.size(1), hidden=HIDDEN, out_dim=2).to(DEVICE)
+    torch.manual_seed(42)
+    np.random.seed(42)
+
+    model = GraphSAGE(in_dim=x_t.size(1), hidden=HIDDEN,
+                      out_dim=2, dropout=DROPOUT).to(DEVICE)
     opt = torch.optim.Adam(model.parameters(), lr=LR)
 
     best_f1 = -1.0
@@ -162,16 +172,57 @@ def main():
         torch.save(best_state, OUT_MODEL)
         print(f"[OK] Saved best DE-GNN -> {OUT_MODEL}")
 
+        # Save inference artifacts
+        art = DegnnArtifacts(
+            feature_cols=feature_cols,
+            edge_cols=edge_cols,
+            scaler_node=scaler_node,
+            scaler_edge=scaler_edge,
+            ids=all_df["id"].astype(str).values,
+            splits=all_df["split"].astype(str).values,
+            y_true=y,
+            x_node_scaled=X_node_scaled,
+            x_edge_norm=X_edge_norm,
+            edge_index=edge_index_np,
+            knn_k=int(KNN_K),
+            hidden_dim=int(HIDDEN),
+            dropout=float(DROPOUT),
+        )
+        save_artifacts(OUT_ARTIFACTS, art)
+        print(f"[OK] Saved DE-GNN artifacts -> {OUT_ARTIFACTS}")
+
     # final test preds (only for nodes that exist in this subsample)
     model.eval()
     with torch.no_grad():
         logits = model(x_t, edge_index)
+        prob_fake = torch.softmax(logits, dim=-1)[:, 1].cpu().numpy()
         pred = logits.argmax(dim=-1).cpu().numpy()
 
-    out = pd.DataFrame({"id": all_df["id"].astype(
-        str), "split": all_df["split"], "y_true": y, "y_pred": pred})
+        # Latent node embeddings (for downstream RF / analysis)
+        emb = model.encode(x_t, edge_index).cpu().numpy().astype(np.float32)
+
+    out = pd.DataFrame({
+        "id": all_df["id"].astype(str),
+        "split": all_df["split"],
+        "y_true": y,
+        "y_pred": pred,
+        "p_degnn_fake": prob_fake.astype(float),
+    })
     out.to_csv(OUT_PREDS, index=False)
     print(f"[OK] Saved DE-GNN preds -> {OUT_PREDS}")
+
+    # Compact NPZ for embeddings
+    np.savez_compressed(
+        OUT_NODE_NPZ,
+        id=all_df["id"].astype(str).values,
+        split=all_df["split"].astype(str).values,
+        y=y,
+        p_fake=prob_fake.astype(np.float32),
+        emb=emb,
+        feature_cols=np.array(feature_cols, dtype=object),
+        edge_cols=np.array(edge_cols, dtype=object),
+    )
+    print(f"[OK] Saved DE-GNN node repr -> {OUT_NODE_NPZ}")
 
     # report test metrics
     test_rows = out[out["split"] == "test"]
