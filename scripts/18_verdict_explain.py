@@ -11,40 +11,17 @@ from typing import Any, Dict, Iterable, List
 import numpy as np
 import pandas as pd
 
+from minerva_qlattice import (
+    SAFE_FUNCS,
+    build_feature_locals,
+    compile_equation,
+    eval_compiled,
+    extract_variable_names,
+)
+
 
 # -----------------------------------------------------------------------------
-# Qlattice equation evaluation (safe subset)
-
-
-def logreg(x):
-    """Logistic/sigmoid function used by Qlattice `logreg(·)` equations.
-
-    Qlattice sometimes wraps a linear expression with `logreg(...)` to
-    constrain outputs to (0,1). We implement it as a numerically-stable
-    sigmoid.
-    """
-    x = np.clip(x, -60, 60)
-    return 1.0 / (1.0 + np.exp(-x))
-
-
-SAFE_FUNCS = {
-    "logreg": logreg,
-    "log": np.log,
-    "log1p": np.log1p,
-    "exp": np.exp,
-    "sqrt": np.sqrt,
-    "tanh": np.tanh,
-    "sin": np.sin,
-    "cos": np.cos,
-    "abs": np.abs,
-    "minimum": np.minimum,
-    "maximum": np.maximum,
-    "min": np.minimum,
-    "max": np.maximum,
-    "where": np.where,
-    "clip": np.clip,
-    "np": np,
-}
+# IO helpers
 
 
 def read_jsonl(path: Path) -> List[Dict[str, Any]]:
@@ -71,59 +48,14 @@ def write_json(path: Path, rows: List[Dict[str, Any]]) -> None:
         json.dump(rows, f, ensure_ascii=False, indent=2)
 
 
-def extract_variable_names(expr: str) -> List[str]:
-    """Extract candidate feature names referenced by the equation."""
-    tokens = set(re.findall(r"[A-Za-z_]\w*", expr))
-    tokens = {t for t in tokens if t not in SAFE_FUNCS}
-    tokens -= {"e", "pi", "True", "False"}
-    return sorted(tokens)
-
-
-def eval_equation(expr: str, df: pd.DataFrame) -> np.ndarray:
-    """Evaluate the equation using numeric columns in df."""
-    expr = expr.strip().replace("^", "**")
-    local_vars = {
-        c: df[c].to_numpy(dtype=float)
-        for c in df.columns
-        if pd.api.types.is_numeric_dtype(df[c])
-    }
-    local_vars.update(SAFE_FUNCS)
-    try:
-        out = eval(expr, {"__builtins__": {}}, local_vars)
-    except Exception as e:
-        missing = set(extract_variable_names(expr)) - set(df.columns)
-        raise RuntimeError(
-            "Failed to evaluate Qlattice equation.\n"
-            f"Error: {repr(e)}\n"
-            f"Missing variables (if any): {sorted(list(missing))}\n"
-            f"Equation: {expr}"
-        )
-    out = np.asarray(out, dtype=float)
-    if out.ndim == 0:
-        out = np.full((len(df),), float(out))
-    return out
-
-
 # -----------------------------------------------------------------------------
 # Explanation helpers
+
 
 URL_RE = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
 
 
-def sigmoid(x: float) -> float:
-    # numerically stable sigmoid
-    if x >= 0:
-        z = math.exp(-x)
-        return 1.0 / (1.0 + z)
-    z = math.exp(x)
-    return z / (1.0 + z)
-
-
 def float_or_none(x: Any) -> float | None:
-    """Convert to float, but return None for missing / non-finite values.
-
-    This keeps the exported JSON strictly valid (no NaN/Infinity).
-    """
     if x is None:
         return None
     try:
@@ -151,25 +83,39 @@ def basic_heuristics(text: str) -> Dict[str, float]:
 
 
 def humanize_feature(name: str) -> str:
-    """Map feature names to human‑readable labels for the game UI."""
-    if name == "p_roberta_fake":
+    # Support both original and sanitized aliases.
+    if name in {"p_roberta_fake", "probertafake"}:
         return "RoBERTa fake probability"
-    if name == "p_distil_fake":
+    if name in {"p_distil_fake", "pdistilfake"}:
         return "DistilBERT fake probability"
-    if name.startswith("r_pca_"):
-        return f"RoBERTa semantic component {name.split('_')[-1]}"
-    if name.startswith("d_pca_"):
-        return f"DistilBERT semantic component {name.split('_')[-1]}"
-    if name == "exclam":
+    if name in {"p_degnn_fake", "pdegnnfake"}:
+        return "DE-GNN fake probability"
+
+    m = re.match(r"r_pca_(\d+)$", name)
+    if m:
+        return f"RoBERTa semantic component {m.group(1)}"
+    m = re.match(r"rpca(\d+)$", name)
+    if m:
+        return f"RoBERTa semantic component {m.group(1)}"
+
+    m = re.match(r"d_pca_(\d+)$", name)
+    if m:
+        return f"DistilBERT semantic component {m.group(1)}"
+    m = re.match(r"dpca(\d+)$", name)
+    if m:
+        return f"DistilBERT semantic component {m.group(1)}"
+
+    if name in {"exclam", "exclamation"}:
         return "Exclamation marks"
-    if name == "question":
+    if name in {"question", "questions"}:
         return "Question marks"
-    if name == "digit_ratio":
+    if name in {"digit_ratio", "digitratio"}:
         return "Digit ratio"
-    if name == "char_len":
+    if name in {"char_len", "charlen"}:
         return "Character length"
-    if name == "word_len":
+    if name in {"word_len", "wordlen"}:
         return "Word count"
+
     return name
 
 
@@ -190,7 +136,6 @@ class VerdictRecord:
 
 
 def choose_default_infile() -> Path:
-    """Pick the best available default input file."""
     candidates = [
         Path("generated/gpt2_synthetic_final.jsonl"),
         Path("generated/gpt2_synthetic_scored.jsonl"),
@@ -203,55 +148,82 @@ def choose_default_infile() -> Path:
 
 
 def compute_margin(score: float, thr: float, direction: str) -> float:
-    if direction == ">=":
-        return float(score - thr)
-    return float(thr - score)
+    return float(score - thr) if direction == ">=" else float(thr - score)
 
 
-def local_contributions(
-    expr: str,
+def _sigmoid_scalar(x: float) -> float:
+    if x >= 0:
+        z = math.exp(-x)
+        return 1.0 / (1.0 + z)
+    z = math.exp(x)
+    return z / (1.0 + z)
+
+
+def local_contributions_fast(
+    code,
     variables: List[str],
     row: Dict[str, Any],
+    alias_to_source: Dict[str, str],
     baseline: Dict[str, float],
     thr: float,
     direction: str,
 ) -> List[Dict[str, Any]]:
-    """Counterfactual per-feature contributions to Qlattice margin.
+    """Per-feature counterfactual contributions using a single vectorized eval()."""
 
-    For each variable v:
-      delta = margin(original) - margin(row with v := baseline[v])
+    n = len(variables)
+    size = n + 1  # index 0 = original, i+1 = counterfactual for var i
 
-    Interpretation:
-      delta > 0  => v pushes toward FAKE (increases margin)
-      delta < 0  => v pushes toward REAL (decreases margin)
-    """
+    local_vars: Dict[str, Any] = {}
 
-    df0 = pd.DataFrame([row])
-    s0 = float(eval_equation(expr, df0)[0])
+    for i, v in enumerate(variables):
+        src = alias_to_source.get(v, v)
+        if src not in row:
+            continue
+        try:
+            orig = float(row[src])
+        except Exception:
+            continue
+        if not math.isfinite(orig):
+            continue
+
+        base = baseline.get(v, orig)
+        arr = np.full((size,), orig, dtype=float)
+        arr[i + 1] = float(base)
+        local_vars[v] = arr
+
+    if not local_vars:
+        return []
+
+    local_vars.update(SAFE_FUNCS)
+
+    out = eval_compiled(code, local_vars, n_rows=size)
+    s0 = float(out[0])
     m0 = compute_margin(s0, thr, direction)
 
-    out: List[Dict[str, Any]] = []
-    for v in variables:
-        if v not in baseline:
+    contribs: List[Dict[str, Any]] = []
+    for i, v in enumerate(variables):
+        if v not in local_vars:
             continue
-        cf = dict(row)
-        cf[v] = float(baseline[v])
-        s1 = float(eval_equation(expr, pd.DataFrame([cf]))[0])
+        s1 = float(out[i + 1])
         m1 = compute_margin(s1, thr, direction)
         delta = float(m0 - m1)
-        out.append(
+
+        src = alias_to_source.get(v, v)
+        val = float_or_none(row.get(src))
+
+        contribs.append(
             {
                 "feature": v,
                 "feature_human": humanize_feature(v),
-                "value": float_or_none(row.get(v)),
-                "baseline": float(baseline[v]),
+                "value": val,
+                "baseline": float(baseline.get(v, float(val) if val is not None else 0.0)),
                 "delta_margin": delta,
                 "direction": "push_fake" if delta > 0 else "push_real" if delta < 0 else "neutral",
             }
         )
 
-    out.sort(key=lambda r: abs(r["delta_margin"]), reverse=True)
-    return out
+    contribs.sort(key=lambda r: abs(r["delta_margin"]), reverse=True)
+    return contribs
 
 
 def build_explanation_text(
@@ -260,133 +232,76 @@ def build_explanation_text(
     top_factors: List[Dict[str, Any]],
     heur: Dict[str, float],
 ) -> Dict[str, Any]:
-    """Create user-facing explanation strings (safe educational framing)."""
+    """Educational explanation strings (avoid 'how-to-evade' phrasing)."""
 
-    # Top 3 “push toward verdict” factors
     push_fake = [f for f in top_factors if f["direction"] == "push_fake"]
     push_real = [f for f in top_factors if f["direction"] == "push_real"]
-
-    if verdict == "fake":
-        key = push_fake[:3]
-    else:
-        key = push_real[:3]
+    key = (push_fake[:3] if verdict == "fake" else push_real[:3])
 
     signals: List[str] = []
     for f in key:
-        # Keep the message informative but not “how-to-evade”
         signals.append(
-            f"{f['feature_human']} is unusually {'high' if f['direction']=='push_fake' else 'low'} "
-            f"relative to baseline."
+            f"{f['feature_human']} deviates from typical baseline values and contributed to the {verdict.upper()} verdict."
         )
 
-    # Add simple heuristic flags
     if heur.get("url_count", 0) >= 1:
         signals.append(
-            "Contains link(s): verify the source domain and the original publisher.")
+            "Contains link(s): verify the domain and check the original publisher.")
     if heur.get("exclamation_count", 0) >= 3:
         signals.append(
-            "Heavy use of exclamation marks can indicate sensational or persuasive framing.")
+            "Heavy exclamation use may indicate sensational framing; verify before sharing.")
     if heur.get("caps_ratio", 0) >= 0.2:
         signals.append(
-            "High ALL‑CAPS ratio can indicate emotionally charged messaging.")
+            "High ALL-CAPS ratio may indicate emotionally charged messaging; slow down and verify.")
 
     if not signals:
         signals.append(
-            "The equation-based score was close to the decision boundary; treat as uncertain and verify carefully.")
+            "The score is close to the boundary; treat as uncertain and verify carefully.")
 
     summary = (
         f"Verdict: {verdict.upper()} (estimated fake-likelihood {fake_pct:.1f}%). "
-        "This decision is primarily based on the interpretable equation (Qlattice) applied to detector and lexical features."
+        "The decision comes from the stored Qlattice equation applied to detector/embedding features."
     )
-
-    why_it_matters = (
-        "Misinformation can influence opinions and decisions. "
-        "Before sharing, cross-check with reliable sources and look for corroboration."
-    )
-
-    what_to_do = [
-        "Check the original source (who published it, when, and where).",
-        "Look for the same claim reported by multiple credible outlets.",
-        "Be cautious with highly emotional language or urgent calls to share.",
-    ]
 
     return {
         "summary": summary,
         "signals": signals,
-        "why_it_matters": why_it_matters,
-        "what_to_do": what_to_do,
+        "what_to_do": [
+            "Check the original source (who published it, when, and where).",
+            "Look for the same claim reported by multiple credible outlets.",
+            "Be cautious with highly emotional language or urgent calls to share.",
+        ],
     }
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description=(
-            "MINERVA Script 18: Create verdict/explanation JSON for Unity using the Qlattice equation. "
-            "(Run with no args after scripts 10–13.)"
-        )
+        description="MINERVA Script 18: Create verdict/explanation JSON for Unity using the Qlattice equation."
     )
 
+    ap.add_argument("--in_file", default=None,
+                    help="Input JSONL (default: best available in generated/).")
     ap.add_argument(
-        "--in_file",
-        default=None,
-        help="Input JSONL (default: generated/gpt2_synthetic_final.jsonl if present).",
-    )
-    ap.add_argument(
-        "--out_file",
-        default="generated/gpt2_synthetic_verdicts.json",
-        help="Output verdict file (default: generated/gpt2_synthetic_verdicts.json).",
-    )
-    ap.add_argument(
-        "--out_format",
-        choices=["json", "jsonl"],
-        default="json",
-        help="Output format (json array is Unity-friendly; jsonl is stream-friendly).",
-    )
-    ap.add_argument(
-        "--equation",
-        default="models/qlattice_equation.txt",
-        help="Path to Qlattice equation (default: models/qlattice_equation.txt).",
-    )
-    ap.add_argument(
-        "--calib_val",
-        default="data/features/val_tabular.csv",
-        help="Validation tabular CSV for baselines/calibration (default: data/features/val_tabular.csv).",
-    )
-    ap.add_argument(
-        "--top_k",
-        type=int,
-        default=5,
-        help="How many top contributing factors to store per record.",
-    )
-    ap.add_argument(
-        "--max_records",
-        type=int,
-        default=None,
-        help="Optional cap for debugging (process only first N records).",
-    )
-    ap.add_argument(
-        "--include_equation",
-        action="store_true",
-        help="If set, include the equation string in every record (bigger output).",
-    )
+        "--out_file", default="generated/gpt2_synthetic_verdicts.json")
+    ap.add_argument("--out_format", choices=["json", "jsonl"], default="json")
+    ap.add_argument("--equation", default="models/qlattice_equation.txt")
+    ap.add_argument("--calib_val", default="data/features/val_tabular.csv")
+    ap.add_argument("--top_k", type=int, default=5)
+    ap.add_argument("--max_records", type=int, default=None)
+    ap.add_argument("--include_equation", action="store_true")
 
     args = ap.parse_args()
 
     in_path = Path(args.in_file) if args.in_file else choose_default_infile()
     if not in_path.exists():
         raise FileNotFoundError(
-            f"Missing input file: {in_path}\n"
-            "Expected after running scripts 10→13.\n"
-            "Try: python scripts/10_prepare_gpt2MINERVA.py && python scripts/11_train_gpt2MINERVA.py && "
-            "python scripts/12_generate_gpt2MINERVA.py ... && python scripts/13_score_generated_with_qlattice.py"
+            f"Missing input file: {in_path}\nExpected after running scripts 12→13."
         )
 
     eq_path = Path(args.equation)
     if not eq_path.exists():
         raise FileNotFoundError(
-            f"Missing equation file: {eq_path}\n"
-            "Run: python scripts/08_train_qlattice.py"
-        )
+            f"Missing equation file: {eq_path}\nRun: python scripts/08_train_qlattice.py")
 
     equation = eq_path.read_text(encoding="utf-8").strip()
     if not equation:
@@ -395,23 +310,24 @@ def main() -> None:
     rows = read_jsonl(in_path)
     if args.max_records:
         rows = rows[: int(args.max_records)]
-
     if not rows:
         raise RuntimeError(f"Input file is empty: {in_path}")
 
     df = pd.DataFrame(rows)
 
-    variables = extract_variable_names(equation)
-    missing = set(variables) - set(df.columns)
+    # Compile equation and prepare locals/aliases.
+    code = compile_equation(equation)
+    bundle = build_feature_locals(df)
+
+    variables = sorted(list(extract_variable_names(equation)))
+    missing = sorted(list(set(variables) - set(bundle.locals.keys())))
     if missing:
         raise RuntimeError(
             "Input JSONL is missing feature columns required by the Qlattice equation.\n"
-            f"Missing: {sorted(list(missing))}\n\n"
-            "Fix: re-run script 12 (ensure PCA files exist if your equation uses r_pca_* / d_pca_*), "
-            "then re-run script 13."
+            f"Missing: {missing}\n\n"
+            "Fix: ensure Script 12 outputs the PCA + lexical columns used by your equation, then re-run Script 13."
         )
 
-    # Determine threshold/direction (prefer what script 13 wrote)
     thr = float(df["qlattice_threshold"].iloc[0]
                 ) if "qlattice_threshold" in df.columns else 0.5
     direction = str(df["qlattice_direction"].iloc[0]
@@ -419,45 +335,55 @@ def main() -> None:
     if direction not in (">=", "<="):
         direction = ">="
 
-    # Baseline values for local contributions + scale for mapping margin→probability
+    # Baselines for counterfactual contributions.
     baseline: Dict[str, float] = {}
-    scale = 1.0
     val_path = Path(args.calib_val)
     if val_path.exists():
         val_df = pd.read_csv(val_path)
-        if set(variables).issubset(set(val_df.columns)):
-            baseline = {v: float(val_df[v].median()) for v in variables}
-            # Use val margins to set a robust sigmoid scale
-            val_scores = eval_equation(equation, val_df)
-            val_margins = np.array([compute_margin(s, thr, direction)
-                                   for s in val_scores], dtype=float)
-            q = float(np.quantile(np.abs(val_margins), 0.75))
-            scale = q if q > 1e-9 else float(np.std(val_margins) + 1e-6)
-        else:
-            # fall back to generated set
-            baseline = {v: float(df[v].median()) for v in variables}
-    else:
-        baseline = {v: float(df[v].median()) for v in variables}
+        val_bundle = build_feature_locals(val_df)
+        for v in variables:
+            src = val_bundle.alias_to_source.get(v)
+            if src and src in val_df.columns and pd.api.types.is_numeric_dtype(val_df[src]):
+                baseline[v] = float(val_df[src].median())
 
-    # If the input already has qlattice_score, reuse it; else compute.
+    if not baseline:
+        for v in variables:
+            src = bundle.alias_to_source.get(v)
+            if src and src in df.columns and pd.api.types.is_numeric_dtype(df[src]):
+                baseline[v] = float(df[src].median())
+
+    # Scores
     if "qlattice_score" in df.columns and pd.api.types.is_numeric_dtype(df["qlattice_score"]):
         scores = df["qlattice_score"].to_numpy(dtype=float)
     else:
-        scores = eval_equation(equation, df)
+        scores = eval_compiled(code, bundle.locals, n_rows=len(df))
         df["qlattice_score"] = scores
 
-    # Ensure margin/pred are available
-    margins = np.array([compute_margin(s, thr, direction)
+    # Probability handling
+    is_prob = bool(np.nanmin(scores) >= -
+                   1e-6 and np.nanmax(scores) <= 1.0 + 1e-6)
+    if is_prob:
+        p_fake_arr = np.clip(scores, 0.0, 1.0)
+    else:
+        margins = np.array([compute_margin(float(s), thr, direction)
+                           for s in scores], dtype=float)
+        scale = float(np.quantile(np.abs(margins), 0.75)
+                      ) if len(margins) else 1.0
+        scale = max(scale, 1e-6)
+        p_fake_arr = np.array([_sigmoid_scalar(float(m) / scale)
+                              for m in margins], dtype=float)
+
+    margins = np.array([compute_margin(float(s), thr, direction)
                        for s in scores], dtype=float)
     df["qlattice_margin"] = margins
     df["qlattice_pred"] = (margins >= 0).astype(int)
 
-    # Difficulty bin may already exist from script 13
     if "difficulty_bin" not in df.columns:
-        # simple fallback: split into 3 quantiles of margin
-        qs = np.quantile(margins, [0.33, 0.66])
+        score_margin = np.abs(np.clip(scores, 0.0, 1.0) -
+                              0.5) if is_prob else np.abs(margins)
+        qs = np.quantile(score_margin, [0.33, 0.66])
         bins = []
-        for m in margins:
+        for m in score_margin:
             if m <= qs[0]:
                 bins.append("hard")
             elif m <= qs[1]:
@@ -467,9 +393,10 @@ def main() -> None:
         df["difficulty_bin"] = bins
 
     out_rows: List[Dict[str, Any]] = []
+
     for i, row in enumerate(df.to_dict(orient="records")):
         rid = str(row.get("id", f"row_{i}"))
-        target_label = row.get("target_label")
+        target_label = row.get("target_label", row.get("target"))
         text = str(row.get("text", ""))
 
         score = float(row.get("qlattice_score"))
@@ -477,30 +404,28 @@ def main() -> None:
         pred = int(row.get("qlattice_pred"))
         verdict = "fake" if pred == 1 else "real"
 
-        # Map margin to a probability-like number using a robust sigmoid
-        p_fake = float(sigmoid(margin / max(1e-6, scale)))
+        p_fake = float(p_fake_arr[i])
         fake_pct = float(100.0 * p_fake)
         cred_pct = float(100.0 * (1.0 - p_fake))
 
-        # Compute per-feature contributions to the margin (Qlattice is the core explainer)
-        contribs = local_contributions(
-            equation,
+        contribs = local_contributions_fast(
+            code=code,
             variables=variables,
             row=row,
+            alias_to_source=bundle.alias_to_source,
             baseline=baseline,
             thr=thr,
             direction=direction,
         )
-        if int(args.top_k) == 0:
-            top_factors = contribs
-        else:
-            top_factors = contribs[: max(1, int(args.top_k))]
 
+        top_factors = contribs if int(
+            args.top_k) == 0 else contribs[: max(1, int(args.top_k))]
         heur = basic_heuristics(text)
 
         detectors: Dict[str, Any] = {
             "p_roberta_fake": float_or_none(row.get("p_roberta_fake")),
             "p_distil_fake": float_or_none(row.get("p_distil_fake")),
+            "p_degnn_fake": float_or_none(row.get("p_degnn_fake")),
         }
         pr = detectors.get("p_roberta_fake")
         pd_ = detectors.get("p_distil_fake")
@@ -513,6 +438,7 @@ def main() -> None:
             "temperature": float_or_none(row.get("temperature")),
             "top_p": float_or_none(row.get("top_p")),
             "seed": row.get("seed"),
+            "graph_prompt": row.get("graph_prompt"),
         }
         metadata = {k: v for k, v in metadata.items() if v is not None}
 
