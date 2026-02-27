@@ -16,6 +16,14 @@ from transformers import (
 # Base PH/Tagalog GPT-2
 BASE_MODEL = "jcblaise/gpt2-tagalog"
 
+# Control tokens used in Script 10 (and expected in Script 12 prompts)
+REAL_TOKEN = "<|label=real|>"
+FAKE_TOKEN = "<|label=fake|>"
+GRAPH_HIGH = "<|graph=high|>"
+GRAPH_MID = "<|graph=mid|>"
+GRAPH_LOW = "<|graph=low|>"
+GRAPH_UNK = "<|graph=unk|>"
+
 CORPUS_DIR = Path("data/gpt2")
 TRAIN_FILE = CORPUS_DIR / "train.txt"
 VAL_FILE = CORPUS_DIR / "val.txt"
@@ -46,6 +54,21 @@ def main() -> None:
     )
 
     tok = AutoTokenizer.from_pretrained(BASE_MODEL, use_fast=True)
+
+    # Register control tokens as *special* so they are not split into BPE fragments.
+    # This makes conditioning (prompting) significantly more reliable.
+    tok.add_special_tokens(
+        {
+            "additional_special_tokens": [
+                REAL_TOKEN,
+                FAKE_TOKEN,
+                GRAPH_HIGH,
+                GRAPH_MID,
+                GRAPH_LOW,
+                GRAPH_UNK,
+            ]
+        }
+    )
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
 
@@ -67,6 +90,7 @@ def main() -> None:
     lm_ds = tokenized.map(group_texts, batched=True)
 
     model = AutoModelForCausalLM.from_pretrained(BASE_MODEL)
+    model.resize_token_embeddings(len(tok))
     collator = DataCollatorForLanguageModeling(tok, mlm=False)
 
     args = TrainingArguments(
