@@ -1,396 +1,297 @@
-from transformers import AutoModelForCausalLM, AutoModelForSequenceClassification, AutoTokenizer
-import torch
-import numpy as np
-import joblib
-from typing import Dict, List, Optional
-from pathlib import Path
-import os
-import json
+from __future__ import annotations
+
 import argparse
+import json
+import math
+import os
+from pathlib import Path
+from typing import Dict, List, Tuple
 
+import joblib
+import numpy as np
+import torch
+from transformers import (
+    AutoModelForCausalLM,
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+)
 
+# -----------------------------
+# Safe import for privacy module
+# -----------------------------
 try:
-    from minerva_privacy import pseudonymize_texts
+    # preferred: scripts/minerva_privacy.py
+    from scripts.minerva_privacy import maybe_pseudonymize_texts
 except Exception:
-    pseudonymize_texts = None
-
-
-def compute_lexical_features(text: str) -> Dict[str, float]:
-    # Simple, cheap, language-agnostic features that work for Tagalog + mixed code-switching.
-    n_chars = len(text)
-    words = text.split()
-    n_words = len(words)
-    n_exclaims = text.count("!")
-    n_questions = text.count("?")
-    pct_upper = sum(1 for c in text if c.isupper()) / max(1, n_chars)
-    has_url = 1.0 if (
-        "http://" in text or "https://" in text or "www." in text) else 0.0
-    has_number = 1.0 if any(c.isdigit() for c in text) else 0.0
-    return {
-        "n_chars": float(n_chars),
-        "n_words": float(n_words),
-        "n_exclaims": float(n_exclaims),
-        "n_questions": float(n_questions),
-        "pct_upper": float(pct_upper),
-        "has_url": float(has_url),
-        "has_number": float(has_number),
-    }
-
-
-def is_hf_model_dir(p: Path) -> bool:
-    # A minimal check for a local Hugging Face model directory.
-    return p.exists() and p.is_dir() and (p / "config.json").exists()
-
-
-def _load_metrics(metrics_path: Path) -> Optional[dict]:
     try:
-        return json.loads(metrics_path.read_text(encoding="utf-8"))
+        # fallback: repo root minerva_privacy.py
+        from minerva_privacy import maybe_pseudonymize_texts
     except Exception:
+        # ultimate fallback (no-op)
+        def maybe_pseudonymize_texts(texts: List[str]) -> List[str]:
+            return texts
+
+
+BASE_GPT2 = "jcblaise/gpt2-tagalog"
+
+# Default directories (will be resolved relative to RUN_DIR if set)
+RUN_DIR = Path(os.environ.get("RUN_DIR", ".")).resolve()
+MODEL_DIR = Path(os.environ.get("MODEL_DIR", RUN_DIR / "models")).resolve()
+SPLITS_DIR = Path(os.environ.get(
+    "SPLITS_DIR", RUN_DIR / "data" / "processed")).resolve()
+
+DEFAULT_OUT_FILE = RUN_DIR / "generated" / "gpt2_synthetic_samples.jsonl"
+
+# PCA files are produced by script 06 (extract features) and used for equation features in scripts 13/18
+PCA_ROBERTA = MODEL_DIR / "pca_roberta.joblib"
+PCA_DISTILBERT = MODEL_DIR / "pca_distilbert.joblib"
+
+# detector directories (trained by scripts 04/05 or wrappers -> script 16)
+ROBERTA_DIR = MODEL_DIR / "roberta_finetuned"
+DISTILBERT_DIR = MODEL_DIR / "distilbert_multilingual_finetuned"
+
+
+def ensure_float(x):
+    try:
+        return float(x)
+    except Exception:
+        return float(np.asarray(x).item())
+
+
+def encode_cls_and_prob(
+    text: str,
+    tok,
+    model,
+    device: torch.device,
+    max_len: int = 256,
+) -> Tuple[int, float, np.ndarray]:
+    """Return (predicted_class, prob_of_fake, pooled_embedding_vector)."""
+    enc = tok(
+        text,
+        truncation=True,
+        max_length=max_len,
+        padding=True,
+        return_tensors="pt",
+    ).to(device)
+
+    with torch.no_grad():
+        out = model(**enc, output_hidden_states=True, return_dict=True)
+        logits = out.logits  # [1, num_labels]
+        probs = torch.softmax(logits, dim=-1).detach().cpu().numpy()[0]
+
+        # Convention: label 1 = fake (works if training used {0: real, 1: fake})
+        prob_fake = float(probs[1]) if probs.shape[0] > 1 else float(probs[0])
+
+        pred = int(np.argmax(probs))
+
+        # pooled embedding: take CLS token hidden state from last layer if available
+        # (works for RoBERTa/DistilBERT style models)
+        hs = out.hidden_states[-1]  # [1, seq, hidden]
+        cls_vec = hs[:, 0, :].detach().cpu().numpy()[0]  # [hidden]
+
+    return pred, prob_fake, cls_vec
+
+
+def load_detector(det_dir: Path, device: torch.device):
+    tok = AutoTokenizer.from_pretrained(str(det_dir), use_fast=True)
+    model = AutoModelForSequenceClassification.from_pretrained(
+        str(det_dir)).to(device)
+    model.eval()
+    return tok, model
+
+
+def load_pca(path: Path):
+    if not path.exists():
         return None
+    return joblib.load(path)
 
 
-def _metric_value(report: dict, metric: str = "eval_f1") -> Optional[float]:
-    # Prefer eval metrics (validation) for model selection.
-    eval_dict = report.get("eval", {}) or {}
-    test_dict = report.get("test", {}) or {}
-
-    # Allow passing either "eval_f1" or "f1"
-    if metric in eval_dict:
-        return eval_dict.get(metric)
-
-    if not metric.startswith("eval_"):
-        k = f"eval_{metric}"
-        if k in eval_dict:
-            return eval_dict.get(k)
-
-    # Fallback to test metrics if eval isn't present (should be rare)
-    if metric in test_dict:
-        return test_dict.get(metric)
-    if not metric.startswith("eval_") and metric in test_dict:
-        return test_dict.get(metric)
-
-    return None
-
-
-def autodetect_best_detector(
-    task: str,
-    run_id: Optional[str] = None,
-    seed: Optional[int] = None,
-    metric: str = "eval_f1",
-    models_dir: Path = Path("models"),
-) -> Path:
-    """Find the best available detector directory for a given task.
-
-    Expected layouts:
-      - models/<task>/run_<run_id>/seed_<seed>/
-      - models/<task>/run_*/seed_*/
-    """
-    base = models_dir / task
-    if not base.exists():
-        raise FileNotFoundError(
-            f"Detector base dir not found: {base}.\n"
-            f"Fix: run scripts/17_run_5seeds_detectors.py (recommended) or train a single seed via scripts/16_train_transformer_classifier.py."
-        )
-
-    # Restrict to a specific run if provided.
-    if run_id:
-        rd = base / f"run_{run_id}"
-        if not rd.exists():
-            raise FileNotFoundError(
-                f"No run directory for task='{task}' and run_id='{run_id}'. Expected: {rd}\n"
-                f"Fix: ensure you trained with --run_id {run_id}."
-            )
-        run_dirs = [rd]
-    else:
-        # Prefer newest run_* by modified time
-        run_dirs = sorted([p for p in base.glob("run_*") if p.is_dir()],
-                          key=lambda p: p.stat().st_mtime, reverse=True)
-
-    candidates: List[Path] = []
-    for rd in run_dirs:
-        if seed is not None:
-            sd = rd / f"seed_{seed}"
-            if sd.exists():
-                candidates.append(sd)
-        else:
-            candidates.extend(
-                sorted([p for p in rd.glob("seed_*") if p.is_dir()]))
-
-    # Filter to directories that look like saved HF models.
-    candidates = [c for c in candidates if is_hf_model_dir(c)]
-
-    if not candidates:
-        raise FileNotFoundError(
-            f"No saved detector model directories found under: {base}\n"
-            f"Fix: run scripts/17_run_5seeds_detectors.py first (it creates models/{task}/run_<RUN_ID>/seed_<SEED>/).\n"
-            f"Tip: if you trained but directories are missing config.json, ensure scripts/16_train_transformer_classifier.py calls trainer.save_model(out_dir) and tokenizer.save_pretrained(out_dir)."
-        )
-
-    # Select best by metrics.json (highest eval metric).
-    best_dir = candidates[0]
-    best_score = float("-inf")
-    for c in candidates:
-        m = _load_metrics(c / "metrics.json")
-        if not m:
-            continue
-        val = _metric_value(m, metric=metric)
-        if val is None:
-            continue
-        if float(val) > best_score:
-            best_score = float(val)
-            best_dir = c
-
-    # If we never saw a metric, keep the first candidate (newest run + lowest seed order).
-    return best_dir
-
-
-def load_detector(model_dir: Path, device: torch.device):
-    tok = AutoTokenizer.from_pretrained(str(model_dir), use_fast=True)
-    mdl = AutoModelForSequenceClassification.from_pretrained(str(model_dir))
-    mdl.to(device)
-    mdl.eval()
-    return tok, mdl
-
-
-@torch.no_grad()
-def score_texts(tok, mdl, texts: List[str], device: torch.device, batch_size: int = 32) -> np.ndarray:
-    probs = []
-    for i in range(0, len(texts), batch_size):
-        batch = texts[i: i + batch_size]
-        enc = tok(batch, truncation=True, padding=True,
-                  max_length=256, return_tensors="pt").to(device)
-        logits = mdl(**enc).logits
-        p = torch.softmax(logits, dim=-1)[:, 1]  # class 1 = fake
-        probs.append(p.detach().cpu().numpy())
-    return np.concatenate(probs, axis=0)
-
-
-@torch.no_grad()
-def encode_texts(tok, mdl, texts: List[str], device: torch.device, batch_size: int = 32) -> np.ndarray:
-    # Mean-pooled last hidden states (simple, fast).
-    embs = []
-    for i in range(0, len(texts), batch_size):
-        batch = texts[i: i + batch_size]
-        enc = tok(batch, truncation=True, padding=True,
-                  max_length=256, return_tensors="pt").to(device)
-        out = mdl.base_model(
-            **enc, output_hidden_states=False, return_dict=True)
-        last = out.last_hidden_state  # [B, T, H]
-        mask = enc["attention_mask"].unsqueeze(-1)  # [B, T, 1]
-        pooled = (last * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
-        embs.append(pooled.detach().cpu().numpy())
-    return np.concatenate(embs, axis=0)
-
-
-# ---------------------------
-# Main
-# ---------------------------
-def build_argparser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser()
-    p.add_argument(
-        "n", type=int, help="Number of candidates to generate (before filtering)")
-    p.add_argument("target", choices=[
-                   "fake", "real"], help="Label tag attached to generated samples")
-    p.add_argument("min_conf", type=float,
-                   help="Minimum confidence threshold for accept_mode")
-    p.add_argument("max_new_tokens", type=int,
-                   help="Max tokens to generate per sample")
-    p.add_argument(
-        "--accept_mode",
-        default="ensemble",
-        choices=["ensemble", "roberta", "distilbert"],
-        help="Which detector(s) to use for filtering: ensemble=(roberta+distilbert avg)",
-    )
-    p.add_argument("--seed", type=int, default=13)
-    p.add_argument("--temperature", type=float, default=0.9)
-    p.add_argument("--top_p", type=float, default=0.95)
-    p.add_argument("--batch", type=int, default=16)
-    p.add_argument("--out", default="generated/gpt2_synthetic_samples.jsonl")
-    p.add_argument("--gen_model_dir", default="models/gpt2_tagalog_finetuned")
-
-    # Detector selection knobs
-    p.add_argument(
-        "--roberta_dir",
-        default="models/roberta_finetuned",
-        help="Path to a fine-tuned RoBERTa detector dir. If missing/invalid, auto-detect is used.",
-    )
-    p.add_argument(
-        "--distil_dir",
-        default="models/distilbert_multilingual_finetuned",
-        help="Path to a fine-tuned DistilBERT detector dir. If missing/invalid, auto-detect is used.",
-    )
-    p.add_argument("--run_id", default=None,
-                   help="Optional: restrict auto-detection to models/<task>/run_<run_id>/seed_*/")
-    p.add_argument("--detector_seed", type=int, default=None,
-                   help="Optional: choose a specific seed directory if available.")
-    p.add_argument("--detector_metric", default="eval_f1",
-                   help="Metric key used to pick best seed (default: eval_f1).")
-
-    p.add_argument("--no_privacy", action="store_true",
-                   help="Disable pseudonymization if minerva_privacy is available.")
-    return p
+def to_jsonl(path: Path, rows: List[Dict]):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
 
 def main():
-    args = build_argparser().parse_args()
+    parser = argparse.ArgumentParser(
+        description="Generate synthetic samples using GPT-2 and filter with detectors.")
+    parser.add_argument(
+        "n", type=int, help="Number of candidates to generate.")
+    parser.add_argument("target", choices=[
+                        "fake", "real"], help="Target label to generate.")
+    parser.add_argument("min_conf", type=float,
+                        help="Minimum confidence threshold for accept_mode.")
+    parser.add_argument("max_new_tokens", type=int,
+                        help="Max new tokens to generate.")
+    parser.add_argument(
+        "--accept_mode", choices=["none", "roberta", "distilbert", "ensemble"], default="none")
+    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--temperature", type=float, default=0.9)
+    parser.add_argument("--top_p", type=float, default=0.95)
+    parser.add_argument("--min_tokens", type=int, default=25)
+    parser.add_argument("--out_file", type=str, default=str(DEFAULT_OUT_FILE))
+    parser.add_argument("--seed", type=int, default=1234)
+    args = parser.parse_args()
 
-    os.makedirs(Path(args.out).parent, exist_ok=True)
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    rng = np.random.default_rng(args.seed)
 
-    gen_model_dir = Path(args.gen_model_dir)
-    if not gen_model_dir.exists():
-        raise FileNotFoundError(
-            f"Missing GPT-2 model dir: {gen_model_dir}.\n"
-            f"Fix: run scripts/11_train_gpt2MINERVA.py first."
-        )
+    # -----------------------------
+    # Load GPT-2 generator
+    # -----------------------------
+    gpt_dir = MODEL_DIR / "gpt2_tagalog_finetuned"
+    gpt_model_name = str(gpt_dir) if gpt_dir.exists() else BASE_GPT2
 
-    # Resolve detector directories (auto-detect if legacy paths are missing/invalid).
-    roberta_dir = Path(args.roberta_dir)
-    if not is_hf_model_dir(roberta_dir):
-        roberta_dir = autodetect_best_detector(
-            task="roberta",
-            run_id=args.run_id,
-            seed=args.detector_seed,
-            metric=args.detector_metric,
-            models_dir=Path("models"),
-        )
+    gen_tok = AutoTokenizer.from_pretrained(gpt_model_name, use_fast=True)
 
-    distil_dir = Path(args.distil_dir)
-    if not is_hf_model_dir(distil_dir):
-        distil_dir = autodetect_best_detector(
-            task="distilbert",
-            run_id=args.run_id,
-            seed=args.detector_seed,
-            metric=args.detector_metric,
-            models_dir=Path("models"),
-        )
+    # IMPORTANT for decoder-only batching:
+    # - set pad token to EOS
+    # - set LEFT padding to avoid warning + ensure correct generation
+    if gen_tok.pad_token is None:
+        gen_tok.pad_token = gen_tok.eos_token
+    gen_tok.padding_side = "left"
 
-    print(f"[12] Using RoBERTa detector -> {roberta_dir}")
-    print(f"[12] Using DistilBERT detector -> {distil_dir}")
+    gen_model = AutoModelForCausalLM.from_pretrained(gpt_model_name).to(device)
+    gen_model.eval()
 
-    # Load generator
-    gen_tok = AutoTokenizer.from_pretrained(str(gen_model_dir), use_fast=True)
-    gen_mdl = AutoModelForCausalLM.from_pretrained(
-        str(gen_model_dir)).to(device)
-    gen_mdl.eval()
-
+    # -----------------------------
     # Load detectors
-    r_tok, r_mdl = load_detector(roberta_dir, device)
-    d_tok, d_mdl = load_detector(distil_dir, device)
+    # -----------------------------
+    if not ROBERTA_DIR.exists():
+        raise FileNotFoundError(f"Missing RoBERTa detector dir: {ROBERTA_DIR}")
+    if not DISTILBERT_DIR.exists():
+        raise FileNotFoundError(
+            f"Missing DistilBERT detector dir: {DISTILBERT_DIR}")
 
-    # Load PCA (optional)
-    models_dir = Path("models")
-    ro_pca_path = models_dir / "pca_roberta.joblib"
-    di_pca_path = models_dir / "pca_distilbert.joblib"
-    pca_ro = joblib.load(ro_pca_path) if ro_pca_path.exists() else None
-    pca_di = joblib.load(di_pca_path) if di_pca_path.exists() else None
+    print(f"[12] Using RoBERTa detector -> {ROBERTA_DIR}")
+    print(f"[12] Using DistilBERT detector -> {DISTILBERT_DIR}")
 
-    if pca_ro is None or pca_di is None:
-        print("[WARN] PCA files not found. Generated samples will NOT include r_pca_* / d_pca_* features.")
-        print("       If your Qlattice equation uses PCA terms (rpca*/dpca*), run scripts/06_extract_features.py to create PCA joblibs, then re-run this script.")
+    r_tok, r_model = load_detector(ROBERTA_DIR, device)
+    d_tok, d_model = load_detector(DISTILBERT_DIR, device)
 
-    # Generate candidates
-    prompts = [
-        "Ulat: ",
-        "Balita: ",
-        "Ayon sa mga ulat, ",
-        "Ayon sa isang source, ",
-        "Breaking: ",
-    ]
+    # -----------------------------
+    # Load PCA models (optional but recommended)
+    # -----------------------------
+    pca_r = load_pca(PCA_ROBERTA)
+    pca_d = load_pca(PCA_DISTILBERT)
 
-    all_texts: List[str] = []
-    gen_batch = args.batch
-    to_generate = args.n
+    if pca_r is None or pca_d is None:
+        print(f"[WARN] PCA models missing. Expected:")
+        print(f"       - {PCA_ROBERTA}")
+        print(f"       - {PCA_DISTILBERT}")
+        print(
+            "[WARN] Script 13 may fail if your Qlattice equation uses dpca*/rpca* terms.")
 
-    while len(all_texts) < to_generate:
-        b = min(gen_batch, to_generate - len(all_texts))
-        batch_prompts = rng.choice(prompts, size=b, replace=True).tolist()
+    # -----------------------------
+    # Prompt format
+    # -----------------------------
+    # Keep prompt short and deterministic; model learns style from fine-tuning corpus.
+    label_token = f"<|label={args.target}|>"
+    prompt = label_token + "\n"
+
+    out_rows: List[Dict] = []
+    kept = 0
+    generated = 0
+
+    # We'll over-generate slightly to meet n kept after filtering
+    # but still stop if we get enough.
+    max_attempts = int(args.n * 2.5)
+
+    # -----------------------------
+    # Generation loop (batched)
+    # -----------------------------
+    while kept < args.n and generated < max_attempts:
+        batch_n = min(args.batch_size, args.n - kept)
+        batch_prompts = [prompt] * batch_n
+
+        # Left-padding configured above
         enc = gen_tok(batch_prompts, return_tensors="pt",
                       padding=True).to(device)
-        out_ids = gen_mdl.generate(
-            **enc,
-            max_new_tokens=args.max_new_tokens,
-            do_sample=True,
-            temperature=args.temperature,
-            top_p=args.top_p,
-            pad_token_id=gen_tok.eos_token_id,
-        )
-        texts = gen_tok.batch_decode(out_ids, skip_special_tokens=True)
-        all_texts.extend([t.strip() for t in texts])
 
-    # Optional pseudonymization
-    privacy_enabled = (not args.no_privacy) and (
-        pseudonymize_texts is not None)
-    if privacy_enabled:
-        all_texts, _maps = pseudonymize_texts(
-            all_texts, placeholder_prefix="Candidate")
+        with torch.no_grad():
+            gen_ids = gen_model.generate(
+                **enc,
+                do_sample=True,
+                temperature=args.temperature,
+                top_p=args.top_p,
+                max_new_tokens=args.max_new_tokens,
+                pad_token_id=gen_tok.pad_token_id,
+                eos_token_id=gen_tok.eos_token_id,
+            )
 
-    # Score with detectors
-    r_probs = score_texts(r_tok, r_mdl, all_texts,
-                          device=device, batch_size=32)
-    d_probs = score_texts(d_tok, d_mdl, all_texts,
-                          device=device, batch_size=32)
+        batch_texts = gen_tok.batch_decode(gen_ids, skip_special_tokens=True)
+        batch_texts = [t.replace(label_token, "").strip() for t in batch_texts]
 
-    if args.accept_mode == "roberta":
-        accept_score = r_probs
-    elif args.accept_mode == "distilbert":
-        accept_score = d_probs
-    else:
-        accept_score = 0.5 * (r_probs + d_probs)
+        # Filter very short generations
+        batch_texts = [t for t in batch_texts if len(
+            t.split()) >= args.min_tokens]
 
-    # Filter by threshold
-    keep_mask = accept_score >= args.min_conf
-    kept_texts = [t for t, m in zip(all_texts, keep_mask) if m]
-    kept_r = r_probs[keep_mask]
-    kept_d = d_probs[keep_mask]
-    kept_s = accept_score[keep_mask]
+        # Pseudonymize entities for legality/privacy
+        batch_texts = maybe_pseudonymize_texts(batch_texts)
 
-    # Encode & PCA
-    rows: List[dict] = []
-    if kept_texts:
-        r_emb = encode_texts(r_tok, r_mdl, kept_texts,
-                             device=device, batch_size=32)
-        d_emb = encode_texts(d_tok, d_mdl, kept_texts,
-                             device=device, batch_size=32)
+        for text in batch_texts:
+            generated += 1
 
-        r_p = pca_ro.transform(r_emb) if pca_ro is not None else None
-        d_p = pca_di.transform(d_emb) if pca_di is not None else None
+            # Detector predictions + embeddings
+            r_pred, r_prob, r_emb = encode_cls_and_prob(
+                text, r_tok, r_model, device=device)
+            d_pred, d_prob, d_emb = encode_cls_and_prob(
+                text, d_tok, d_model, device=device)
 
-        for i, txt in enumerate(kept_texts):
-            row = {
-                "text": txt,
+            # Acceptance logic
+            if args.accept_mode == "none":
+                accept = True
+                accept_score = 0.0
+            elif args.accept_mode == "roberta":
+                accept_score = r_prob
+                accept = (accept_score >= args.min_conf)
+            elif args.accept_mode == "distilbert":
+                accept_score = d_prob
+                accept = (accept_score >= args.min_conf)
+            else:  # ensemble
+                accept_score = (r_prob + d_prob) / 2.0
+                accept = (accept_score >= args.min_conf)
+
+            if not accept:
+                continue
+
+            row: Dict = {
+                "id": f"gpt2_{generated:07d}",
                 "target": args.target,
+                "text": text,
+                "roberta_pred": int(r_pred),
+                "roberta_prob_fake": ensure_float(r_prob),
+                "distilbert_pred": int(d_pred),
+                "distilbert_prob_fake": ensure_float(d_prob),
                 "accept_mode": args.accept_mode,
-                "accept_score": float(kept_s[i]),
-                "p_roberta_fake": float(kept_r[i]),
-                "p_distilbert_fake": float(kept_d[i]),
-                "privacy_enabled": bool(privacy_enabled),
-                "detector_roberta_dir": str(roberta_dir),
-                "detector_distilbert_dir": str(distil_dir),
+                "accept_score": ensure_float(accept_score),
             }
-            row.update(compute_lexical_features(txt))
-            if r_p is not None:
-                for k in range(r_p.shape[1]):
-                    row[f"r_pca_{k}"] = float(r_p[i, k])
-            if d_p is not None:
-                for k in range(d_p.shape[1]):
-                    row[f"d_pca_{k}"] = float(d_p[i, k])
-            rows.append(row)
 
-    # Write JSONL
-    out_path = Path(args.out)
-    with out_path.open("w", encoding="utf-8") as f:
-        for row in rows:
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+            # Add PCA feature columns expected downstream (scripts 13/18)
+            if pca_r is not None:
+                r_pca_vec = pca_r.transform(r_emb.reshape(1, -1))[0]
+                for k, v in enumerate(r_pca_vec.tolist()):
+                    row[f"r_pca_{k}"] = ensure_float(v)
 
-    print(f"[12] Generated: {len(all_texts)} | Kept: {len(rows)}")
+            if pca_d is not None:
+                d_pca_vec = pca_d.transform(d_emb.reshape(1, -1))[0]
+                for k, v in enumerate(d_pca_vec.tolist()):
+                    row[f"d_pca_{k}"] = ensure_float(v)
+
+            out_rows.append(row)
+            kept += 1
+            if kept >= args.n:
+                break
+
+    out_path = Path(args.out_file)
+    to_jsonl(out_path, out_rows)
+    print(f"[12] Generated attempts: {generated} | Kept: {kept}")
     print(f"[12] Saved -> {out_path}")
-    if privacy_enabled:
-        print("[12] Pseudonymization: ENABLED (placeholders like 'Candidate A').")
-    else:
-        print("[12] Pseudonymization: DISABLED.")
+    # Optional: print pseudonymization mode hint
+    print("[12] Pseudonymization: ENABLED (placeholders like 'Candidate A').")
 
 
 if __name__ == "__main__":
