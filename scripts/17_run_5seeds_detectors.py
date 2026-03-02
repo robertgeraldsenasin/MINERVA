@@ -41,17 +41,7 @@ def _seed_out_dir(output_base: str, task: str, run_id: str, seed: int) -> Path:
 
 
 def _normalize_metrics_schema(r: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Script 17 (original) expects:
-        r["test"]["f1"], r["test"]["accuracy"], and r["output_dir"]
 
-    Your updated Script 16 writes:
-        r["test_metrics"] and r["eval_metrics"]
-
-    This normalizes BOTH into a consistent form by ensuring:
-        r["test"] exists and is a dict
-        r["val"] exists (optional, derived from eval_metrics)
-    """
     # Ensure output_dir exists (Script 16 writes output_dir; just keep safe fallback)
     if "output_dir" not in r and "output_dir" not in r:
         # If missing, we can't export/copy later. Caller should provide.
