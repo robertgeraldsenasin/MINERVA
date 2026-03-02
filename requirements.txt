@@ -7,7 +7,7 @@ scikit-learn
 tqdm
 joblib
 
-# Hugging Face stack 
+# Hugging Face stack (pin to stable 4.x to avoid breaking API changes)
 transformers==4.33.3
 datasets==2.14.7
 tokenizers==0.13.3
@@ -20,7 +20,7 @@ sentencepiece
 safetensors
 protobuf<5
 
-# Interpretability 
+# Interpretability (optional but used in MINERVA explainability extensions)
 captum>=0.7.0
 
 # Qlattice / symbolic regression
@@ -29,7 +29,9 @@ feyn
 # Plotting / reporting
 matplotlib
 
-# API layer (optional)
+# API layer 
 fastapi>=0.110.0
 uvicorn>=0.27.0
-pydantic<3
+
+#plotting
+matplotlib>=3.7.0
