@@ -26,9 +26,10 @@ except Exception:
     pseudonymize_texts = None
 
 try:
-    from minerva_degnn import load_degnn_artifacts, predict_p_fake_for_new_nodes  # type: ignore
+    from minerva_degnn import load_artifacts, load_degnn_model, predict_p_fake_for_new_nodes  # type: ignore
 except Exception:
-    load_degnn_artifacts = None
+    load_artifacts = None
+    load_degnn_model = None
     predict_p_fake_for_new_nodes = None
 
 
@@ -275,6 +276,7 @@ class Paths:
     pca_roberta: Path
     pca_distilbert: Path
     degnn_artifacts: Path
+    degnn_model: Path
 
 
 def resolve_paths(args) -> Paths:
@@ -290,6 +292,7 @@ def resolve_paths(args) -> Paths:
         pca_roberta=Path(args.pca_roberta),
         pca_distilbert=Path(args.pca_distilbert),
         degnn_artifacts=Path(args.degnn_artifacts),
+        degnn_model=Path(args.degnn_model),
     )
 
 
@@ -343,6 +346,7 @@ def build_argparser() -> argparse.ArgumentParser:
     # DE-GNN artifacts
     p.add_argument("--degnn_artifacts",
                    default="models/degnn_artifacts.joblib")
+    p.add_argument("--degnn_model", default="models/degnn.pt")
 
     # Prompt conditioning token for DE-GNN bins
     p.add_argument(
@@ -451,8 +455,9 @@ def main() -> None:
     # Optional DE-GNN
     need_degnn = args.accept_mode in ("degnn", "ensemble3")
     degnn_art = None
+    degnn_model = None
     if need_degnn:
-        if load_degnn_artifacts is None or predict_p_fake_for_new_nodes is None:
+        if load_artifacts is None or load_degnn_model is None or predict_p_fake_for_new_nodes is None:
             raise RuntimeError(
                 "DE-GNN utilities missing (minerva_degnn.py). Ensure the patch files are in repo root."
             )
@@ -460,7 +465,13 @@ def main() -> None:
             raise FileNotFoundError(
                 f"Missing DE-GNN artifacts: {paths.degnn_artifacts}\nFix: run scripts/09_train_degnn.py first."
             )
-        degnn_art = load_degnn_artifacts(paths.degnn_artifacts)
+        if not paths.degnn_model.exists():
+            raise FileNotFoundError(
+                f"Missing DE-GNN model weights: {paths.degnn_model}\nFix: run scripts/09_train_degnn.py first."
+            )
+        degnn_art = load_artifacts(paths.degnn_artifacts)
+        degnn_model = load_degnn_model(
+            paths.degnn_model, degnn_art, device=device)
 
     # Privacy
     do_priv = _should_pseudonymize(args.no_privacy)
@@ -553,7 +564,16 @@ def main() -> None:
                     feat[c] = 0.0
             feat = feat[degnn_art.feature_cols]
 
-            p_degnn_fake = predict_p_fake_for_new_nodes(degnn_art, feat)
+            if degnn_model is None:
+                raise RuntimeError(
+                    "DE-GNN model was not loaded but accept_mode requires it.")
+
+            p_degnn_fake = predict_p_fake_for_new_nodes(
+                feat,
+                artifacts=degnn_art,
+                model=degnn_model,
+                device=device,
+            )
 
             if args.accept_mode == "degnn":
                 accept_score2 = np.array([_confidence_for_target(
