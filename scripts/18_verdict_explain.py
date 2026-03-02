@@ -171,28 +171,31 @@ def local_contributions_fast(
     """Per-feature counterfactual contributions using a single vectorized eval()."""
 
     n = len(variables)
+    if n == 0:
+        return []
     size = n + 1  # index 0 = original, i+1 = counterfactual for var i
 
+    # IMPORTANT: Provide *all* variables required by the equation.
+    # If a variable is missing/non-finite in the row, fall back to its baseline.
+    # This prevents NameError during eval() and keeps contributions stable.
     local_vars: Dict[str, Any] = {}
-
     for i, v in enumerate(variables):
         src = alias_to_source.get(v, v)
-        if src not in row:
-            continue
+
+        # original value (row -> float) with baseline fallback
+        orig_val: float
         try:
-            orig = float(row[src])
+            orig_val = float(row.get(src))
+            if not math.isfinite(orig_val):
+                raise ValueError("non-finite")
         except Exception:
-            continue
-        if not math.isfinite(orig):
-            continue
+            orig_val = float(baseline.get(v, 0.0))
 
-        base = baseline.get(v, orig)
-        arr = np.full((size,), orig, dtype=float)
-        arr[i + 1] = float(base)
+        base_val = float(baseline.get(v, orig_val))
+
+        arr = np.full((size,), orig_val, dtype=float)
+        arr[i + 1] = base_val
         local_vars[v] = arr
-
-    if not local_vars:
-        return []
 
     local_vars.update(SAFE_FUNCS)
 
