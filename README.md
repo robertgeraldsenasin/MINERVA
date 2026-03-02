@@ -44,30 +44,30 @@ This repo is designed for a Philippine senior-high-school learning context: stud
 
 ```mermaid
 flowchart TD
-  A[01 Download dataset] --> B[02 Prepare corpus CSV]
-  B --> C[03 Train/Val/Test split]
+  A["01 Download dataset"] --> B["02 Prepare corpus CSV"];
+  B --> C["03 Train/Val/Test split"];
 
-  C --> D[17 Train detectors (5 seeds)]
-  D --> E[15 Evaluate detectors]
+  C --> D["17 Train detectors (5 seeds)"];
+  D --> E["15 Evaluate detectors"];
 
-  D --> F[06 Extract features]
-  F --> G[07 Random Forest baseline]
-  F --> H[08 Qlattice symbolic regression]
-  F --> I[09 Train DE-GNN (GraphSAGE on kNN graph)]
+  D --> F["06 Extract features"];
+  F --> G["07 Random Forest baseline"];
+  F --> H["08 Qlattice symbolic regression"];
+  F --> I["09 Train DE-GNN (GraphSAGE on kNN graph)"];
 
-  I --> J[10 Build GPT-2 corpus (label + graph tokens)]
-  J --> K[11 Fine-tune GPT-2 Tagalog]
+  I --> J["10 Build GPT-2 corpus (label + graph tokens)"];
+  J --> K["11 Fine-tune GPT-2 Tagalog"];
 ```
 
 ### Generation + curation for Unity
 
 ```mermaid
 flowchart TD
-  K[Fine-tuned GPT-2] --> L[12 Generate candidates (REAL/FAKE)]
-  L --> M[Detector + DE-GNN acceptance gate]
-  M --> N[13 Score with Qlattice equation]
-  N --> O[18 Build teaching explanations + Unity JSON]
-  O --> P[21 Balance deck (REAL/FAKE/NEUTRAL)]
+  K["11 Fine-tuned GPT-2"] --> L["12 Generate candidates (REAL/FAKE)"];
+  L --> M["Acceptance gate (RoBERTa + DistilBERT + optional DE-GNN)"];
+  M --> N["13 Score with Qlattice equation"];
+  N --> O["18 Build teaching explanations + Unity JSON"];
+  O --> P["21 Balance deck (REAL/FAKE/NEUTRAL)"];
 ```
 
 **Design principle:** treat generation as **untrusted** → only export samples that pass multiple independent checks.
