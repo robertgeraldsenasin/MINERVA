@@ -1,37 +1,21 @@
-# MINERVA requirements (Colab-tested, Python 3.11)
+# MINERVA requirements (Colab-friendly, Python 3.10+)
+#
 
-# Core DS stack
-numpy<2
-pandas
+
+# Core data stack
+numpy>=2.0.0
+pandas>=2.2.0
 scikit-learn
 tqdm
 joblib
 
-# Hugging Face stack (pin to stable 4.x to avoid breaking API changes)
-transformers==4.33.3
-datasets==2.14.7
-tokenizers==0.13.3
-accelerate==0.23.0
-evaluate>=0.4.0
-huggingface-hub<1.0.0
+# Hugging Face stack (used by RoBERTa/DistilBERT/GPT-2 scripts)
+transformers>=4.41,<5
+datasets
+accelerate
 
-# NLP utilities
-sentencepiece
-safetensors
-protobuf<5
-
-# Interpretability (optional but used in MINERVA explainability extensions)
-captum>=0.7.0
-
-# Qlattice / symbolic regression
+# Qlattice / symbolic regression (used by scripts/08_train_qlattice.py)
 feyn
 
-# Plotting / reporting
+# Plotting (used by scripts/19_plot_training_graphs.py)
 matplotlib
-
-# API layer 
-fastapi>=0.110.0
-uvicorn>=0.27.0
-
-#plotting
-matplotlib>=3.7.0
