@@ -77,8 +77,7 @@ flowchart TD
 ## Quickstart (Google Colab)
 
 Open and run (pick the one that exists in your repo):
-- `notebooks/MinervaTesting_colab_FINAL_FIXED.ipynb` (recommended, if present)
-- `notebooks/MinervaTesting_colab_FINAL.ipynb` (fallback)
+- TBA
 
 Why the “FIXED” notebook?
 - Colab comes with preinstalled compiled packages; downgrading `numpy` without reinstalling `pandas` can cause binary incompatibilities. The fixed notebook handles clean installs and avoids the `numpy.dtype size changed` crash.
@@ -285,9 +284,6 @@ In other words: MINERVA is not “a model”; it’s a **maintainable ML-enabled
 
 ---
 
-## How to defend “impact” (suggested ablations)
-
-If a panel asks **“Did DE-GNN / Qlattice / ensembling actually help?”**, answer with **measurable comparisons**.
 
 ### A) Detectors vs baseline
 
@@ -328,7 +324,7 @@ python scripts/10_prepare_gpt2MINERVA.py --no_degnn_tokens --out_dir data/gpt2_n
 
 2) Fine-tune two GPT models and compare acceptance/scoring results.
 
-This is a clean SE story: *we changed only one module, kept evaluation identical, and compared outputs.*
+
 
 ### D) Qlattice margin as “teaching difficulty”
 
@@ -341,7 +337,7 @@ Show that increasing `--min_margin` yields:
 
 ---
 
-## Limitations (be honest in defense)
+## Limitations 
 
 - **Single dataset** (jcblaise/fake_news_filipino) → risk of domain shift.
 - **Truth ≠ style**: detectors can learn stylistic cues, not factual reality.
