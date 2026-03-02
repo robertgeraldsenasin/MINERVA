@@ -1,354 +1,427 @@
-# MINERVA (Fake News / Misinformation Detection Pipeline)
+# MINERVA
 
-Hey! This repo is our **MINERVA** project: a *reproducible* pipeline for detecting fake news / misinformation using:
+**MINERVA** is an end‑to‑end **Software Engineering–oriented** pipeline that:
 
-- **RoBERTa (Tagalog specialist)**  
-- **DistilBERT (multilingual / Tagalog + English + code-switch-friendly)**  
-- **Feature extraction** (embeddings + probabilities + simple text stats)  
-- **Random Forest** (strong tabular baseline)  
-- **Qlattice** (turns features into an interpretable “equation-style” rule)  
-- **DE‑GNN (text graph model)** (optional “reasoning over similarity” layer)
+1. fine‑tunes **Filipino/Tagalog fake‑news detectors**,
+2. uses those detectors (plus **DE‑GNN** + **Qlattice**) as **quality gates + explainers**, and
+3. produces **game‑ready Unity “news cards”** (REAL / FAKE / NEUTRAL) with **human‑readable teaching explanations**.
 
+This repo is designed for a Philippine senior‑high‑school learning context: students are not just told a verdict—they are shown _why_ a post looks credible vs suspicious, using signals that map to media‑literacy cues.
 
----
-
-## What you need installed
-
-- **Python 3.10+** (3.10 recommended because it’s stable with the ML stack we pinned)
-- (Optional) **NVIDIA GPU + CUDA PyTorch** if you want training to run fast.
+> ⚠️ **Important:** MINERVA is an **educational content curation pipeline**, not a real‑world fact‑checking authority. The generator can still produce plausible but incorrect statements. Treat outputs as _simulated training material_.
 
 ---
 
-## Setup (one-time)
+## Key outputs
 
-### 1) Create and activate your virtual environment
-**Windows PowerShell:**
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+- **Detectors** (RoBERTa + DistilBERT) for REAL/FAKE classification
+- **DE‑GNN** (Dual‑Embedding Graph Neural Network) confidence scores over a similarity graph
+- **Qlattice equation** (symbolic regression) → interpretable scoring function
+- **GPT‑2 Tagalog generator** trained with **control tokens**
+- **Unity card exports** (JSON) with:
+  - `verdict` (real/fake/neutral)
+  - `credibility_percent` for UI meters
+  - `fake_likelihood_percent`
+  - explanation fields for teachable feedback
+
+---
+
+## Repository layout
+
+- `scripts/` : numbered pipeline scripts (01..21)
+- `data/` : `raw/`, `processed/`, `features/`, `gpt2/` (created at runtime)
+- `models/` : saved HF models + PCA + Qlattice equation + DE‑GNN artifacts
+- `logs/` : training logs + evaluation summaries
+- `generated/` : synthetic samples + Unity card JSON exports
+- `docs/schemas/` : example JSON structures for scored records + Unity cards
+- `reports/` : figures and thesis‑aligned PDF reports
+- `notebooks/` : Google Colab notebook(s)
+
+---
+
+## Pipeline at a glance
+
+### Training + modeling
+
+```mermaid
+flowchart TD
+  A[01 Download dataset] --> B[02 Prepare corpus CSV]
+  B --> C[03 Train/Val/Test split]
+
+  C --> D[17 Train detectors (5 seeds)]
+  D --> E[15 Evaluate detectors]
+
+  D --> F[06 Extract features]
+  F --> G[07 Random Forest baseline]
+  F --> H[08 Qlattice symbolic regression]
+  F --> I[09 Train DE‑GNN (GraphSAGE on kNN graph)]
+
+  I --> J[10 Build GPT‑2 corpus w/ <|label|> + <|graph|> tokens]
+  J --> K[11 Fine‑tune GPT‑2 Tagalog]
 ```
 
-### 2) Install dependencies
-```powershell
-python -m pip install -r requirements.txt
+### Generation + curation for Unity
+
+```mermaid
+flowchart TD
+  K[Fine‑tuned GPT‑2] --> L[12 Generate candidates (REAL/FAKE)]
+  L --> M[Detector + DE‑GNN acceptance gate]
+  M --> N[13 Score with Qlattice equation]
+  N --> O[18 Build teaching explanations + Unity JSON]
+  O --> P[21 Balance deck (REAL/FAKE/NEUTRAL)]
 ```
 
-### 3) Quick sanity check
-```powershell
-python -c "import transformers, datasets, sklearn; print('transformers', transformers.__version__); print('datasets', datasets.__version__)"
-python -c "import torch; print('torch', torch.__version__, 'cuda?', torch.cuda.is_available())"
+**Design principle:** treat generation as **untrusted** → only export samples that pass multiple independent checks.
+
+---
+
+## Quickstart (Google Colab)
+
+Open and run (pick the one that exists in your repo):
+
+- `notebooks/MinervaTesting_colab_FINAL_FIXED.ipynb` (recommended, if present)
+- `notebooks/MinervaTesting_colab_FINAL.ipynb` (fallback)
+
+Why the “FIXED” notebook?
+
+- Colab comes with preinstalled compiled packages; downgrading `numpy` without reinstalling `pandas` can cause binary incompatibilities. The fixed notebook handles clean installs and avoids the `numpy.dtype size changed` crash.
+
+---
+
+## Dependencies (`requirements.txt`)
+
+The requirement set is intentionally **small** and grouped by purpose:
+
+- **Core ML stack:** `torch`, `transformers`, `datasets`, `accelerate`
+- **Tabular + classic ML:** `numpy`, `pandas`, `scikit-learn`, `joblib`
+- **Explainability + reporting:** `captum`, `matplotlib`
+- **Symbolic regression:** `feyn` (Qlattice engine)
+
+Why not include “everything”?
+
+- **Software engineering goal:** keep installs predictable, reduce dependency conflicts, and make the pipeline reproducible in Colab and local machines.
+
+---
+
+## Run the full pipeline (01 → 21)
+
+From repo root:
+
+```bash
+python scripts/01_download_dataset.py
+python scripts/02_prepare_dataset.py
+python scripts/03_split_dataset.py
+
+# Detectors: train 5 seeds and export best model to canonical paths
+python scripts/17_run_5seeds_detectors.py --run_id RUN1
+
+# Baselines + evaluation
+python scripts/14_train_baseline_tfidf_logreg.py
+python scripts/15_evaluate_detectors.py
+
+# Feature engineering + interpretable/graph models
+python scripts/06_extract_features.py
+python scripts/07_train_random_forest.py
+python scripts/08_train_qlattice.py
+python scripts/09_train_degnn.py
+
+# GPT‑2 corpus + training (uses DE‑GNN confidence tokens)
+python scripts/10_prepare_gpt2MINERVA.py
+python scripts/11_train_gpt2MINERVA.py
+
+# Generate REAL + FAKE candidate cards, filtered by ensemble gate
+python scripts/12_generate_gpt2MINERVA.py 500 fake 0.70 120 --accept_mode ensemble3 --out generated/gpt2_synthetic_samples_fake.jsonl
+python scripts/12_generate_gpt2MINERVA.py 500 real 0.70 120 --accept_mode ensemble3 --out generated/gpt2_synthetic_samples_real.jsonl
+
+# Score with Qlattice and keep only strong-margin samples
+python scripts/13_score_generated_with_qlattice.py --in_jsonl generated/gpt2_synthetic_samples_fake.jsonl --target fake --out_scored generated/gpt2_synthetic_scored_fake.jsonl --out_final generated/gpt2_synthetic_final_fake.jsonl
+python scripts/13_score_generated_with_qlattice.py --in_jsonl generated/gpt2_synthetic_samples_real.jsonl --target real --out_scored generated/gpt2_synthetic_scored_real.jsonl --out_final generated/gpt2_synthetic_final_real.jsonl
+
+# (Optional) combine finals into one JSONL
+cat generated/gpt2_synthetic_final_fake.jsonl generated/gpt2_synthetic_final_real.jsonl > generated/gpt2_synthetic_final_both.jsonl
+
+# Build teaching explanations + Unity JSON
+python scripts/18_verdict_explain.py --in_file generated/gpt2_synthetic_final_both.jsonl --out_file generated/unity_cards.json
+
+# Create a 3-way band and EXACT balancing for game decks
+python scripts/21_balance_unity_cards.py --in_file generated/unity_cards.json --out_file generated/unity_cards_balanced.json --n_per_class 200 --neutral_low 0.50 --neutral_high 0.60 --allow_reuse
 ```
 
 ---
 
-## How the scripts connect (the “pipeline map”)
+## What each “main algorithm” contributes
 
-Think of the repo like a mini factory:
+This section is written for defense / panel questions: **WHY these parts exist** and **what problem each solves**.
 
+### 1) Two Transformer detectors (RoBERTa Tagalog + DistilBERT multilingual)
+
+**Used in:** scripts `17`, `04`, `05`, `06`, `12`, `15`
+
+**Why two models instead of one?**
+
+- **Philippine social media is code‑switched** (Tagalog + English, “Taglish”), so we want:
+  - a **Tagalog specialist** (captures Tagalog morphology/idioms better), and
+  - a **multilingual generalist** (handles English fragments and mixed syntax).
+- In engineering terms: two detectors act like **redundant sensors**. Disagreement = uncertainty → good for “NEUTRAL” cards and for rejecting questionable generations.
+
+**How they’re used (not just as classifiers):**
+
+- `06_extract_features.py` turns them into **feature generators**:
+  - CLS embeddings → PCA features
+  - calibrated probabilities (`p_roberta_fake`, `p_distil_fake`) → compact “credibility signals”
+- `12_generate_gpt2MINERVA.py` uses detectors as an **accept/reject gate** to curate GPT outputs.
+
+### 2) PCA over dual embedding spaces
+
+**Used in:** `06_extract_features.py`
+
+Transformers produce high‑dimensional embeddings. PCA is used to:
+
+- reduce dimensionality (faster downstream models, smaller artifacts)
+- preserve the strongest variance directions
+- make tabular models feasible (RF, Qlattice, DE‑GNN)
+
+### 3) Random Forest (tabular baseline)
+
+**Used in:** `07_train_random_forest.py`
+
+Why RF is still included:
+
+- fast to train, strong baseline
+- exposes feature importance (debugging + insight)
+- helps verify whether the neural models are doing something meaningful
+
+### 4) Qlattice symbolic regression (interpretable “equation”)
+
+**Used in:** `08_train_qlattice.py`, `13_score_generated_with_qlattice.py`, `18_verdict_explain.py`
+
+Why Qlattice:
+
+- Produces a **small mathematical expression** (equation) instead of an opaque model.
+- That equation can be:
+  - versioned like code,
+  - re‑evaluated in Python deterministically,
+  - explained to students using _human_ heuristics (“high punctuation + certain embedding pattern increases fake‑likelihood”).
+
+In MINERVA, the Qlattice score becomes a **teaching‑friendly** scalar signal:
+
+- `p_qlattice_fake` → converted to `credibility_percent` UI meter
+- `margin` from 0.5 → “difficulty” (easy/medium/hard)
+
+### 5) DE‑GNN (Dual‑Embedding Graph Neural Network)
+
+**Used in:** `09_train_degnn.py`, `10_prepare_gpt2MINERVA.py`, `12_generate_gpt2MINERVA.py`
+
+**What “dual embedding” means here:**
+
+- We fuse two semantic views of the same text:
+  1. RoBERTa‑PCA features
+  2. DistilBERT‑PCA features
+- plus detector probabilities
+
+**Why a GNN at all (if we already have embeddings)?**
+
+- Real posts often form _clusters_ by topic, wording style, and narrative patterns.
+- A kNN similarity graph approximates that structure when we don’t have social‑network edges.
+- GraphSAGE aggregates neighborhood signals, which can smooth noisy predictions and yield a confidence measure.
+
+**Why not just kNN?**
+
+- Plain kNN is a _fixed rule_ and scales poorly (store all points; sensitive to distance noise).
+- GraphSAGE learns how to weigh self vs neighbor information and is designed for **inductive** settings (score new nodes by connecting them to the reference graph).
+
+**How DE‑GNN impacts GPT generation (the “before it feeds to GPT” part):**
+
+1. `09_train_degnn.py` exports `p_degnn_fake` per training sample.
+2. `10_prepare_gpt2MINERVA.py` converts that into `<|graph=high|>/<|graph=mid|>/<|graph=low|>` tokens.
+3. GPT‑2 is fine‑tuned on text that includes both:
+   - `<|label=fake|>` vs `<|label=real|>` (class conditioning)
+   - `<|graph=...|>` (graph‑confidence conditioning)
+
+Result: we can ask GPT to generate “REAL + graph‑high” vs “FAKE + graph‑low”, and we can reject generations that fail the DE‑GNN gate.
+
+### 6) GPT‑2 Tagalog generation + quality gates
+
+**Used in:** `10`, `11`, `12`, `13`
+
+Why generate at all?
+
+- The Unity game needs _many_ short, varied cards.
+- Real labeled data is limited; generation helps build an educational deck while protecting the original dataset from direct reuse.
+
+Why we don’t “trust” the generator:
+
+- Generative models can hallucinate.
+
+How MINERVA reduces risk:
+
+- **conditioning tokens** (label + graph)
+- **acceptance gating** using multiple detectors (`--accept_mode ensemble3`)
+- **post‑scoring** with a deterministic Qlattice equation
+
+This is the core SE strategy: generation → **validation** → export.
+
+---
+
+## Unity integration
+
+### Where the “scored” and “final” files come from
+
+Per target class (REAL or FAKE):
+
+- Script **12** writes:
+  - `generated/gpt2_synthetic_samples_<target>.jsonl` (accepted candidates)
+- Script **13** writes:
+  - `generated/gpt2_synthetic_scored_<target>.jsonl` (adds Qlattice fields)
+  - `generated/gpt2_synthetic_final_<target>.jsonl` (filters by target + margin)
+
+### Turning scores into teachable game content
+
+- Script **18** turns final JSONL into Unity cards:
+  - `credibility_percent` → credibility ring/meter
+  - `verdict` → label/badge
+  - `explanation.summary` → student‑readable “why” text
+  - `explanation.signals[]` → bullet list of cues (writing style, certainty, etc.)
+
+- Script **21** creates a 3‑way band (REAL/FAKE/NEUTRAL) and balances the deck:
+  - default neutral band is **50–60% fake‑likelihood** (your requested range)
+
+---
+
+## Why this is a Software Engineering study (not “just AI”)
+
+The novelty here is primarily **systems integration**:
+
+- **Modular pipeline** (01..21) with explicit artifacts and interfaces
+- **Reproducibility**: multi‑seed training, exported best detectors, deterministic scoring
+- **Quality gates**: using independent models as acceptance tests for generated content
+- **Explainability for end‑users**: symbolic equation + structured explanations suitable for UI
+- **Product integration**: balanced JSON decks for Unity Android deployment
+- **Safety**: pseudonymization options to reduce leakage of real names
+
+In other words: MINERVA is not “a model”; it’s a **maintainable ML‑enabled product pipeline**.
+
+---
+
+## How to defend “impact” (suggested ablations)
+
+If a panel asks **“Did DE‑GNN / Qlattice / ensembling actually help?”**, answer with **measurable comparisons**.
+
+### A) Detectors vs baseline
+
+1. Train baseline:
+
+```bash
+python scripts/14_train_baseline_tfidf_logreg.py
 ```
-01_download_dataset.py
-      ↓
-02_prepare_dataset.py
-      ↓
-03_split_dataset.py
-      ↓
-04_train_robertaMINERVA.py      05_train_distilbertMINERVA.py
-             ↓                             ↓
-                06_extract_features.py (uses BOTH models)
-                             ↓
-07_train_random_forest.py   08_train_qlattice.py   09_train_degnn.py
+
+2. Train detectors + evaluate:
+
+```bash
+python scripts/17_run_5seeds_detectors.py --run_id RUN1
+python scripts/15_evaluate_detectors.py
 ```
 
-Each script **expects files created by the previous scripts**.
+Show: accuracy/F1 of baseline vs transformers.
 
----
+### B) Ensembling as a quality gate
 
-## Running the full pipeline (01 → 09)
+Run Script 12 with different `--accept_mode` and compare:
 
-From the project root:
+- acceptance rate (how many candidates were rejected)
+- distribution of Qlattice scores after Script 13
 
-```powershell
-python scripts\01_download_dataset.py
-python scripts\02_prepare_dataset.py
-python scripts\03_split_dataset.py
+Example:
 
-python scripts\04_train_robertaMINERVA.py
-python scripts\05_train_distilbertMINERVA.py
-
-python scripts\06_extract_features.py
-python scripts\07_train_random_forest.py
-python scripts\08_train_qlattice.py
-python scripts\09_train_degnn.py
+```bash
+python scripts/12_generate_gpt2MINERVA.py 300 fake 0.70 120 --accept_mode roberta
+python scripts/12_generate_gpt2MINERVA.py 300 fake 0.70 120 --accept_mode distilbert
+python scripts/12_generate_gpt2MINERVA.py 300 fake 0.70 120 --accept_mode ensemble
+python scripts/12_generate_gpt2MINERVA.py 300 fake 0.70 120 --accept_mode ensemble3
 ```
 
----
+### C) DE‑GNN impact on the generator
 
-## Folder guide (what goes where)
+1. Train GPT‑2 corpus **with** and **without** graph tokens:
 
-These folders are **generated locally** when you run scripts:
+```bash
+python scripts/10_prepare_gpt2MINERVA.py
+python scripts/10_prepare_gpt2MINERVA.py --no_degnn_tokens --out_dir data/gpt2_no_graph
+```
 
-- `data/raw/`  
-  Downloaded datasets (CSV/ZIP extract). **Not committed** to GitHub.
-- `data/processed/`  
-  Cleaned + merged data + train/val/test splits. **Not committed**.
-- `data/features/`  
-  Embeddings, tabular features, DE‑GNN predictions. **Not committed**.
-- `models/`  
-  Trained models (RoBERTa, DistilBERT, RF, PCA, DE‑GNN). **Not committed**.
-- `logs/`  
-  Training logs and evaluation summaries (some small ones can be committed).
-- `generated/`  
-  Exports for Unity (JSON) and other final artifacts (usually not committed unless it’s a tiny example).
+2. Fine‑tune two GPT models and compare acceptance/scoring results.
 
----
+This is a clean SE story: _we changed only one module, kept evaluation identical, and compared outputs._
 
-# What each file does (and what you can tweak)
+### D) Qlattice margin as “teaching difficulty”
 
-## `requirements.txt`
-**What it does:** pins versions so installs don’t randomly break.
+Show that increasing `--min_margin` yields:
 
-**Why pinned?**
-- `numpy<2` avoids annoying `datasets/arrow` “copy” errors.
-- `transformers`, `datasets`, `accelerate` are pinned to avoid version mismatches.
-
-**Common tweaks:**
-- If you have GPU, install CUDA PyTorch separately (PyTorch has different wheels).
+- fewer but clearer cards
+- more decisive “credibility” scores (farther from 50%)
+- fewer ambiguous explanations
 
 ---
 
-# Script Files:
+---
 
-## `scripts/01_download_dataset.py`
-**What it does:**
-- Downloads datasets (mainly via Hugging Face).
-- If a dataset needs extra loader code (like SEACrowd), this script can fall back to a ZIP download.
+## Limitations (be honest in defense)
 
-**Outputs:**
-- `data/raw/*.csv`
-- `data/raw/seacrowd_ph_fake_news_corpus_zip/...`
+- **Single dataset** (jcblaise/fake_news_filipino) → risk of domain shift.
+- **Truth ≠ style**: detectors can learn stylistic cues, not factual reality.
+- **Synthetic ≠ verified**: generated text is for education only.
 
-**Common tweaks:**
-- Change dataset IDs (top of file).
-- If SEACrowd HF loading fails, you can install `seacrowd` and retry (optional).
-- If ZIP URL changes, update the fallback URLs.
+Mitigations already in the pipeline:
 
-**Datasets used:**
-- Fake News Filipino dataset (Tagalog) [1]
-- WELFake dataset (English) [2]
-- SEACrowd PH fake news corpus wrapper [3] + underlying corpus repo [4]
+- multi‑model agreement gating
+- margin‑based filtering
+- neutral band for uncertain items
 
 ---
 
-## `scripts/02_prepare_dataset.py`
-**What it does:**
-- Loads raw CSVs and converts everything into a **single clean format**:
-  - `id`
-  - `dataset`
-  - `lang`
-  - `text`
-  - `label`
+## References (2020+)
 
-**Label convention (super important):**
-We try to unify everything as:
-- `label = 1` → **FAKE / NOT‑CREDIBLE**
-- `label = 0` → **REAL / CREDIBLE**
+> Links are provided for transparency and for defense citations.
 
-**Outputs:**
-- `data/processed/corpus.csv`
+- Transformers library & transformer fine‑tuning practice:
+  - Wolf et al., 2020. _Transformers: State‑of‑the‑Art Natural Language Processing._ EMNLP Demos. https://aclanthology.org/2020.emnlp-demos.6/
 
-**Common tweaks:**
-- If you discover a dataset’s label meaning is reversed, change the mapping constants at the top.
-- Adjust the WELFake downsampling size if training is too slow on CPU.
+- Graph neural networks (background + methods):
+  - Zhou et al., 2020. _Graph neural networks: A review of methods and applications._ AI Open. https://www.sciencedirect.com/science/article/pii/S2666651021000012
 
----
+- Qlattice / Feyn symbolic regression:
+  - Broløs et al., 2021. _An Approach to Symbolic Regression Using Feyn._ arXiv:2104.05417. https://arxiv.org/abs/2104.05417
 
-## `scripts/03_split_dataset.py`
-**What it does:**
-- Splits `corpus.csv` into:
-  - `train.csv`
-  - `val.csv`
-  - `test.csv`
-- Uses stratification so your label balance doesn’t get wrecked.
+- Hallucination risk in generative models:
+  - Huang et al., 2023. _A Survey on Hallucination in Large Language Models._ arXiv:2311.05232. https://arxiv.org/abs/2311.05232
 
-**Outputs:**
-- `data/processed/train.csv`
-- `data/processed/val.csv`
-- `data/processed/test.csv`
+- Game‑based / inoculation interventions against misinformation:
+  - Roozenbeek et al., 2022. _Psychological inoculation improves resilience against misinformation on social media._ Science Advances. https://www.science.org/doi/10.1126/sciadv.abo6254
+  - Neylan et al., 2023. _How to inoculate against multimodal misinformation._ Scientific Reports. https://www.nature.com/articles/s41598-023-43885-2
 
-**Common tweaks:**
-- Change split ratios (train/val/test).
-- Change stratification rule if you want to stratify by dataset+label instead of label-only.
+- Philippine / Filipino student credibility and MIL context:
+  - Fajardo, 2023. _Filipino students' competency in evaluating the credibility of digital media content._ Journal of Media Literacy Education. https://digitalcommons.uri.edu/jmle/vol15/iss2/7/
+  - Bautista Jr., 2021. _Teaching Media and Information Literacy in Philippine Senior High Schools: Strategies Used and Challenges Faced by Selected Teachers._ Asian Journal on Perspectives in Education. https://ajpe.feu.edu.ph/index.php/ajpe/article/view/7649
+
+- Code‑switching relevance (Tagalog‑English):
+  - Herrera et al., 2022. _A Dataset for Investigating Tagalog‑English Code‑Switching._ LREC. https://aclanthology.org/2022.lrec-1.225/
+
+- MLOps / pipeline engineering best practices:
+  - Google Cloud, 2024. _MLOps: Continuous delivery and automation pipelines in machine learning._ https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning
+
+- Ensemble transformer rationale (example in fake‑news tasks):
+  - LekshmiAmmal et al., 2021. _Ensemble Transformer Model for Fake News Classification_ (CLEF CheckThat! Lab). https://ceur-ws.org/Vol-2936/paper-49.pdf
 
 ---
 
-## `scripts/04_train_robertaMINERVA.py`
-**What it does:**
-- Fine-tunes **RoBERTa Tagalog** (`jcblaise/roberta-tagalog-base`) for 2‑class fake news detection. [7]
+## Layman explanation (for non‑technical readers)
 
-**Expected behavior:**
-- This is your **Tagalog specialist** model.
+We built a “news‑training card factory” for Filipino students:
 
-**Outputs:**
-- `models/roberta_finetuned/`
+1. We teach two AI readers to recognize writing patterns common in real vs fake posts.
+2. We make those two AI readers check each other so the system is less easily fooled.
+3. We also add a “similarity map” (graph model) so the system can see whether a new post looks like known patterns.
+4. We then use an equation (Qlattice) to turn the AI signals into a score students can understand.
+5. Finally, we generate many practice cards and keep only the ones that pass the checks.
 
-**Common tweaks:**
-- `FILTER_LANG`: train RoBERTa on Tagalog-only (recommended) or allow mixed.
-- `MAX_LEN`: 256 is safe; increase if you have GPU + RAM.
-- `per_device_train_batch_size`: increase if GPU memory allows.
-
-**Paper reference:** RoBERTa [5]
-
----
-
-## `scripts/05_train_distilbertMINERVA.py`
-**What it does:**
-- Fine-tunes **DistilBERT multilingual** for the same fake/real classification task. [8]
-
-**Expected behavior:**
-- This is your **multilingual / code-switch friendly** model.
-
-**Outputs:**
-- `models/distilbert_multilingual_finetuned/`
-
-**Common tweaks:**
-- `MAX_TRAIN_SAMPLES`: cap it if CPU training is too slow.
-- Try different multilingual bases later if you want (but keep it documented).
-
-**Paper reference:** DistilBERT [6]
-
----
-
-## `scripts/06_extract_features.py`
-**What it does:**
-Turns your two fine-tuned Transformers into **feature generators**:
-
-For each article:
-- RoBERTa CLS embedding + P(fake)
-- DistilBERT CLS embedding + P(fake)
-- PCA compression (so features become manageable)
-- Simple lexical stats (length, punctuation, digit ratio, etc.)
-
-**Outputs:**
-- `data/features/*_tabular.csv`
-- `data/features/*_embeddings.npz`
-- `models/pca_roberta.joblib`
-- `models/pca_distilbert.joblib`
-
-**Common tweaks:**
-- `PCA_COMPONENTS`: more dims = better accuracy sometimes, slower + bigger RF/GNN.
-- `BATCH_SIZE`: increase if you have GPU.
-- Add more “cheap” features (caps ratio, emoji count, code-switch ratio).
-
----
-
-## `scripts/07_train_random_forest.py`
-**What it does:**
-Trains a **Random Forest** on the tabular features from script 06.
-
-**Why RF?**
-- Strong baseline
-- Easy to debug
-- Feature importance is useful for analysis
-
-**Outputs:**
-- `models/random_forest.joblib`
-- `logs/random_forest_report.txt` (if enabled)
-
-**Common tweaks:**
-- `n_estimators`: higher = better stability but slower.
-- You can try XGBoost/LightGBM later (optional extension).
-
-**Paper reference:** Random Forests (Breiman, 2001) [9]
-
----
-
-## `scripts/08_train_qlattice.py`
-**What it does:**
-Fits a **Qlattice** model (symbolic regression) on the SAME feature table, producing an interpretable equation.
-
-**Outputs:**
-- `models/qlattice_equation.txt`
-- (Sometimes) `logs/qlattice_notes.txt` if install/import fails
-
-**Common tweaks:**
-- If `feyn` install fails on your machine, you can skip this script and still finish the pipeline.
-- Reduce features if Qlattice is too slow (stick to PCA + probabilities + a few lexical stats).
-
-**Paper reference:** Qlattice / symbolic regression approach [10]
-
----
-
-## `scripts/09_train_degnn.py`
-**What it does:**
-Creates a graph of articles:
-- Nodes = articles
-- Edges = kNN similarity in feature space (cosine similarity)
-
-Then trains a GraphSAGE‑style GNN over that graph.
-
-**Outputs:**
-- `models/degnn.pt`
-- `data/features/degnn_preds.csv`
-
-**Common tweaks:**
-- `KNN_K`: more neighbors = denser graph (can help but slower).
-- `MAX_NODES`: lower this if your PC struggles.
-- `EPOCHS`, `HIDDEN`: tuning knobs for model capacity.
-
-**Paper references:**
-- GraphSAGE idea (Hamilton et al.) [11]
-- Rumor / fake info with GNNs (example: BiGCN AAAI) [12]
-
----
-
-## Coming next (GPT module)
-
-- `10_prepare_gpt2_corpus.py`  
-- `11_train_gpt2.py`  
-- `12_generate_validate_export.py`  
-
-The idea is:
-- GPT generates candidate “news cards”
-- Your detection pipeline validates them
-- Only validated content is exported to Unity
-
----
-
-# Common issues (quick fixes)
-
-### “CUDA is False but I have a GPU”
-You installed CPU-only PyTorch. Install a CUDA PyTorch wheel (depends on your GPU + CUDA version).
-
-### “SEACrowd requires dependency ‘seacrowd’”
-Totally normal. Either:
-- install `seacrowd` (optional), OR
-- keep using the ZIP fallback included in script 01.
-
-### “Training is slow”
-- Reduce dataset size (downsample WELFake in script 02 or cap in script 05).
-- Lower `MAX_LEN` (256 is already decent).
-- Use GPU CUDA PyTorch.
-
----
-
-# References
-
-**Datasets**
-
-1. Fake News Filipino (Hugging Face dataset card): https://huggingface.co/datasets/jcblaise/fake_news_filipino  
-2. WELFake (Hugging Face dataset card): https://huggingface.co/datasets/davanstrien/WELFake  
-3. SEACrowd PH fake news corpus (HF dataset card): https://huggingface.co/datasets/SEACrowd/ph_fake_news_corpus  
-4. Philippine Fake News Corpus (source repo): https://github.com/aaroncarlfernandez/Philippine-Fake-News-Corpus  
-
-**Models / Methods**
-
-5. RoBERTa Tagalog base model (HF model card): https://huggingface.co/jcblaise/roberta-tagalog-base  
-6. DistilBERT multilingual cased (HF model card): https://huggingface.co/distilbert/distilbert-base-multilingual-cased  
-7. Breiman (2001). *Random Forests.* Machine Learning 45, 5–32. (Classic RF paper)  
-8. Broløs et al. (2021). *An Approach to Symbolic Regression Using Feyn.* arXiv:2104.05417 — https://arxiv.org/abs/2104.05417  
-
-
----
-
-## License / ethics note
-This repo stores scripts, not the raw datasets. Always follow each dataset’s terms before redistributing any text content.
+The result is a balanced deck of REAL/FAKE/NEUTRAL cards that your Unity game can show, with explanations that help students learn _how to think_, not just what to answer.
