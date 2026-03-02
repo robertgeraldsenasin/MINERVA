@@ -1,27 +1,4 @@
 from __future__ import annotations
-
-"""MINERVA Script 20 (Optional): Pseudonymize names in a CSV/JSONL file.
-
-Use cases
----------
-- If you want to pseudonymize *existing* datasets/splits before sharing/exporting.
-- If you want to re-pseudonymize generated content as a final safety pass.
-
-Examples
---------
-CSV:
-    python scripts/20_pseudonymize_entities.py \
-        --in_file data/processed/train.csv \
-        --out_file data/processed/train_pseudo.csv \
-        --text_key text
-
-JSONL:
-    python scripts/20_pseudonymize_entities.py \
-        --in_file generated/gpt2_synthetic_final.jsonl \
-        --out_file generated/gpt2_synthetic_final_pseudo.jsonl \
-        --text_key text
-"""
-
 import argparse
 import json
 import sys
