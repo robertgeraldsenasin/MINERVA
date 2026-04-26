@@ -1,0 +1,35 @@
+{
+  "get_next_cards_request": {
+    "p_day": 4,
+    "p_limit": 5,
+    "p_candidate_ids": [
+      "A",
+      "B",
+      "C"
+    ]
+  },
+  "get_next_cards_response": {
+    "cards": [
+      {
+        "id": "card_fake_A_0001",
+        "day": 4,
+        "targets": [
+          "A"
+        ],
+        "text": "BREAKING: Kumakalat online na umatras na raw si Candidate A sa city debate..."
+      }
+    ]
+  },
+  "submit_card_result_request": {
+    "card_id": "card_fake_A_0001",
+    "player_verdict": "fake",
+    "shared": false,
+    "confidence": 0.82,
+    "day": 4
+  },
+  "submit_card_result_response": {
+    "status": "ok",
+    "xp_delta": 15,
+    "mistake_type": null
+  }
+}

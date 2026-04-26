@@ -1,0 +1,63 @@
+{
+  "id": "card_fake_A_0001",
+  "text": "BREAKING: Kumakalat online na umatras na raw si Candidate A sa city debate matapos umanong madiskubre ang isang lihim na survey. I-share ito agad bago burahin!",
+  "verdict": "fake",
+  "credibility_percent": 19,
+  "fake_likelihood_percent": 86,
+  "difficulty_bin": "easy",
+  "p_fake_qlattice": 0.86,
+  "qlattice": {
+    "score": 0.86,
+    "threshold": 0.5,
+    "margin": 0.36,
+    "direction": "fake",
+    "pred": 1,
+    "top_factors": [
+      {
+        "feature": "p_roberta_fake",
+        "impact": 0.31,
+        "direction": "up"
+      },
+      {
+        "feature": "p_distil_fake",
+        "impact": 0.24,
+        "direction": "up"
+      },
+      {
+        "feature": "caps_ratio",
+        "impact": 0.11,
+        "direction": "up"
+      },
+      {
+        "feature": "url_count",
+        "impact": -0.06,
+        "direction": "down"
+      }
+    ]
+  },
+  "detectors": {
+    "p_roberta_fake": 0.91,
+    "p_distil_fake": 0.84,
+    "p_degnn_fake": 0.78
+  },
+  "heuristics": {
+    "all_caps": true,
+    "exclamation_count": 1,
+    "url_count": 0,
+    "source_attribution_missing": true,
+    "urgency_phrase_found": true
+  },
+  "explanation": {
+    "summary": "This post looks suspicious because it uses urgency, provides no verifiable source, and makes a strong claim about Candidate A without evidence.",
+    "signals": [
+      "Uses urgency language: 'I-share ito agad'",
+      "No linked source, document, or official statement",
+      "The claim conflicts with the known debate schedule and candidate records"
+    ],
+    "what_to_do": [
+      "Check the official debate organizer announcement or city election bulletin.",
+      "Look for multiple independent reports before sharing.",
+      "Treat screenshots and anonymous survey claims as unverified until confirmed."
+    ]
+  }
+}
