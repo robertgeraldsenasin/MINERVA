@@ -1,0 +1,106 @@
+{
+  "frameworks": {
+    "civic_online_reasoning": [
+      "Who is behind this information?",
+      "What is the evidence?",
+      "What do other sources say?"
+    ],
+    "sift": [
+      "Stop before reacting or sharing.",
+      "Investigate the source or uploader.",
+      "Find better coverage from reliable outlets.",
+      "Trace the quote, image, number, or clip to its original context."
+    ]
+  },
+  "tactics": {
+    "unverified_quote": {
+      "title": "Unverified quote",
+      "why_it_matters": "A quote can be edited, invented, or pulled out of context.",
+      "default_steps": [
+        "Search the exact quote plus the candidate name.",
+        "Look for a full speech, transcript, press release, or debate clip.",
+        "Check whether credible outlets quote the same words in the same context."
+      ]
+    },
+    "unsupported_number": {
+      "title": "Unsupported number",
+      "why_it_matters": "Percentages, rankings, and totals sound persuasive even when the source is missing or misleading.",
+      "default_steps": [
+        "Identify the number being used to persuade you.",
+        "Ask which document, survey, or report produced that number.",
+        "Compare it with the official city or campaign source."
+      ]
+    },
+    "contextless_media": {
+      "title": "Contextless media",
+      "why_it_matters": "Photos, screenshots, and short clips often hide where, when, and why something happened.",
+      "default_steps": [
+        "Find the original upload, not just a repost or edited clip.",
+        "Check the date, location, and the full sequence of events.",
+        "See whether reputable coverage matches the same interpretation."
+      ]
+    },
+    "false_endorsement": {
+      "title": "False endorsement or affiliation",
+      "why_it_matters": "Campaign influence can be exaggerated by claiming support that has no official record.",
+      "default_steps": [
+        "Check whether the endorsement appears in official filings or statements.",
+        "Look for the endorser's own verified page or press release.",
+        "Compare the claim with public records and campaign disclosures."
+      ]
+    },
+    "smear_or_accusation": {
+      "title": "Smear or accusation",
+      "why_it_matters": "Serious allegations trigger emotion quickly, but they still need traceable evidence and context.",
+      "default_steps": [
+        "Separate the accusation from the evidence.",
+        "Look for a police report, court document, or official statement.",
+        "Check whether credible outlets report the same facts without exaggeration."
+      ]
+    },
+    "policy_distortion": {
+      "title": "Policy distortion",
+      "why_it_matters": "Posts often twist a real proposal by changing timing, cost, scope, or approval status.",
+      "default_steps": [
+        "Identify the actual policy or proposal being discussed.",
+        "Open the official program page, ordinance, or campaign costing.",
+        "Compare the post's wording with the source document line by line."
+      ]
+    },
+    "virality_without_evidence": {
+      "title": "Virality used as evidence",
+      "why_it_matters": "A claim does not become true just because many people react to it.",
+      "default_steps": [
+        "Ignore likes and shares for the moment.",
+        "Trace the claim to the earliest traceable source.",
+        "Check whether the source provides evidence, not just reactions."
+      ]
+    },
+    "traceable_update": {
+      "title": "Traceable update",
+      "why_it_matters": "A credible post still needs verification habits; trust should come from evidence, not from tone alone.",
+      "default_steps": [
+        "Identify the source named in the post.",
+        "Verify that the source is official or independently credible.",
+        "Check whether another reliable source reports the same update."
+      ]
+    },
+    "ambiguous_or_uncertain": {
+      "title": "Ambiguous claim",
+      "why_it_matters": "Some posts mix a real issue with weak or missing evidence, so the best response is caution and verification.",
+      "default_steps": [
+        "List what the post clearly shows and what it only implies.",
+        "Find the missing evidence that would settle the unclear part.",
+        "Delay trusting or sharing until you confirm the unclear detail."
+      ]
+    }
+  },
+  "lesson_focus_titles": {
+    "source": "Source tracing",
+    "evidence": "Evidence checking",
+    "context": "Context recovery",
+    "corroboration": "Cross-checking",
+    "statistics": "Number checking",
+    "emotion": "Emotional manipulation awareness"
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "candidates": [
+    {
+      "candidate_id": "A",
+      "name": "Aurelia Santos",
+      "role": "incumbent mayor",
+      "aliases": [
+        "Candidate A",
+        "Aurelia Santos",
+        "Mayor Santos",
+        "Santos"
+      ],
+      "platform_keywords": [
+        "public health",
+        "clinic",
+        "ordinance",
+        "barangay",
+        "town hall",
+        "health expansion",
+        "crime rate",
+        "construction firm",
+        "public filings",
+        "city report"
+      ],
+      "trusted_sources": [
+        "official city website",
+        "city council archive",
+        "barangay attendance records",
+        "city annual report",
+        "public filings"
+      ]
+    },
+    {
+      "candidate_id": "B",
+      "name": "Bruno Villanueva",
+      "role": "mayoral challenger",
+      "aliases": [
+        "Candidate B",
+        "Bruno Villanueva",
+        "Villanueva",
+        "Bruno"
+      ],
+      "platform_keywords": [
+        "student transit",
+        "transit subsidy",
+        "city council approval",
+        "open data",
+        "procurement summaries",
+        "proposal costings",
+        "campaign website",
+        "quarterly report"
+      ],
+      "trusted_sources": [
+        "official campaign website",
+        "city council minutes",
+        "budget office memo",
+        "procurement summary page"
+      ]
+    },
+    {
+      "candidate_id": "C",
+      "name": "Celia Navarro",
+      "role": "law-and-order challenger",
+      "aliases": [
+        "Candidate C",
+        "Celia Navarro",
+        "Navarro",
+        "Celia"
+      ],
+      "platform_keywords": [
+        "law and order",
+        "crime statistics",
+        "city-specific records",
+        "budget plan",
+        "line-item budget",
+        "procurement transparency",
+        "police",
+        "campaign speech"
+      ],
+      "trusted_sources": [
+        "official campaign website",
+        "city police report",
+        "city budget office page",
+        "debate transcript"
+      ]
+    },
+    {
+      "candidate_id": "GENERAL",
+      "name": "the San Isidro election process",
+      "role": "general election context",
+      "aliases": [
+        "city election",
+        "election bulletin",
+        "official notice"
+      ],
+      "platform_keywords": [
+        "debate",
+        "election notice",
+        "bulletin",
+        "city website",
+        "official schedule",
+        "official election bulletin",
+        "city notice",
+        "campaign schedule"
+      ],
+      "trusted_sources": [
+        "official election bulletin",
+        "city website",
+        "city election office"
+      ]
+    }
+  ],
+  "GENERAL": {
+    "name": "the San Isidro election process",
+    "role": "general election context",
+    "aliases": [
+      "city election",
+      "election bulletin",
+      "official notice"
+    ],
+    "platform_keywords": [
+      "debate",
+      "election notice",
+      "bulletin",
+      "city website",
+      "official schedule",
+      "official election bulletin",
+      "city notice",
+      "campaign schedule"
+    ],
+    "trusted_sources": [
+      "official election bulletin",
+      "city website",
+      "city election office"
+    ]
+  }
+}
