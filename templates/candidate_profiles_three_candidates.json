@@ -1,98 +1,130 @@
 {
-  "A": {
-    "candidate_id": "A",
-    "display_name": "Candidate A",
-    "public_name": "Aurelia Santos",
-    "short_name": "Aurelia",
-    "aliases": [
-      "Candidate A",
-      "Aurelia Santos",
-      "Aurelia",
-      "Mayor Aurelia",
-      "Team Bukas"
-    ],
-    "office": "Mayor",
-    "party": "Team Bukas",
-    "persona": "Incumbent, experienced, calm under pressure, and trusted by older constituents.",
-    "policy_focus": [
-      "Public health expansion",
-      "Infrastructure maintenance",
-      "Transparent budgeting"
-    ],
-    "campaign_style": [
-      "Formal speeches",
-      "Community town halls",
-      "Policy-first messaging"
-    ],
-    "blue_truth_ids": [
-      "BT-02",
-      "BT-05",
-      "BT-07",
-      "BT-10",
-      "BT-11"
-    ]
-  },
-  "B": {
-    "candidate_id": "B",
-    "display_name": "Candidate B",
-    "public_name": "Bruno Villanueva",
-    "short_name": "Bruno",
-    "aliases": [
-      "Candidate B",
-      "Bruno Villanueva",
-      "Bruno",
-      "Councilor Bruno",
-      "Bagong Bayan"
-    ],
-    "office": "Mayor",
-    "party": "Bagong Bayan",
-    "persona": "Reform-minded challenger, energetic, data-driven, and popular with younger voters.",
-    "policy_focus": [
-      "Digital governance",
-      "Student transit subsidy",
-      "Open-data transparency"
-    ],
-    "campaign_style": [
-      "Social-media explainers",
-      "Debates",
-      "Volunteer-driven outreach"
-    ],
-    "blue_truth_ids": [
-      "BT-03",
-      "BT-06",
-      "BT-09",
-      "BT-12"
-    ]
-  },
-  "C": {
-    "candidate_id": "C",
-    "display_name": "Candidate C",
-    "public_name": "Celia Navarro",
-    "short_name": "Celia",
-    "aliases": [
-      "Candidate C",
-      "Celia Navarro",
-      "Celia",
-      "Atty. Celia",
-      "Lakas Lungsod"
-    ],
-    "office": "Mayor",
-    "party": "Lakas Lungsod",
-    "persona": "Confrontational outsider, blunt speaker, and strong with law-and-order rhetoric.",
-    "policy_focus": [
-      "Crime crackdown",
-      "Rapid-response command center",
-      "Budget cuts for low-priority programs"
-    ],
-    "campaign_style": [
-      "Aggressive speeches",
-      "Provocative interviews",
-      "Security-centered messaging"
-    ],
-    "blue_truth_ids": [
-      "BT-04",
-      "BT-08",
-      "BT-13"
-    ]
-  }
+  "version": "1.0",
+  "description": "Three fictional candidates with archetype-grounded profiles for the M.I.N.E.R.V.A. simulator. References: Arugay & Baquisal (2022); Schipper (2025); Mendoza et al. (2022, 2023); Bautista (2021).",
+  "candidates": [
+    {
+      "code": "C-RM",
+      "name": "Sen. Reynaldo \"Rey\" Marquez",
+      "short_name": "Marquez",
+      "archetype": "DYNASTIC",
+      "region": "Northern Luzon",
+      "party_acronym": "BSL",
+      "party_name": "Bagong Sigla Lakas",
+      "platform_slogan": "Bagong Sigla, Bagong Bukas",
+      "policy_planks": [
+        "Continued large-scale infrastructure rollout",
+        "Stricter law-and-order policing framework",
+        "Expanded national-unity youth programmes",
+        "Tax reforms favouring agribusiness corridors"
+      ],
+      "indicator_weights": {
+        "REV": 0.85,
+        "ENDO": 0.75,
+        "IMP": 0.65,
+        "DISC": 0.5,
+        "EMO": 0.3,
+        "URG": 0.25,
+        "ANON": 0.45,
+        "MISS": 0.4,
+        "FAB": 0.5,
+        "POL": 0.55,
+        "CONS": 0.3,
+        "RECF": 0.4
+      },
+      "counter_anchors": [
+        "Documented Senate voting record",
+        "Filed Statements of Assets, Liabilities and Net Worth (SALN)",
+        "Floor-debate transcripts and committee reports",
+        "Public infrastructure-project audits"
+      ],
+      "references": [
+        "Arugay & Baquisal (2022)",
+        "Arugay & Mendoza (ISEAS Perspective 2024/53)",
+        "Schipper (Data & Policy 2025)"
+      ]
+    },
+    {
+      "code": "C-IB",
+      "name": "Vice-Mayor Iris Bantayan",
+      "short_name": "Bantayan",
+      "archetype": "REFORMIST",
+      "region": "Central Visayas",
+      "party_acronym": "TNB",
+      "party_name": "Tahanan ng Bayan",
+      "platform_slogan": "Tahanan, Hindi Pamana",
+      "policy_planks": [
+        "Open-data government and procurement transparency",
+        "Public-defender expansion for indigent litigants",
+        "Climate-resilience municipal funds",
+        "Mass-transit modernisation (MRT/LRT integration)",
+        "Universal early-childhood-education subsidy"
+      ],
+      "indicator_weights": {
+        "DISC": 0.85,
+        "CONS": 0.7,
+        "FAB": 0.65,
+        "POL": 0.55,
+        "EMO": 0.45,
+        "URG": 0.3,
+        "ANON": 0.55,
+        "MISS": 0.4,
+        "REV": 0.25,
+        "ENDO": 0.3,
+        "IMP": 0.3,
+        "RECF": 0.45
+      },
+      "counter_anchors": [
+        "Verifiable policy white papers",
+        "Livestreamed town-hall recordings",
+        "Court-published legal briefs and case files",
+        "Civil-society coalition endorsements with named signatories"
+      ],
+      "references": [
+        "Schipper (2025) — red-tagging tactics",
+        "Mendoza et al. (Asian J. Communication, 2023)",
+        "Bautista (FEU AJPE, 2021)"
+      ]
+    },
+    {
+      "code": "C-JS",
+      "name": "Rep. Datu Jomar \"JM\" Salonga",
+      "short_name": "Salonga",
+      "archetype": "POPULIST",
+      "region": "Mindanao party-list (BARMM)",
+      "party_acronym": "PSM",
+      "party_name": "Para sa Masa",
+      "platform_slogan": "Para sa Masa, Para sa Mundo",
+      "policy_planks": [
+        "Doubling of 4Ps conditional-cash-transfer coverage",
+        "OFW remittance-fee protection law",
+        "Cheap-rice ('Tutok-Bigas') programme",
+        "Pro-poor housing acceleration via NHA"
+      ],
+      "indicator_weights": {
+        "EMO": 0.85,
+        "URG": 0.8,
+        "ENDO": 0.75,
+        "RECF": 0.7,
+        "POL": 0.5,
+        "FAB": 0.55,
+        "ANON": 0.5,
+        "MISS": 0.45,
+        "REV": 0.2,
+        "DISC": 0.4,
+        "CONS": 0.35,
+        "IMP": 0.5
+      },
+      "counter_anchors": [
+        "Verified broadcast clips with timestamps",
+        "Commission-on-Audit (COA) reports for sponsored projects",
+        "Filed bills with House voting records",
+        "Constituent-service-office case records"
+      ],
+      "references": [
+        "Mendoza et al. (2022) youth voting & misinformation",
+        "Deinla et al. (Asian J. Political Science, 2022)",
+        "Cadeliña et al. (IEEE ICCECT 2024) — Pinoycchio"
+      ]
+    }
+  ]
 }

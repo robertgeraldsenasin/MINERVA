@@ -1,0 +1,35 @@
+{
+  "input_total": 25,
+  "promoted": 12,
+  "rejected": 0,
+  "days": 3,
+  "cards_per_day": 4,
+  "fake_count": 9,
+  "real_count": 3,
+  "uncertain_count": 0,
+  "candidate_distribution": {
+    "C-RM": 4,
+    "C-IB": 2,
+    "C-JS": 6,
+    "NONE": 0
+  },
+  "tier_distribution": {
+    "novice": 10,
+    "proficient": 2,
+    "advanced": 0
+  },
+  "indicator_coverage": {
+    "MISS": 12,
+    "FAB": 9,
+    "URG": 5,
+    "ANON": 4
+  },
+  "explanation_diversity": {
+    "total_summaries": 12,
+    "unique_summaries": 12,
+    "diversity_pct": 100.0
+  },
+  "bank_version": "1.0",
+  "bank_hash": "86c776531ee78be2",
+  "ts": "2026-05-01T18:53:23.648462+00:00"
+}

@@ -1,0 +1,3067 @@
+[
+  {
+    "id": "gpt2_real_s13_000114",
+    "candidate": "C-RM",
+    "text": "BREAKING: Sa pagkakataong ito, isang Pinoy naman ang nakaiskor ng 3,823 puntos sa fourth quarter. Nagtala si Sen. Reynaldo \"Rey\" Marquez JC ng 15 puntos para sa Sen. Reynaldo \"Rey\" Marquez. Pero may hindi inaasahan si Sen. Reynaldo \"Rey\" Marquez ng 7-of-10 shooting (total) sa second half. Napanatili naman niya ang kanyang double-double sa 4.5 puntos. Umiskor siya ng 20 puntos, 11.5 rebounds at 9 assists habang ang 2.4 na steals ni Sen. Reynaldo \"Rey\" Marquez ay may 6.7 puntos, 7.",
+    "target_label": "real",
+    "verdict": "REAL",
+    "fake_likelihood_percent": 0.09244033055204573,
+    "credibility_percent": 99.90755966944795,
+    "difficulty_bin": "easy",
+    "fired_indicators": [
+      "URG",
+      "MISS",
+      "FAB"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": true,
+        "evidence": [
+          "breaking",
+          "BREAKING"
+        ],
+        "score": 0.4,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": true,
+        "evidence": [
+          " Marquez JC ng 15 puntos para sa Sen. Reynaldo ",
+          " Marquez. Pero may hindi inaasahan si Sen. Reynaldo "
+        ],
+        "score": 1.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 1.0,
+      "ind_urg_score": 0.4,
+      "ind_anon_fired": 0.0,
+      "ind_anon_score": 0.0,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 1.0,
+      "ind_fab_score": 1.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 89.0,
+      "len_chars": 484.0,
+      "num_urls": 0.0,
+      "num_quotes": 3.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.06611570247933884,
+      "excl_count": 0.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.0009244033055204573,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": -0.49907559669447954,
+      "pred": 0,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": -21.834232330322266,
+          "baseline": -3.5690207,
+          "delta_margin": -0.30542182085190167,
+          "direction": "push_real"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": 1.8333325386047363,
+          "baseline": 0.06387472,
+          "delta_margin": 0.0004249686226451832,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": -0.6174453496932983,
+          "baseline": 0.19161405,
+          "delta_margin": -0.00038604776235567906,
+          "direction": "push_real"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.0016244977014139295,
+      "p_distil_fake": 0.016174202784895897,
+      "p_degnn_fake": 0.0020039607770740986,
+      "p_ensemble_fake": 0.008899350243154913
+    },
+    "heuristics": {
+      "url_count": 0.0,
+      "exclamation_count": 0.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.09180327868852459
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.6681876677731211,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "novice",
+      "summary": "This post looks credible (estimated fake-likelihood 0%). Notice what's *here*: a named outlet, a verifiable date, a neutral tone. Reward yourself for spotting it — that's real-world signal.",
+      "indicator_phrases": [
+        {
+          "indicator": "CREDIBLE",
+          "phrase": "Notice what's *here*: a named outlet, a verifiable date, a neutral tone. Reward yourself for spotting it — that's real-world signal.",
+          "bank_ref": "CREDIBLE/v1/n2",
+          "sift_move": "Find better coverage from a known outlet."
+        }
+      ],
+      "sift_move": "Find better coverage from a known outlet.",
+      "credible_counter_card_id": null,
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.674793+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 1
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Entity E",
+        "Candidate JEB",
+        "Candidate JEY",
+        "Entity H"
+      ]
+    },
+    "day": 1
+  },
+  {
+    "id": "gpt2_fake_s13_000118",
+    "candidate": "C-JS",
+    "text": "Balita: Ayon sa mga pulis, may mga kasama tayong isang babae na nakapatong sa ulo ng isang babae sa lungsod ng Quezon. Agad na tumakas ang babae palayo sa lugar ng krimen. Nang matiyak na patay na ito, tumakbo ang babae sa Barangay Masinag. Hindi naman daw nanlaban ang babae pero agad itong tinutukan ng baril ng isa pang lalaki. Sinamantala ng mga otoridad ang paghahanap sa biktima at tuluyang nakatakas ang suspek. Sa isinagawang follow-up operation ng Candidate KD of the Philippines (AFP), nadakip ang suspek na si Rep. Datu Jomar \"JM\" Salonga KCQ.",
+    "target_label": "fake",
+    "verdict": "FAKE",
+    "fake_likelihood_percent": 95.53034975920579,
+    "credibility_percent": 4.469650240794209,
+    "difficulty_bin": "easy",
+    "fired_indicators": [
+      "ANON",
+      "MISS"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": false,
+        "evidence": [
+          "AFP",
+          "KCQ"
+        ],
+        "score": 0.2,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": true,
+        "evidence": [
+          "daw"
+        ],
+        "score": 0.4,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 0.0,
+      "ind_urg_score": 0.2,
+      "ind_anon_fired": 1.0,
+      "ind_anon_score": 0.4,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 0.0,
+      "ind_fab_score": 0.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 96.0,
+      "len_chars": 554.0,
+      "num_urls": 0.0,
+      "num_quotes": 0.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.04693140794223827,
+      "excl_count": 0.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.9553034975920579,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": 0.4553034975920579,
+      "pred": 1,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": 9.755573272705078,
+          "baseline": -3.5690207,
+          "delta_margin": 0.7633854250517667,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": 1.5782902240753174,
+          "baseline": 0.19161405,
+          "delta_margin": 0.07713667552971692,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": -4.073465347290039,
+          "baseline": 0.06387472,
+          "delta_margin": -0.03373874555529932,
+          "direction": "push_real"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.9840463995933533,
+      "p_distil_fake": 0.4340626895427704,
+      "p_degnn_fake": 0.7337785959243774,
+      "p_ensemble_fake": 0.7090545445680618
+    },
+    "heuristics": {
+      "url_count": 0.0,
+      "exclamation_count": 0.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.05116279069767442
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.8021837391227805,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "novice",
+      "summary": "This post about Rep. Datu Jomar \"JM\" Salonga looks suspicious (estimated fake-likelihood 96%). 2 misinformation cues fired: ANON, MISS. Watch for *'insiders revealed'* with nobody named. If no one will sign their name to a claim, it isn't reportable yet. Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job.",
+      "indicator_phrases": [
+        {
+          "indicator": "ANON",
+          "phrase": "Watch for *'insiders revealed'* with nobody named. If no one will sign their name to a claim, it isn't reportable yet.",
+          "bank_ref": "ANON/v1.0/n2",
+          "sift_move": "Investigate the source — who is publishing this?"
+        },
+        {
+          "indicator": "MISS",
+          "phrase": "Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job.",
+          "bank_ref": "MISS/v1.0/n2",
+          "sift_move": "Trace claims and quotes back to the original document."
+        }
+      ],
+      "sift_move": "Investigate the source — who is publishing this?",
+      "credible_counter_card_id": "gpt2_real_s13_000114",
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.646273+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 0
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Entity L"
+      ]
+    },
+    "day": 1
+  },
+  {
+    "id": "gpt2_fake_s13_000373",
+    "candidate": "C-JS",
+    "text": "Balita: Inakusahan ni Rep. Datu Jomar \"JM\" Salonga si Rep. Datu Jomar \"JM\" Salonga na sangkot sa paggawa at pagbebenta ng mga iligal na paputok sa Bocaue, Bulacan. Ayon sa opisyal ng kapulisan, isang impormante ang nagpondo sa operasyon ng naturang mga paputok. Nakumpiska mula sa mga suspek ang mga malalakas na uri ng paputok at fireworks. Ang isang tao na walang takot sa buhay ay maaaring maging biktima ng \"tanim bala\" o mga taong sangkot sa illegal na droga. Ayon sa isa sa mga naging pahayag ng ating Presidente ay kailangan daw talagang tutukan ng gobyerno ang pagresolba sa problema.",
+    "target_label": "fake",
+    "verdict": "FAKE",
+    "fake_likelihood_percent": 99.93106811948968,
+    "credibility_percent": 0.06893188051031984,
+    "difficulty_bin": "easy",
+    "fired_indicators": [
+      "ANON",
+      "MISS",
+      "FAB"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": true,
+        "evidence": [
+          "daw"
+        ],
+        "score": 0.4,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": true,
+        "evidence": [
+          " Salonga na sangkot sa paggawa at pagbebenta ng mga iligal na paputok sa Bocaue, Bulacan. Ayon sa opisyal ng kapulisan, "
+        ],
+        "score": 1.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 0.0,
+      "ind_urg_score": 0.0,
+      "ind_anon_fired": 1.0,
+      "ind_anon_score": 0.4,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 1.0,
+      "ind_fab_score": 1.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 101.0,
+      "len_chars": 592.0,
+      "num_urls": 0.0,
+      "num_quotes": 2.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.03547297297297297,
+      "excl_count": 0.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.9993106811948967,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": 0.49931068119489674,
+      "pred": 1,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": 16.768585205078125,
+          "baseline": -3.5690207,
+          "delta_margin": 0.3979621219761146,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": 2.4753191471099854,
+          "baseline": 0.19161405,
+          "delta_margin": 0.006546603683978636,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": -2.4135665893554688,
+          "baseline": 0.06387472,
+          "delta_margin": -0.00039826827073730087,
+          "direction": "push_real"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.9977120161056519,
+      "p_distil_fake": 0.8895472884178162,
+      "p_degnn_fake": 0.9541162252426147,
+      "p_ensemble_fake": 0.943629652261734
+    },
+    "heuristics": {
+      "url_count": 0.0,
+      "exclamation_count": 0.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.033112582781456956
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.8021837391227805,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "novice",
+      "summary": "This post about Rep. Datu Jomar \"JM\" Salonga looks suspicious (estimated fake-likelihood 100%). 3 misinformation cues fired: ANON, MISS, FAB. Watch for *'insiders revealed'* with nobody named. If no one will sign their name to a claim, it isn't reportable yet. There's no link, no document, no photo with caption — the claim hangs in the air. Big claims need receipts. Long quotes attributed to politicians should always come with a transcript or video. No transcript = treat as alleged.",
+      "indicator_phrases": [
+        {
+          "indicator": "ANON",
+          "phrase": "Watch for *'insiders revealed'* with nobody named. If no one will sign their name to a claim, it isn't reportable yet.",
+          "bank_ref": "ANON/v1.0/n2",
+          "sift_move": "Investigate the source — who is publishing this?"
+        },
+        {
+          "indicator": "MISS",
+          "phrase": "There's no link, no document, no photo with caption — the claim hangs in the air. Big claims need receipts.",
+          "bank_ref": "MISS/v1.0/n1",
+          "sift_move": "Find better coverage from a known outlet."
+        },
+        {
+          "indicator": "FAB",
+          "phrase": "Long quotes attributed to politicians should always come with a transcript or video. No transcript = treat as alleged.",
+          "bank_ref": "FAB/v1.0/n2",
+          "sift_move": "Trace claims and quotes back to the original document."
+        }
+      ],
+      "sift_move": "Investigate the source — who is publishing this?",
+      "credible_counter_card_id": "gpt2_real_s13_000114",
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.655233+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 1
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Entity D",
+        "Candidate EJX"
+      ]
+    },
+    "day": 1
+  },
+  {
+    "id": "gpt2_fake_s13_000246",
+    "candidate": "C-JS",
+    "text": "Ulat: Ang mga tanong ng mga kababayan natin ay bakit hindi natin natugunan ang isyu ng \"morning\" sa Boracay sa Malay, Aklan at sa halip ay hayaan ang mga lokal na pamahalaan na linisin ang isla. Sa isang Facebook post, sinabi ng mga Malay na isa ang mga isla sa kanilang mga lugar at hindi ito dapat gawin ng mga lokal na pamahalaan. Ang mga isla sa isla ay mga isla na rin ng mga taong naninirahan sa naturang isla. Ayon kay Rep. Datu Jomar \"JM\" Salonga EA, wala naman daw anumang batas na kailangan para sa rehabilitasyon ng Boracay para na rin sa mga taong bibisita sa isla.",
+    "target_label": "fake",
+    "verdict": "FAKE",
+    "fake_likelihood_percent": 98.00240322759902,
+    "credibility_percent": 1.997596772400982,
+    "difficulty_bin": "easy",
+    "fired_indicators": [
+      "ANON",
+      "MISS",
+      "FAB"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": true,
+        "evidence": [
+          "daw"
+        ],
+        "score": 0.4,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": true,
+        "evidence": [
+          " sa Boracay sa Malay, Aklan at sa halip ay hayaan ang mga lokal na pamahalaan na linisin ang isla. Sa isang Facebook pos"
+        ],
+        "score": 1.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 0.0,
+      "ind_urg_score": 0.0,
+      "ind_anon_fired": 1.0,
+      "ind_anon_score": 0.4,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 1.0,
+      "ind_fab_score": 1.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 109.0,
+      "len_chars": 577.0,
+      "num_urls": 0.0,
+      "num_quotes": 1.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.03292894280762565,
+      "excl_count": 0.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.9800240322759901,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": 0.4800240322759901,
+      "pred": 1,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": 14.223952293395996,
+          "baseline": -3.5690207,
+          "delta_margin": 0.8724397598189108,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": -4.083757400512695,
+          "baseline": 0.06387472,
+          "delta_margin": -0.015189603329599843,
+          "direction": "push_real"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": 0.842306911945343,
+          "baseline": 0.19161405,
+          "delta_margin": 0.009894004822696756,
+          "direction": "push_fake"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.9956276416778564,
+      "p_distil_fake": 0.561539888381958,
+      "p_degnn_fake": 0.9027374386787415,
+      "p_ensemble_fake": 0.7785837650299072
+    },
+    "heuristics": {
+      "url_count": 0.0,
+      "exclamation_count": 0.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.033936651583710405
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.6681876677731211,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "novice",
+      "summary": "This post about Rep. Datu Jomar \"JM\" Salonga looks suspicious (estimated fake-likelihood 98%). 3 misinformation cues fired: ANON, MISS, FAB. Watch for *'insiders revealed'* with nobody named. If no one will sign their name to a claim, it isn't reportable yet. Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job. Long quotes attributed to politicians should always come with a transcript or video. No transcript = treat as alleged.",
+      "indicator_phrases": [
+        {
+          "indicator": "ANON",
+          "phrase": "Watch for *'insiders revealed'* with nobody named. If no one will sign their name to a claim, it isn't reportable yet.",
+          "bank_ref": "ANON/v1.0/n2",
+          "sift_move": "Investigate the source — who is publishing this?"
+        },
+        {
+          "indicator": "MISS",
+          "phrase": "Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job.",
+          "bank_ref": "MISS/v1.0/n2",
+          "sift_move": "Trace claims and quotes back to the original document."
+        },
+        {
+          "indicator": "FAB",
+          "phrase": "Long quotes attributed to politicians should always come with a transcript or video. No transcript = treat as alleged.",
+          "bank_ref": "FAB/v1.0/n2",
+          "sift_move": "Trace claims and quotes back to the original document."
+        }
+      ],
+      "sift_move": "Investigate the source — who is publishing this?",
+      "credible_counter_card_id": "gpt2_real_s13_000114",
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.651720+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 1
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Entity C"
+      ]
+    },
+    "day": 1
+  },
+  {
+    "id": "gpt2_real_s13_000083",
+    "candidate": "C-JS",
+    "text": "Ulat: Sa isang panayam ng CNN Philippines, sinabi ni Candidate IZ Rep. Datu Jomar \"JM\" Salonga na dapat ay wala ng saysay ang mga binitiwang salita ni Candidate IZ sa isang talumpati niya tungkol sa isyu ng droga. \"Positive tayo sa lahat ng ginagawa natin, at siyempre, kung hindi mo na lang sasabihin sa kanila na 'yan, hindi mo talaga nagagawa. So, dapat na lahat tayo ay may karapatan,\" sabi ni De Lima. \"Sige po tayo magtiis sa mga salita na iyon na kung may pagkakataon sila na magsalita para walang nangyari sa ating kababayan.",
+    "target_label": "real",
+    "verdict": "REAL",
+    "fake_likelihood_percent": 1.362264148412325,
+    "credibility_percent": 98.63773585158768,
+    "difficulty_bin": "easy",
+    "fired_indicators": [
+      "MISS",
+      "FAB"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": false,
+        "evidence": [
+          "CNN"
+        ],
+        "score": 0.1,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": true,
+        "evidence": [
+          " Salonga na dapat ay wala ng saysay ang mga binitiwang salita ni Candidate IZ sa isang talumpati niya tungkol sa isyu ng"
+        ],
+        "score": 1.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 0.0,
+      "ind_urg_score": 0.1,
+      "ind_anon_fired": 0.0,
+      "ind_anon_score": 0.0,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 1.0,
+      "ind_fab_score": 1.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 95.0,
+      "len_chars": 533.0,
+      "num_urls": 0.0,
+      "num_quotes": 2.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.043151969981238276,
+      "excl_count": 0.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.01362264148412325,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": -0.48637735851587677,
+      "pred": 0,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": -8.361867904663086,
+          "baseline": -3.5690207,
+          "delta_margin": -0.05152354011770327,
+          "direction": "push_real"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": -3.3573713302612305,
+          "baseline": 0.06387472,
+          "delta_margin": -0.02985394815105674,
+          "direction": "push_real"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": -0.7342591881752014,
+          "baseline": 0.19161405,
+          "delta_margin": -0.0063393432414281525,
+          "direction": "push_real"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.14988383650779724,
+      "p_distil_fake": 0.08791470527648926,
+      "p_degnn_fake": 0.017497355118393898,
+      "p_ensemble_fake": 0.11889927089214325
+    },
+    "heuristics": {
+      "url_count": 0.0,
+      "exclamation_count": 0.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.050970873786407765
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.8021837391227805,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "novice",
+      "summary": "This post looks credible (estimated fake-likelihood 1%). Good news — this post names its source, links to a public document, and avoids loaded language. That's what credible looks like.",
+      "indicator_phrases": [
+        {
+          "indicator": "CREDIBLE",
+          "phrase": "Good news — this post names its source, links to a public document, and avoids loaded language. That's what credible looks like.",
+          "bank_ref": "CREDIBLE/v1/n1",
+          "sift_move": "Find better coverage from a known outlet."
+        }
+      ],
+      "sift_move": "Find better coverage from a known outlet.",
+      "credible_counter_card_id": null,
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.669993+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 1
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Candidate HEQ"
+      ]
+    },
+    "day": 2
+  },
+  {
+    "id": "gpt2_fake_s13_000489",
+    "candidate": "C-RM",
+    "text": "Ulat: Matapos ang apat na taong pagkakatakas ng dating pulis na si Sen. Reynaldo \"Rey\" Marquez SL, nag-iwan ng sariling baril ang isang hindi nakilalang salarin sa isang bahay sa Quezon City, nitong Lunes ng gabi. Sa isang social media post, sinabi ni PNP Sen. Reynaldo \"Rey\" Marquez na ito ang unang pagkakataon na nag-viral ang mga video kung saan makikita ang mga suspek sa pagpatay sa isang dating pulis na si Sen. Reynaldo \"Rey\" Marquez. Sa mga litrato na ipinakita ng ilang netizen, makikita ang bangkay ni Candidate EB na may nakasulat na \"Sen. Reynaldo \"Rey\" Marquez\".",
+    "target_label": "fake",
+    "verdict": "FAKE",
+    "fake_likelihood_percent": 99.68468461738647,
+    "credibility_percent": 0.31531538261353376,
+    "difficulty_bin": "easy",
+    "fired_indicators": [
+      "MISS",
+      "FAB"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": false,
+        "evidence": [
+          "PNP"
+        ],
+        "score": 0.1,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": true,
+        "evidence": [
+          " Marquez SL, nag-iwan ng sariling baril ang isang hindi nakilalang salarin sa isang bahay sa Quezon City, nitong Lunes n",
+          " Marquez na ito ang unang pagkakataon na nag-viral ang mga video kung saan makikita ang mga suspek sa pagpatay sa isang "
+        ],
+        "score": 1.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 0.0,
+      "ind_urg_score": 0.1,
+      "ind_anon_fired": 0.0,
+      "ind_anon_score": 0.0,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 1.0,
+      "ind_fab_score": 1.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 100.0,
+      "len_chars": 576.0,
+      "num_urls": 0.0,
+      "num_quotes": 4.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.05381944444444445,
+      "excl_count": 0.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.9968468461738647,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": 0.49684684617386465,
+      "pred": 1,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": 16.20736312866211,
+          "baseline": -3.5690207,
+          "delta_margin": 0.7123595222808308,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": 1.5743992328643799,
+          "baseline": 0.19161405,
+          "delta_margin": 0.006099533886520736,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": -2.5811920166015625,
+          "baseline": 0.06387472,
+          "delta_margin": -0.0018953932322532951,
+          "direction": "push_real"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.9973084926605225,
+      "p_distil_fake": 0.7651863098144531,
+      "p_degnn_fake": 0.9680248498916626,
+      "p_ensemble_fake": 0.8812474012374878
+    },
+    "heuristics": {
+      "url_count": 0.0,
+      "exclamation_count": 0.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.06601466992665037
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.8021837391227805,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "novice",
+      "summary": "This post about Sen. Reynaldo \"Rey\" Marquez looks suspicious (estimated fake-likelihood 100%). 2 misinformation cues fired: MISS, FAB. Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job. A direct quote from a public figure with no video, transcript, or news link is suspicious — anyone could write quote marks around anything.",
+      "indicator_phrases": [
+        {
+          "indicator": "MISS",
+          "phrase": "Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job.",
+          "bank_ref": "MISS/v1.0/n2",
+          "sift_move": "Trace claims and quotes back to the original document."
+        },
+        {
+          "indicator": "FAB",
+          "phrase": "A direct quote from a public figure with no video, transcript, or news link is suspicious — anyone could write quote marks around anything.",
+          "bank_ref": "FAB/v1.0/n1",
+          "sift_move": "Trace claims and quotes back to the original document."
+        }
+      ],
+      "sift_move": "Trace claims and quotes back to the original document.",
+      "credible_counter_card_id": "gpt2_real_s13_000083",
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.658964+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 1
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Entity J",
+        "Candidate DOO",
+        "Candidate CYO",
+        "Entity D"
+      ]
+    },
+    "day": 2
+  },
+  {
+    "id": "gpt2_fake_s13_000097",
+    "candidate": "C-RM",
+    "text": "Update: Sen. Reynaldo \"Rey\" Marquez DS ay isang website na nag-aalok ng trabaho sa mga jobseekers. Ang website ay matatagpuan sa website ng Candidate DS.net.com, na nakabase sa ika-29 na estado ng Canada. Sa naturang website, ang mga aplikante ay maaaring mag-apply ng trabaho sa pamamagitan ng kanilang mga job fair. Ang kanilang website ay makikita sa www.www.gov.ph.ph.com.ph at sa www.com.ph/www.passport.com-Agric.com-Post.com.",
+    "target_label": "fake",
+    "verdict": "FAKE",
+    "fake_likelihood_percent": 64.14408427445949,
+    "credibility_percent": 35.85591572554051,
+    "difficulty_bin": "hard",
+    "fired_indicators": [
+      "MISS"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 0.0,
+      "ind_urg_score": 0.0,
+      "ind_anon_fired": 0.0,
+      "ind_anon_score": 0.0,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 0.0,
+      "ind_fab_score": 0.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 81.0,
+      "len_chars": 432.0,
+      "num_urls": 0.0,
+      "num_quotes": 0.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.037037037037037035,
+      "excl_count": 0.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.6414408427445949,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": 0.1414408427445949,
+      "pred": 1,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": -0.04255044460296631,
+          "baseline": -3.5690207,
+          "delta_margin": 0.2892149279920874,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": 0.9060801863670349,
+          "baseline": 0.19161405,
+          "delta_margin": 0.11134097121335174,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": 0.10305500030517578,
+          "baseline": 0.06387472,
+          "delta_margin": 0.0031435894435736245,
+          "direction": "push_fake"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.7012261152267456,
+      "p_distil_fake": 0.8215513825416565,
+      "p_degnn_fake": 0.804648220539093,
+      "p_ensemble_fake": 0.761388748884201
+    },
+    "heuristics": {
+      "url_count": 2.0,
+      "exclamation_count": 0.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.04294478527607362
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.8021837391227805,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "novice",
+      "summary": "This post about Sen. Reynaldo \"Rey\" Marquez looks suspicious (estimated fake-likelihood 64%). 1 misinformation cue fired: MISS. Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job.",
+      "indicator_phrases": [
+        {
+          "indicator": "MISS",
+          "phrase": "Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job.",
+          "bank_ref": "MISS/v1.0/n2",
+          "sift_move": "Trace claims and quotes back to the original document."
+        }
+      ],
+      "sift_move": "Trace claims and quotes back to the original document.",
+      "credible_counter_card_id": "gpt2_real_s13_000083",
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.644491+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 0
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Entity K"
+      ]
+    },
+    "day": 2
+  },
+  {
+    "id": "gpt2_fake_s13_000136",
+    "candidate": "C-RM",
+    "text": "Paalala: \"Good luck! 'Wag kayong mang-apak ng gulo! Gawin ninyo yung buhay namin!\" - Sen. Reynaldo \"Rey\" Marquez) -- Sen. Reynaldo \"Rey\" Marquez | ABS-CBN | Sen. Reynaldo \"Rey\" Marquez, GMA News3 Kinondena ni Sen. Reynaldo \"Rey\" Marquez O Go ang mga pahayag ng ilang kababayan natin na may mga kababayan tayong nagugutom dahil sa patuloy na pagtaas ng presyo ng mga bilihin at serbisyo. Ayon sa senador, dapat lang mag-ingat ang mga tao sa maling pamamalakad. \"Kung may mga kababayan tayong nagugutom, hindi po ito dapat mag-alala.",
+    "target_label": "fake",
+    "verdict": "FAKE",
+    "fake_likelihood_percent": 99.5407223217249,
+    "credibility_percent": 0.45927767827510024,
+    "difficulty_bin": "easy",
+    "fired_indicators": [
+      "URG",
+      "MISS",
+      "FAB"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": true,
+        "evidence": [
+          "ABS",
+          "CBN",
+          "GMA"
+        ],
+        "score": 0.6000000000000001,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": true,
+        "evidence": [
+          "Good luck! 'Wag kayong mang-apak ng gulo! Gawin ninyo yung buhay namin!",
+          " Marquez O Go ang mga pahayag ng ilang kababayan natin na may mga kababayan tayong nagugutom dahil sa patuloy na pagtaas"
+        ],
+        "score": 1.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 1.0,
+      "ind_urg_score": 0.6000000000000001,
+      "ind_anon_fired": 0.0,
+      "ind_anon_score": 0.0,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 1.0,
+      "ind_fab_score": 1.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 88.0,
+      "len_chars": 531.0,
+      "num_urls": 0.0,
+      "num_quotes": 5.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.06591337099811675,
+      "excl_count": 3.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.9954072232172491,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": 0.49540722321724906,
+      "pred": 1,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": 17.586563110351562,
+          "baseline": -3.5690207,
+          "delta_margin": 0.8493161950920264,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": -0.9326576590538025,
+          "baseline": 0.19161405,
+          "delta_margin": -0.0016587564466379323,
+          "direction": "push_real"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": -0.6019492149353027,
+          "baseline": 0.06387472,
+          "delta_margin": -0.0009468654900902651,
+          "direction": "push_real"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.9981440305709839,
+      "p_distil_fake": 0.9280010461807251,
+      "p_degnn_fake": 0.9764959216117859,
+      "p_ensemble_fake": 0.9630725383758545
+    },
+    "heuristics": {
+      "url_count": 0.0,
+      "exclamation_count": 3.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.08967391304347826
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.8021837391227805,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "novice",
+      "summary": "This post about Sen. Reynaldo \"Rey\" Marquez looks suspicious (estimated fake-likelihood 100%). 3 misinformation cues fired: URG, MISS, FAB. When a post tells you to act *bago mahuli* or *before it's deleted*, it's training you to skip checking. Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job. A direct quote from a public figure with no video, transcript, or news link is suspicious — anyone could write quote marks around anything.",
+      "indicator_phrases": [
+        {
+          "indicator": "URG",
+          "phrase": "When a post tells you to act *bago mahuli* or *before it's deleted*, it's training you to skip checking.",
+          "bank_ref": "URG/v1.0/n2",
+          "sift_move": "Trace claims and quotes back to the original document."
+        },
+        {
+          "indicator": "MISS",
+          "phrase": "Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job.",
+          "bank_ref": "MISS/v1.0/n2",
+          "sift_move": "Trace claims and quotes back to the original document."
+        },
+        {
+          "indicator": "FAB",
+          "phrase": "A direct quote from a public figure with no video, transcript, or news link is suspicious — anyone could write quote marks around anything.",
+          "bank_ref": "FAB/v1.0/n1",
+          "sift_move": "Trace claims and quotes back to the original document."
+        }
+      ],
+      "sift_move": "Trace claims and quotes back to the original document.",
+      "credible_counter_card_id": "gpt2_real_s13_000083",
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.647960+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 1
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Sen. Entity",
+        "Candidate GZF"
+      ]
+    },
+    "day": 2
+  },
+  {
+    "id": "gpt2_real_s13_000016",
+    "candidate": "C-IB",
+    "text": "Paalala: Sa isang press conference, sinabi ni Candidate W, hepe ng AFP-Vice-Mayor Iris Bantayan, na hindi nila maaaring palampasin ang banta ng pambobomba sa Vice-Mayor Iris Bantayan. Dahil dito, posibleng sa kasalukuyan ay hindi na muna tatanggap ng mga miyembro ng Candidate CXXH (PNP) ang mga teroristang grupo. \"We will not let this incident be a threat to us. We will not tolerate such acts that we are going to do but we will not tolerate such attacks,\" ayon kay Vice-Mayor Iris Bantayan.",
+    "target_label": "real",
+    "verdict": "REAL",
+    "fake_likelihood_percent": 0.13495044056214722,
+    "credibility_percent": 99.86504955943785,
+    "difficulty_bin": "easy",
+    "fired_indicators": [
+      "URG",
+      "MISS",
+      "FAB"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": true,
+        "evidence": [
+          "AFP",
+          "CXXH",
+          "PNP"
+        ],
+        "score": 0.30000000000000004,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": true,
+        "evidence": [
+          "We will not let this incident be a threat to us. We will not tolerate such acts that we are going to do but we will not "
+        ],
+        "score": 1.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 1.0,
+      "ind_urg_score": 0.30000000000000004,
+      "ind_anon_fired": 0.0,
+      "ind_anon_score": 0.0,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 1.0,
+      "ind_fab_score": 1.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 87.0,
+      "len_chars": 494.0,
+      "num_urls": 0.0,
+      "num_quotes": 1.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.06072874493927125,
+      "excl_count": 0.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.0013495044056214722,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": -0.4986504955943785,
+      "pred": 0,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": -16.348329544067383,
+          "baseline": -3.5690207,
+          "delta_margin": -0.09051473381686653,
+          "direction": "push_real"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": -2.164407968521118,
+          "baseline": 0.19161405,
+          "delta_margin": -0.001404149318638248,
+          "direction": "push_real"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": -1.3505916595458984,
+          "baseline": 0.06387472,
+          "delta_margin": -0.0008569205380106748,
+          "direction": "push_real"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.011865677312016487,
+      "p_distil_fake": 0.031128792092204094,
+      "p_degnn_fake": 0.005958113819360733,
+      "p_ensemble_fake": 0.02149723470211029
+    },
+    "heuristics": {
+      "url_count": 0.0,
+      "exclamation_count": 0.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.07734806629834254
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.8909030415099183,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "novice",
+      "summary": "This post looks credible (estimated fake-likelihood 0%). Good news — this post names its source, links to a public document, and avoids loaded language. That's what credible looks like.",
+      "indicator_phrases": [
+        {
+          "indicator": "CREDIBLE",
+          "phrase": "Good news — this post names its source, links to a public document, and avoids loaded language. That's what credible looks like.",
+          "bank_ref": "CREDIBLE/v1/n1",
+          "sift_move": "Find better coverage from a known outlet."
+        }
+      ],
+      "sift_move": "Find better coverage from a known outlet.",
+      "credible_counter_card_id": null,
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.662173+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 1
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Candidate CXK",
+        "Candidate CXF",
+        "Entity C"
+      ]
+    },
+    "day": 3
+  },
+  {
+    "id": "gpt2_fake_s13_000206",
+    "candidate": "C-JS",
+    "text": "Ulat: Ang huling pagkakataon ay natagpuan ang bangkay ni Candidate W. Sa video na ito, makikitang may kausap na lalaki sa labas ng bahay ng biktima. Tinambangan ng hindi pa kilalang salarin si Rep. Datu Jomar \"JM\" Salonga W sa kaniyang kotse habang naglalakad. Ayon sa impormasyon mula sa Candidate W at Rep. Datu Jomar \"JM\" Salonga, pinatay daw ito ng salarin sa pamamagitan ng baril at saka ginahasa. May palatandaan daw na may relasyon sa droga ang biktima. Dahil dito, kaagad na tumakas ang salarin sakay ng motorsiklo. Ayon sa pulisya, nagtamo ito ng mga tama ng bala sa batok at dibdib.",
+    "target_label": "fake",
+    "verdict": "FAKE",
+    "fake_likelihood_percent": 99.92811112269854,
+    "credibility_percent": 0.07188887730146121,
+    "difficulty_bin": "easy",
+    "fired_indicators": [
+      "URG",
+      "ANON",
+      "MISS",
+      "FAB"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": true,
+        "evidence": [
+          "kaagad"
+        ],
+        "score": 0.3,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": true,
+        "evidence": [
+          "daw",
+          "daw"
+        ],
+        "score": 0.8,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": true,
+        "evidence": [
+          " Salonga W sa kaniyang kotse habang naglalakad. Ayon sa impormasyon mula sa Candidate W at Rep. Datu Jomar "
+        ],
+        "score": 1.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 1.0,
+      "ind_urg_score": 0.3,
+      "ind_anon_fired": 1.0,
+      "ind_anon_score": 0.8,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 1.0,
+      "ind_fab_score": 1.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 103.0,
+      "len_chars": 592.0,
+      "num_urls": 0.0,
+      "num_quotes": 1.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.04222972972972973,
+      "excl_count": 0.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.9992811112269854,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": 0.4992811112269854,
+      "pred": 1,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": 16.190723419189453,
+          "baseline": -3.5690207,
+          "delta_margin": 0.36185746572182087,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": 2.2600855827331543,
+          "baseline": 0.19161405,
+          "delta_margin": 0.004545976828845388,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": -0.9340896606445312,
+          "baseline": 0.06387472,
+          "delta_margin": -0.00021090857979066957,
+          "direction": "push_real"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.9972338080406189,
+      "p_distil_fake": 0.8908132314682007,
+      "p_degnn_fake": 0.9743573665618896,
+      "p_ensemble_fake": 0.9440235197544098
+    },
+    "heuristics": {
+      "url_count": 0.0,
+      "exclamation_count": 0.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.042316258351893093
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.8021837391227805,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "novice",
+      "summary": "This post about Rep. Datu Jomar \"JM\" Salonga looks suspicious (estimated fake-likelihood 100%). 3 misinformation cues fired: URG, ANON, MISS. When a post tells you to act *bago mahuli* or *before it's deleted*, it's training you to skip checking. Tagalog hearsay markers like *daw* and *diumano* signal second-hand information. Treat as rumour until traced. Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job.",
+      "indicator_phrases": [
+        {
+          "indicator": "URG",
+          "phrase": "When a post tells you to act *bago mahuli* or *before it's deleted*, it's training you to skip checking.",
+          "bank_ref": "URG/v1.0/n2",
+          "sift_move": "Trace claims and quotes back to the original document."
+        },
+        {
+          "indicator": "ANON",
+          "phrase": "Tagalog hearsay markers like *daw* and *diumano* signal second-hand information. Treat as rumour until traced.",
+          "bank_ref": "ANON/v1.0/n3",
+          "sift_move": "Trace claims and quotes back to the original document."
+        },
+        {
+          "indicator": "MISS",
+          "phrase": "Big claim, zero receipts. Ask yourself: where would I check this? If you cannot answer that question, the post hasn't done its job.",
+          "bank_ref": "MISS/v1.0/n2",
+          "sift_move": "Trace claims and quotes back to the original document."
+        }
+      ],
+      "sift_move": "Trace claims and quotes back to the original document.",
+      "credible_counter_card_id": "gpt2_real_s13_000016",
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.649824+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 1
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Entity B",
+        "Candidate AUU"
+      ]
+    },
+    "day": 3
+  },
+  {
+    "id": "gpt2_fake_s13_000335",
+    "candidate": "C-JS",
+    "text": "Balita: Ang resulta ng botohan ay inilabas ng Commission on Elections (Comelec), habang ang mga kandidato na hindi pa nakakukuha ng kanilang mga balota ay hindi pa nakikita ang pangalan ay nasa ika-limang pwesto na. Samantala, ang ibang kandidato na na-impeached ay may kani-kanyang listahan. Source: CNN Hinamon ni Candidate W ang ilang kongresista na huwag tanggapin ang pagkatalo ni Rep. Datu Jomar \"JM\" Salonga at huwag tanggapin ang pagkatalo kay Rep. Datu Jomar \"JM\" Salonga W bilang kongresista. Ayon sa kilalang oposisyon party list na Candidate AD, ang mga nasabing pahayag ni Atty.",
+    "target_label": "fake",
+    "verdict": "FAKE",
+    "fake_likelihood_percent": 99.42215228954824,
+    "credibility_percent": 0.5778477104517634,
+    "difficulty_bin": "easy",
+    "fired_indicators": [
+      "MISS",
+      "FAB"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": false,
+        "evidence": [
+          "CNN"
+        ],
+        "score": 0.1,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": true,
+        "evidence": [
+          " Salonga at huwag tanggapin ang pagkatalo kay Rep. Datu Jomar "
+        ],
+        "score": 1.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 0.0,
+      "ind_urg_score": 0.1,
+      "ind_anon_fired": 0.0,
+      "ind_anon_score": 0.0,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 1.0,
+      "ind_fab_score": 1.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 97.0,
+      "len_chars": 591.0,
+      "num_urls": 0.0,
+      "num_quotes": 1.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.05245346869712352,
+      "excl_count": 0.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.9942215228954824,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": 0.4942215228954824,
+      "pred": 1,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": 14.030527114868164,
+          "baseline": -3.5690207,
+          "delta_margin": 0.6832465216650487,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": 0.9888911247253418,
+          "baseline": 0.06387472,
+          "delta_margin": 0.002178289640017761,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": 0.12714242935180664,
+          "baseline": 0.19161405,
+          "delta_margin": -0.0001901515230691153,
+          "direction": "push_real"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.9951658248901367,
+      "p_distil_fake": 0.9442585706710815,
+      "p_degnn_fake": 0.9700680375099182,
+      "p_ensemble_fake": 0.9697121977806091
+    },
+    "heuristics": {
+      "url_count": 0.0,
+      "exclamation_count": 0.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.054945054945054944
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.9963157462736696,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "proficient",
+      "summary": "This post about Rep. Datu Jomar \"JM\" Salonga looks suspicious (estimated fake-likelihood 99%). 2 misinformation cues fired: MISS, FAB. Notice the asymmetry: a bold political claim with no document, contract, or COA report attached. The bigger the claim, the bigger the receipts should be. Fabricated-quote attacks were a 2022 Philippine-election staple (Arugay & Baquisal 2022). Always trace to a primary transcript before treating a quote as real.",
+      "indicator_phrases": [
+        {
+          "indicator": "MISS",
+          "phrase": "Notice the asymmetry: a bold political claim with no document, contract, or COA report attached. The bigger the claim, the bigger the receipts should be.",
+          "bank_ref": "MISS/v1.0/p1",
+          "sift_move": "Find better coverage from a known outlet."
+        },
+        {
+          "indicator": "FAB",
+          "phrase": "Fabricated-quote attacks were a 2022 Philippine-election staple (Arugay & Baquisal 2022). Always trace to a primary transcript before treating a quote as real.",
+          "bank_ref": "FAB/v1.0/p1",
+          "sift_move": "Trace claims and quotes back to the original document."
+        }
+      ],
+      "sift_move": "Find better coverage from a known outlet.",
+      "credible_counter_card_id": "gpt2_real_s13_000016",
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.653499+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 1
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Entity A",
+        "Candidate AEP"
+      ]
+    },
+    "day": 3
+  },
+  {
+    "id": "gpt2_fake_s13_000000",
+    "candidate": "C-IB",
+    "text": "Paalala: Sa pagbisita ng mga opisyal ng Vice-Mayor Iris Bantayan na pinangunahan ng Pangulo sa Cebu City, muling pinaalalahanan ng Pangulo ang mga taga-Cebu na huwag maniwala sa mga ginagawa ng gobyerno laban sa mga rebeldeng komunista. Ipinagmalaki ni Vice-Mayor Iris Bantayan ang kampanya ng Presidente laban sa mga rebelde sa kabila ng mga ulat na may mga NPA na nagre-recruit ng mga rebeldeng komunista. \"Alam mo may mga NPA na nagre-recruit ng mga komunista. Alam ninyo 'pag may mga NPA na nagre-recruit ng mga komunista na NPA, kayong mga NPA, I will declare a ceasefire.",
+    "target_label": "fake",
+    "verdict": "FAKE",
+    "fake_likelihood_percent": 74.09897787074347,
+    "credibility_percent": 25.901022129256532,
+    "difficulty_bin": "medium",
+    "fired_indicators": [
+      "URG",
+      "MISS"
+    ],
+    "indicator_details": {
+      "EMO": {
+        "code": "EMO",
+        "label": "Emotional / loaded language",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Emotion"
+      },
+      "URG": {
+        "code": "URG",
+        "label": "Urgency / pressure cues",
+        "fired": true,
+        "evidence": [
+          "NPA",
+          "NPA",
+          "NPA",
+          "NPA",
+          "NPA"
+        ],
+        "score": 0.5,
+        "depict_family": "Emotion+Trolling"
+      },
+      "ANON": {
+        "code": "ANON",
+        "label": "Anonymous or vague attribution",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "MISS": {
+        "code": "MISS",
+        "label": "Missing evidence (no link, no named source)",
+        "fired": true,
+        "evidence": [
+          "urls=0",
+          "named_sources=0"
+        ],
+        "score": 1.0,
+        "depict_family": "Composite (no source / no link)"
+      },
+      "FAB": {
+        "code": "FAB",
+        "label": "Fabricated-quote risk (unverifiable attribution)",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "POL": {
+        "code": "POL",
+        "label": "Polarising in-group / out-group framing",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Polarization"
+      },
+      "CONS": {
+        "code": "CONS",
+        "label": "Conspiratorial reasoning",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Conspiracy"
+      },
+      "DISC": {
+        "code": "DISC",
+        "label": "Discrediting / personal attack",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Discrediting"
+      },
+      "IMP": {
+        "code": "IMP",
+        "label": "Impersonation / fake authority",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Impersonation"
+      },
+      "REV": {
+        "code": "REV",
+        "label": "Historical revisionism",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (Arugay & Baquisal 2022)"
+      },
+      "ENDO": {
+        "code": "ENDO",
+        "label": "Manufactured survey or fake endorsement",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (manufactured surveys/endorsements)"
+      },
+      "RECF": {
+        "code": "RECF",
+        "label": "Candidate-record fabrication",
+        "fired": false,
+        "evidence": [],
+        "score": 0.0,
+        "depict_family": "Filipino-specific (candidate-record fabrication)"
+      }
+    },
+    "named_features": {
+      "ind_emo_fired": 0.0,
+      "ind_emo_score": 0.0,
+      "ind_urg_fired": 1.0,
+      "ind_urg_score": 0.5,
+      "ind_anon_fired": 0.0,
+      "ind_anon_score": 0.0,
+      "ind_miss_fired": 1.0,
+      "ind_miss_score": 1.0,
+      "ind_fab_fired": 0.0,
+      "ind_fab_score": 0.0,
+      "ind_pol_fired": 0.0,
+      "ind_pol_score": 0.0,
+      "ind_cons_fired": 0.0,
+      "ind_cons_score": 0.0,
+      "ind_disc_fired": 0.0,
+      "ind_disc_score": 0.0,
+      "ind_imp_fired": 0.0,
+      "ind_imp_score": 0.0,
+      "ind_rev_fired": 0.0,
+      "ind_rev_score": 0.0,
+      "ind_endo_fired": 0.0,
+      "ind_endo_score": 0.0,
+      "ind_recf_fired": 0.0,
+      "ind_recf_score": 0.0,
+      "len_words": 102.0,
+      "len_chars": 577.0,
+      "num_urls": 0.0,
+      "num_quotes": 0.0,
+      "num_named_sources": 0.0,
+      "caps_ratio": 0.060658578856152515,
+      "excl_count": 0.0,
+      "question_count": 0.0
+    },
+    "qlattice": {
+      "score": 0.7409897787074347,
+      "threshold": 0.5,
+      "direction": ">=",
+      "margin": 0.24098977870743465,
+      "pred": 1,
+      "equation": "",
+      "top_factors": [
+        {
+          "feature": "rpca0",
+          "feature_human": "RoBERTa semantic component 0",
+          "value": 6.455164909362793,
+          "baseline": -3.5690207,
+          "delta_margin": 0.6526484974652771,
+          "direction": "push_fake"
+        },
+        {
+          "feature": "dpca1",
+          "feature_human": "DistilBERT semantic component 1",
+          "value": -2.1243362426757812,
+          "baseline": 0.06387472,
+          "delta_margin": -0.1187366157254851,
+          "direction": "push_real"
+        },
+        {
+          "feature": "dpca3",
+          "feature_human": "DistilBERT semantic component 3",
+          "value": -1.0686039924621582,
+          "baseline": 0.19161405,
+          "delta_margin": -0.08237145174671845,
+          "direction": "push_real"
+        }
+      ]
+    },
+    "detectors": {
+      "p_roberta_fake": 0.9569750428199768,
+      "p_distil_fake": 0.8932843208312988,
+      "p_degnn_fake": 0.8903661966323853,
+      "p_ensemble_fake": 0.9251296818256378
+    },
+    "heuristics": {
+      "url_count": 0.0,
+      "exclamation_count": 0.0,
+      "question_count": 0.0,
+      "caps_ratio": 0.078125
+    },
+    "theme_flags": {
+      "is_electoral": true,
+      "electoral_score": 0.9426757223241691,
+      "is_neutral_volume": false,
+      "classifier_label": "electoral"
+    },
+    "explanation": {
+      "tier": "proficient",
+      "summary": "This post about Vice-Mayor Iris Bantayan looks suspicious (estimated fake-likelihood 74%). 2 misinformation cues fired: URG, MISS. Two convergent urgency cues here (shouting capitals AND a *share-before-deleted* phrase). Stack matters: each cue alone could be coincidence; together they are a pattern. Notice the asymmetry: a bold political claim with no document, contract, or COA report attached. The bigger the claim, the bigger the receipts should be.",
+      "indicator_phrases": [
+        {
+          "indicator": "URG",
+          "phrase": "Two convergent urgency cues here (shouting capitals AND a *share-before-deleted* phrase). Stack matters: each cue alone could be coincidence; together they are a pattern.",
+          "bank_ref": "URG/v1.0/p2",
+          "sift_move": "Investigate the source — who is publishing this?"
+        },
+        {
+          "indicator": "MISS",
+          "phrase": "Notice the asymmetry: a bold political claim with no document, contract, or COA report attached. The bigger the claim, the bigger the receipts should be.",
+          "bank_ref": "MISS/v1.0/p1",
+          "sift_move": "Find better coverage from a known outlet."
+        }
+      ],
+      "sift_move": "Investigate the source — who is publishing this?",
+      "credible_counter_card_id": "gpt2_real_s13_000016",
+      "bank_version": "1.0"
+    },
+    "provenance": {
+      "seed": 1729,
+      "git_sha": "unknown",
+      "bank_version": "1.0",
+      "generated_at": "2026-05-01T18:52:15.642862+00:00",
+      "pipeline_version": "2.0.0",
+      "script_chain": [
+        "13",
+        "18",
+        "22",
+        "23",
+        "24"
+      ],
+      "pseudonym_session_size": 0
+    },
+    "metadata": {
+      "accept_mode": "ensemble3",
+      "min_conf": 0.7,
+      "temperature": 0.9,
+      "top_p": 0.95,
+      "seed": 13,
+      "graph_prompt": "high",
+      "pseudonym_replacements": [
+        "Candidate DTR",
+        "Candidate DTQ"
+      ]
+    },
+    "day": 3
+  }
+]
