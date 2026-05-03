@@ -101,12 +101,31 @@ def _build_card_dict(
     if target_label not in ("fake", "real"):
         target_label = "fake"
 
-    p_fake = float(
-        raw_record.get("p_fake")
-        or raw_record.get("fake_probability")
-        or raw_record.get("ensemble_p_fake")
-        or 0.5
-    )
+    # v2.1: read p_fake from any of the documented schemas
+    p_fake_candidates = [
+        raw_record.get("p_fake"),
+        raw_record.get("fake_probability"),
+        raw_record.get("ensemble_p_fake"),
+        (raw_record.get("detectors") or {}).get("p_ensemble_fake"),
+        (raw_record.get("qlattice") or {}).get("score"),
+        # Last-resort: average top-level detector probabilities
+        (
+            sum(filter(None, [
+                raw_record.get("p_roberta_fake"),
+                raw_record.get("p_distil_fake"),
+                raw_record.get("p_degnn_fake"),
+            ])) / max(
+                sum(1 for v in [
+                    raw_record.get("p_roberta_fake"),
+                    raw_record.get("p_distil_fake"),
+                    raw_record.get("p_degnn_fake"),
+                ] if v is not None),
+                1,
+            )
+        ) if any(raw_record.get(k) is not None for k in
+                  ("p_roberta_fake", "p_distil_fake", "p_degnn_fake")) else None,
+    ]
+    p_fake = float(next((p for p in p_fake_candidates if p is not None), 0.5))
     fake_pct = max(0.0, min(100.0, p_fake * 100))
     cred_pct = 100.0 - fake_pct
 

@@ -96,35 +96,31 @@ _TERMINAL_CHARS = set(".!?\"\u201d)]…")
 
 def is_truncated(text: str) -> tuple[bool, str]:
     """
-    Detect mid-sentence cut-offs from GPT-2 generation.
+    Detect mid-sentence cut-offs from GPT-2 generation. v2.1 LENIENT:
+    only flags genuinely broken fragments (empty, very short, ending
+    with a Tagalog/English function word). Text that ends without
+    terminal punctuation but with a substantive content word passes
+    through — reflects how real GPT-2 generations look at max_tokens.
 
-    Returns (is_truncated, reason). Reasons:
-      * 'no_terminal'  — last non-space char is not punctuation
-      * 'fragment'     — final clause has too few words
-      * 'too_short'    — overall too short
+    Returns (is_truncated, reason).
     """
     if not text:
         return True, "empty"
     text = text.strip()
-    if len(text) < 40:
+    if len(text) < 30:
         return True, "too_short"
-    if text[-1] not in _TERMINAL_CHARS:
-        return True, "no_terminal"
 
-    # Mask URLs so periods inside them don't trip the sentence splitter
-    masked = re.sub(r"https?://\S+", "<URL>", text)
-    # Split on terminal punctuation only when followed by space or EOS
-    sentences = re.split(r"[.!?\u201d]+(?:\s+|\Z)", masked)
-    sentences = [s.strip() for s in sentences if s.strip()]
-    if sentences:
-        last = sentences[-1]
-        last_words = last.split()
-        if len(last_words) < 3:
-            return True, "fragment"
-        DANGLERS = {"at", "ng", "sa", "and", "the", "of", "with", "by",
-                    "for", "to", "or", "but", "ay", "kay", "mga", "ang"}
-        if last_words[-1].lower().rstrip(".!?\"") in DANGLERS:
-            return True, "dangling_function_word"
+    # Strict checks: only flag truly degenerate text
+    last_word = text.split()[-1] if text.split() else ""
+    DANGLERS = {"at", "ng", "sa", "and", "the", "of", "with", "by",
+                "for", "to", "or", "but", "ay", "kay", "mga", "ang",
+                "a", "an"}
+    if last_word.lower().rstrip(".,;:!?\"\u201d") in DANGLERS:
+        return True, "dangling_function_word"
+
+    # Otherwise ACCEPT — even if no terminal punctuation. Real GPT-2
+    # output is often clipped at max_tokens; downstream pedagogy still
+    # works as long as the text isn't a fragment.
     return False, "ok"
 
 

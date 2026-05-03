@@ -1,46 +1,43 @@
 #!/usr/bin/env python3
 """
-13_score_generated_with_qlattice.py  (REFACTORED v2.0)
+13_score_generated_with_qlattice.py  (REFACTORED v2.1)
 ======================================================
 
-Score GPT-2-generated candidate posts with the QLattice symbolic
-regression model AND a post-generation quality gate.
+Score GPT-2-generated candidate posts and route them onward to
+script 18 with a sane probabilistic verdict.
 
-WHAT CHANGED FROM v1
---------------------
-v1 fed only the opaque PCA components (rpca0..rpca15, dpca0..dpca15)
-to QLattice, producing equations like `0.62 + 0.41*rpca3 - 0.18*dpca7`
-that no SHS student can interpret.
+WHAT CHANGED FROM v2.0
+----------------------
+v2.0 had two real bugs that made it drop ~94% of valid GPT-2
+generations on real data:
+  1. It looked for ``rec["detectors"]["p_ensemble_fake"]`` but
+     script 12 emits ``p_roberta_fake``, ``p_distil_fake``,
+     ``p_degnn_fake`` at the TOP LEVEL of each record. Result:
+     every record ended up with p_fake=0.5 → UNCERTAIN.
+  2. The truncation gate rejected any text that did not end on
+     terminal punctuation. Real GPT-2 generations from script 12
+     frequently end mid-sentence because of the
+     ``--max_new_tokens 120`` cap. Result: ~94% rejection.
 
-v2.0:
-  * Named-feature augmentation: alongside the PCA components we now
-    feed the 12 indicator features (ind_emo_fired, ind_urg_score,
-    num_urls, caps_ratio, etc.) extracted by minerva_indicators.
-    QLattice picks whichever set of features minimises loss; in
-    practice the named features dominate for the simple equations
-    we want for SHS interpretability (Christensen et al. 2022;
-    Brolós et al. 2021).
-  * Post-generation truncation gate: any output that does not end on
-    terminal punctuation gets retried up to N times. Final output
-    rejected if still truncated.
-  * Optional perplexity gate (Wenzek et al. 2020): a per-card
-    perplexity score from the same GPT-2-JCBlaise model used for
-    generation; cards above the 95th-percentile perplexity threshold
-    are flagged as low-fluency.
-  * Structured rejection log under reports/.
-
-If your existing repo's 13_score_generated_with_qlattice.py already
-fits a QLattice and writes JSONL, this drop-in replacement adds
-named features and the gate without disturbing your existing
-training-set scoring path.
+v2.1 fixes both:
+  * Reads ``p_*_fake`` from the top level (script 12's actual
+    schema) and falls back to nested ``detectors.*`` for
+    forward-compat.
+  * Computes ``p_ensemble_fake`` as the mean of available detector
+    probabilities so script 18 has a sane verdict signal.
+  * Truncation gate is now LENIENT: it logs a warning + flag in
+    the record, but does not drop unless the text is empty or
+    obviously degenerate (<30 chars, dangling Tagalog/English
+    function word at the very end).
+  * Schema-friendly: passes through r_pca_*, d_pca_* embeddings.
+  * Accepts BOTH the new (--in_file/--out_file) and legacy
+    (--in_jsonl/--out_final) CLIs so old notebooks keep working.
 
 PIPELINE POSITION
 -----------------
-Reads:  generated/gpt2_synthetic_raw_*.jsonl (GPT-2 outputs)
-        models/qlattice_model.pkl
-        models/pca_models.pkl
-Writes: generated/gpt2_synthetic_final_*.jsonl
-        reports/score_rejection_log.jsonl
+Reads:  generated/gpt2_synthetic_samples_{fake,real}.jsonl
+Writes: generated/gpt2_synthetic_final_{fake,real}.jsonl
+Next:   script 18.
 """
 
 from __future__ import annotations
@@ -54,44 +51,65 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from minerva_indicators import named_features
-from minerva_filters import is_truncated
+from minerva_indicators import named_features  # noqa: E402
+from minerva_filters import is_truncated        # noqa: E402
 
 logger = logging.getLogger(__name__)
 
 
 def score_record(rec: dict, qlattice_model=None, pca_models=None) -> dict:
     """
-    Compute QLattice + detector ensemble score for one record.
+    Compute QLattice + detector ensemble for one GPT-2 record.
 
-    This function expects upstream embeddings in rec['emb_roberta'],
-    rec['emb_distil'], rec['emb_degnn']. If they are absent (e.g.
-    when called on legacy JSONL), we fall back to whatever per-record
-    p_*_fake numbers are present and skip QLattice re-evaluation.
+    Reads detector probabilities from the actual script-12 output
+    schema (top-level fields). Falls back gracefully if some are
+    missing.
     """
     text = rec.get("text") or rec.get("generated_text") or ""
 
-    # Named features (always available; deterministic from text)
-    feats = named_features(text)
-    rec.setdefault("named_features", {}).update(feats)
+    # Named features (deterministic from text)
+    rec.setdefault("named_features", {}).update(named_features(text))
 
-    # If a fitted QLattice model is provided, use it; else trust upstream
-    if qlattice_model is not None and pca_models is not None:
+    # Detector probabilities — read from TOP LEVEL (script 12 schema)
+    p_roberta = rec.get("p_roberta_fake")
+    p_distil  = rec.get("p_distil_fake")
+    p_degnn   = rec.get("p_degnn_fake")
+
+    # Forward-compat fallback
+    det_in = rec.get("detectors") or {}
+    if p_roberta is None:
+        p_roberta = det_in.get("p_roberta_fake")
+    if p_distil is None:
+        p_distil = det_in.get("p_distil_fake")
+    if p_degnn is None:
+        p_degnn = det_in.get("p_degnn_fake")
+
+    # Average available detectors
+    detectors_present = [float(p) for p in (p_roberta, p_distil, p_degnn)
+                         if p is not None]
+    p_ensemble = sum(detectors_present) / len(detectors_present) \
+        if detectors_present else 0.5
+
+    rec["detectors"] = {
+        "p_roberta_fake": float(p_roberta) if p_roberta is not None
+        else float(p_ensemble),
+        "p_distil_fake": float(p_distil) if p_distil is not None
+        else float(p_ensemble),
+        "p_degnn_fake": float(p_degnn) if p_degnn is not None
+        else float(p_ensemble),
+        "p_ensemble_fake": float(p_ensemble),
+    }
+    rec["p_fake"] = float(p_ensemble)
+
+    # QLattice scoring (optional)
+    if qlattice_model is not None:
         try:
-            import numpy as np
             import pandas as pd
-            # Stitch PCA components if embeddings present
-            row = dict(feats)
-            for kind, embkey in [
-                ("r", "emb_roberta"),
-                ("d", "emb_distil"),
-                ("g", "emb_degnn"),
-            ]:
-                emb = rec.get(embkey)
-                if emb is not None and kind in pca_models:
-                    pcs = pca_models[kind].transform(np.array([emb]))[0]
-                    for i, v in enumerate(pcs):
-                        row[f"{kind}pca{i}"] = float(v)
+            row = dict(rec.get("named_features", {}))
+            for k, v in rec.items():
+                if k.startswith(("r_pca_", "d_pca_", "g_pca_")) \
+                        and isinstance(v, (int, float)):
+                    row[k] = float(v)
             df = pd.DataFrame([row])
             score = float(qlattice_model.predict(df)[0])
             rec["qlattice"] = {
@@ -100,51 +118,64 @@ def score_record(rec: dict, qlattice_model=None, pca_models=None) -> dict:
                 "direction": ">=",
                 "margin": score - 0.5,
                 "pred": int(score >= 0.5),
-                "equation": getattr(qlattice_model, "expression", str(qlattice_model)),
+                "equation": getattr(qlattice_model, "expression",
+                                    str(qlattice_model)),
                 "top_factors": _top_factors(qlattice_model, row),
             }
+            rec["p_fake"] = score
+            rec["detectors"]["p_ensemble_fake"] = score
         except Exception as e:
             logger.debug("QLattice scoring failed for %s: %s",
                          rec.get("id", "?"), e)
 
-    # Fallback p_fake computation
-    if "p_fake" not in rec:
-        det = rec.get("detectors") or {}
-        rec["p_fake"] = float(
-            det.get("p_ensemble_fake")
-            or rec.get("qlattice", {}).get("score")
-            or 0.5
-        )
-
+    truncated, why = is_truncated(text)
+    rec["truncation_flag"] = {"is_truncated": bool(truncated), "reason": why}
     return rec
 
 
 def _top_factors(model, row: dict) -> list:
-    """Best-effort extraction of model's top contributing features."""
     try:
-        # Feyn QLattice models expose .features / .inputs
         feats = list(getattr(model, "features", []))[:5]
         return [{"feature": f, "value": row.get(f, 0.0)} for f in feats]
     except Exception:
-        # Heuristic fallback: pick top numeric features by |value|
-        items = sorted(row.items(), key=lambda kv: -abs(kv[1]))[:5]
-        return [{"feature": k, "value": v} for k, v in items if isinstance(v, (int, float))]
+        items = sorted(
+            ((k, v) for k, v in row.items() if isinstance(v, (int, float))),
+            key=lambda kv: -abs(kv[1]),
+        )[:5]
+        return [{"feature": k, "value": v} for k, v in items]
+
+
+def should_drop(rec: dict) -> tuple[bool, str]:
+    """Lenient drop policy — only reject obviously broken records."""
+    text = (rec.get("text") or "").strip()
+    if not text:
+        return True, "empty_text"
+    if len(text) < 30:
+        return True, "too_short"
+    DANGLERS = {"ang", "ng", "sa", "at", "ay", "kay", "mga",
+                "the", "a", "an", "of", "and", "or", "but",
+                "with", "for", "to", "by"}
+    last = text.split()[-1].lower().rstrip(".,;:!?\"\u201d")
+    if last in DANGLERS:
+        return True, "dangling_function_word"
+    return False, "ok"
 
 
 def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--in_file", required=True)
-    p.add_argument("--out_file", required=True)
-    p.add_argument("--qlattice_model", default=None,
-                   help="Optional path to a saved QLattice .pkl; if absent, "
-                        "we trust upstream p_fake")
-    p.add_argument("--pca_models", default=None,
-                   help="Optional path to dict-of-PCA-models pkl")
-    p.add_argument("--rejection_log", default="reports/score_rejection_log.jsonl")
-    p.add_argument("--truncation_max_retries", type=int, default=0,
-                   help="If your generator supports retry, pass >0; this "
-                        "script only LOGS truncation, retry is the "
-                        "generator's job")
+    p = argparse.ArgumentParser(
+        description="QLattice-augmented scorer for GPT-2 synthetic posts (v2.1)"
+    )
+    p.add_argument("--in_file", "--in_jsonl", dest="in_file", required=True)
+    p.add_argument("--out_file", "--out_final", dest="out_file", required=True)
+    p.add_argument("--out_scored", default=None,
+                   help="(legacy compat) optional copy of output")
+    p.add_argument("--target", default=None, help="(legacy compat, ignored)")
+    p.add_argument("--qlattice_model", default=None)
+    p.add_argument("--pca_models", default=None)
+    p.add_argument("--rejection_log",
+                   default="reports/score_rejection_log.jsonl")
+    p.add_argument("--strict_truncation", action="store_true",
+                   help="(default off) drop any truncated record")
     args = p.parse_args()
 
     logging.basicConfig(level=logging.INFO,
@@ -158,51 +189,68 @@ def main():
             logger.info("Loaded QLattice from %s", args.qlattice_model)
         except Exception as e:
             logger.warning("Could not load QLattice: %s", e)
-    if args.pca_models and Path(args.pca_models).exists():
-        try:
-            import pickle
-            pca_models = pickle.load(open(args.pca_models, "rb"))
-            logger.info("Loaded PCA models from %s", args.pca_models)
-        except Exception as e:
-            logger.warning("Could not load PCA: %s", e)
 
     rejections: list = []
-    out_count = trunc_count = 0
+    n_in = n_out = n_dropped = n_truncated_kept = 0
     Path(args.out_file).parent.mkdir(parents=True, exist_ok=True)
+
     with open(args.in_file, "r", encoding="utf-8") as fin, \
          open(args.out_file, "w", encoding="utf-8") as fout:
         for line in fin:
             line = line.strip()
             if not line:
                 continue
+            n_in += 1
             try:
                 rec = json.loads(line)
             except json.JSONDecodeError:
-                continue
-            text = rec.get("text") or rec.get("generated_text") or ""
-            truncated, why = is_truncated(text)
-            if truncated:
-                trunc_count += 1
+                n_dropped += 1
                 rejections.append({
-                    "card_id": rec.get("id", "unknown"),
-                    "stage": "truncation_filter",
+                    "card_id": "unknown",
+                    "stage": "score",
                     "verdict": "reject",
-                    "reason": f"truncation: {why}",
+                    "reason": "json_decode_error",
                     "ts": datetime.now(timezone.utc).isoformat(),
                 })
-                continue  # drop truncated cards
+                continue
+
             scored = score_record(rec, qlattice_model, pca_models)
+            drop, why = should_drop(scored)
+            if not drop and args.strict_truncation and \
+               scored.get("truncation_flag", {}).get("is_truncated"):
+                drop = True
+                why = "strict_truncation_" + scored["truncation_flag"]["reason"]
+            if drop:
+                n_dropped += 1
+                rejections.append({
+                    "card_id": rec.get("id", "unknown"),
+                    "stage": "score",
+                    "verdict": "reject",
+                    "reason": why,
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                })
+                continue
+
+            if scored.get("truncation_flag", {}).get("is_truncated"):
+                n_truncated_kept += 1
             fout.write(json.dumps(scored, ensure_ascii=False) + "\n")
-            out_count += 1
+            n_out += 1
 
     Path(args.rejection_log).parent.mkdir(parents=True, exist_ok=True)
     with open(args.rejection_log, "w", encoding="utf-8") as f:
         for r in rejections:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
-    logger.info("Scored %d records, dropped %d truncated → %s",
-                out_count, trunc_count, args.out_file)
-    logger.info("Rejection log → %s", args.rejection_log)
+    if args.out_scored:
+        Path(args.out_scored).parent.mkdir(parents=True, exist_ok=True)
+        with open(args.out_file, "rb") as src, \
+             open(args.out_scored, "wb") as dst:
+            dst.write(src.read())
+
+    logger.info("=" * 60)
+    logger.info("Score results: in=%d, passed=%d, dropped=%d, "
+                "kept-but-flagged=%d", n_in, n_out, n_dropped, n_truncated_kept)
+    logger.info("=" * 60)
 
 
 if __name__ == "__main__":

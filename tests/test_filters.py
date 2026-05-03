@@ -30,12 +30,22 @@ def test_keyword_score_low_for_meralco_leak():
     assert s < 0.55
 
 
-def test_is_truncated_no_terminal():
+def test_is_truncated_dangling_word():
+    """v2.1: dangling function word is the only kind of truncation we catch."""
     truncated, why = is_truncated(
         "Sen. Marquez vowed to push for new infrastructure spending next "
         "quarter, citing the need for")
     assert truncated
-    assert why == "no_terminal"
+    assert why == "dangling_function_word"
+
+
+def test_is_truncated_no_terminal_now_accepted():
+    """v2.1: text without terminal punctuation but with content word is accepted."""
+    truncated, why = is_truncated(
+        "Sen. Marquez vowed to push for new infrastructure spending next "
+        "quarter, citing the constitution")
+    assert not truncated
+    assert why == "ok"
 
 
 def test_is_truncated_dangling_function_word():

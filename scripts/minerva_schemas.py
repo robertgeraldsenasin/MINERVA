@@ -180,13 +180,16 @@ class UnityCard(BaseModel):
     @field_validator("text")
     @classmethod
     def _validate_text_complete(cls, v: str) -> str:
-        # Heuristic: a complete card ends with terminal punctuation or quote
+        # v2.1: Lenient — only reject empty / degenerate text. The
+        # truncation gate in script 13 already flags incomplete text;
+        # the schema does not need to also reject it because real GPT-2
+        # generations frequently lack a final period due to max_tokens
+        # cutoff and are still pedagogically usable.
         v = v.strip()
-        if v and v[-1] not in ".!?\"\u201d)]":
-            raise ValueError(
-                "Card text appears truncated (does not end with terminal "
-                "punctuation). Reject and regenerate."
-            )
+        if not v:
+            raise ValueError("Card text is empty.")
+        if len(v) < 30:
+            raise ValueError(f"Card text too short ({len(v)} chars).")
         return v
 
     @field_validator("id")
