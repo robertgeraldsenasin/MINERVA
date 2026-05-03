@@ -1,0 +1,67 @@
+# M.I.N.E.R.V.A. — Python dependencies
+# v2.6-final-consolidated + P1.2
+
+# ============================================================
+# CORE — Required for the v2.6 template-based pipeline (Mode A)
+# ============================================================
+
+# Schema validation (CandidateCode, UnityCard, etc.)
+pydantic>=2.0,<3.0
+
+# Numerical + tabular
+numpy>=1.24,<2.0
+pandas>=2.0,<3.0
+
+# Random Forest, KNN, StandardScaler used by detector training
+scikit-learn>=1.3,<2.0
+
+# Persistence for trained model artifacts
+joblib>=1.3,<2.0
+
+# Testing
+pytest>=7.4,<9.0
+
+
+# ============================================================
+# DETECTORS — Needed if you re-train RoBERTa / DistilBERT / DE-GNN
+# (skip if you only run the card-generation pipeline scripts 30-40)
+# ============================================================
+
+# Hugging Face transformers + tokenizers (RoBERTa-Tagalog, DistilBERT-mult)
+transformers>=4.35,<5.0
+
+# PyTorch — pre-installed on Colab, listed for completeness
+torch>=2.0
+# torch-geometric  # Uncomment if running scripts/09_train_degnn.py
+
+# QLattice — symbolic explainability (Feyn). Optional; fallback exists.
+# feyn>=4.0  # Install separately on Colab if needed: !pip install feyn
+
+
+# ============================================================
+# OPTIONAL — Mode B (GPT-2 augmentation pipeline, scripts 10-13)
+# ============================================================
+# Uncomment if you set USE_GPT2=True in the Colab notebook.
+
+# accelerate>=0.24
+# datasets>=2.14
+# sentencepiece>=0.1.99
+
+
+# ============================================================
+# OPTIONAL — Web/IO helpers (used by some scripts)
+# ============================================================
+
+# requests>=2.31  # Only needed if scripts/01_download_dataset.py is rerun
+
+# ============================================================
+# NOTES
+# ============================================================
+# Run scripts 30 -> 31 -> 21 -> 23 -> 24 -> 28 -> 26 -> 32 -> 40
+# requires only the CORE block above. ~30 seconds to install on Colab.
+#
+# Run scripts 04, 05, 09 (detector training) requires the DETECTORS
+# block. ~3 minutes to install + GPU.
+#
+# Run scripts 11, 12, 13 (GPT-2 augmentation) requires the OPTIONAL
+# Mode B block. ~5 minutes + heavy GPU.
