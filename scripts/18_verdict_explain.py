@@ -141,6 +141,28 @@ def _build_card_dict(
     indicator_summary = indicator_summary_for_card(text)
     fired = indicator_summary["fired_indicators"]
 
+    # v2.2: VERDICT-RULE ALIGNMENT GUARD
+    # If the symbolic-regression score says REAL but indicator rules
+    # find >=2 misinformation cues, the two interpretation paths
+    # disagree. Showing students "this post is credible" when the
+    # rule layer found multiple red flags would actively confuse the
+    # learner. Demote to UNCERTAIN — keeps the post in the deck for
+    # critical-thinking practice but doesn't claim credibility.
+    if verdict == "REAL" and len(fired) >= 2:
+        verdict = "UNCERTAIN"
+        # Adjust fake_pct upward into the uncertainty band so the
+        # displayed percentage doesn't contradict the new verdict.
+        fake_pct = max(fake_pct, 41.0)
+        cred_pct = 100.0 - fake_pct
+    # Symmetric guard: if FAKE but zero indicators fired, the
+    # detectors found something the rules didn't surface — still call
+    # it FAKE but flag for audit.
+    alignment_flag = "ok"
+    if verdict == "FAKE" and len(fired) == 0:
+        alignment_flag = "fake_no_indicators"
+    elif verdict == "UNCERTAIN" and p_fake <= 0.4:
+        alignment_flag = "demoted_real_to_uncertain"
+
     # Tier banding
     tier = tier_for_card_index(card_index)
 
@@ -204,8 +226,9 @@ def _build_card_dict(
         "git_sha": git_sha,
         "bank_version": BANK_VERSION,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "pipeline_version": "2.0.0",
+        "pipeline_version": "2.2.0",
         "script_chain": ["13", "18"],
+        "alignment_flag": alignment_flag,
     }
 
     card = {

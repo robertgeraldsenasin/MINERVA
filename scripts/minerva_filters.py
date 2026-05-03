@@ -58,11 +58,23 @@ ELECTORAL_NEGATIVE = [
     # Utilities (the Meralco leak)
     "meralco", "electric bill", "electricity rate", "kuryente",
     "ercb", "doe", "department of energy", "petron", "shell",
-    # Sports / entertainment (irrelevant volume)
+    # Sports — generic + boxing-specific (v2.2 expanded after audit)
     "kpop", "k-pop", "blackpink", "bts", "nba", "pba", "uaap",
-    "ncaa", "boxing", "manny pacquiao boxing",
-    # Weather / disasters (unless electoral)
+    "ncaa", "boxing", "manny pacquiao boxing", "boksingero",
+    "lightweight", "heavyweight", "featherweight", "mgm",
+    "split decision", "fighter", "knockout", "ko win",
+    "championship", "kampeonato", "tournament", "world cup",
+    "fifa", "olympics", "olympiad", "olympic",
+    "puntos", "iskor sa loob", "round", "ikaapat na round",
+    "ikalimang round", "panalo sa laban", "first round ko",
+    # Entertainment / showbiz (v2.2 expanded after audit)
+    "aktres", "aktor", "actress", "showbiz", "host", "love team",
+    "tv host", "kapamilya", "kapuso", "starstruck",
+    "abs-cbn drama", "gma drama", "concert tour",
+    # Weather / disasters (unless explicitly electoral)
     "typhoon update", "bagyo update", "lpa", "pagasa weather",
+    # Misc news that drifts off-theme in the JCBlaise corpus
+    "medical mission", "outreach concert", "wrestling",
 ]
 
 
@@ -71,18 +83,21 @@ def keyword_score(text: str) -> tuple[float, dict]:
     Cheap baseline keyword scorer: returns electoral-relevance score
     in [0, 1] and the diagnostic counts.
 
-    NOTE: For production, supplement with the DistilBERT-multilingual
-    classifier fine-tuned on hard negatives (see notebook §10).
-    This function is the deterministic fall-back when the classifier
-    is unavailable.
+    v2.2: weights negatives more heavily so a card with 4 sports terms
+    and 1 candidate mention scores below threshold (was passing in v2.1
+    because positives were treated as 1.0 each and negatives as 0.6 each).
     """
     if not text:
         return 0.0, {"pos": 0, "neg": 0, "len": 0}
     tl = text.lower()
     pos = sum(1 for w in ELECTORAL_POSITIVE if w.lower() in tl)
     neg = sum(1 for w in ELECTORAL_NEGATIVE if w.lower() in tl)
-    # Score: positives push up, negatives without positives push down
-    raw = pos - 0.6 * neg
+    # v2.2: stronger negative weighting (was 0.6 per negative, now 1.0)
+    # plus an explicit downweight when negatives outnumber positives
+    raw = pos - 1.0 * neg
+    # Heavy penalty if neg count >= pos count (off-theme dominates)
+    if neg >= pos and neg >= 2:
+        raw -= 1.5
     # Squash to [0, 1]
     score = 1.0 / (1.0 + 2.71828 ** (-0.7 * raw))
     return score, {"pos": pos, "neg": neg, "len": len(text)}

@@ -37,7 +37,7 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-BANK_VERSION = "1.0"
+BANK_VERSION = "1.1"
 
 
 # ---------------------------------------------------------------------------
@@ -379,29 +379,34 @@ BANK: dict[str, list[BankEntry]] = {
 
 # ---------------------------------------------------------------------------
 # Credible-card affirmations (Modirrousta-Galian & Higham 2023 mandate)
+# v2.2: phrasing rewritten to NOT make claims that the indicator extractor
+# may not actually verify (e.g. "verifiable date", "named outlet"). Instead
+# focus on the absence of misinformation cues — which is what we can
+# actually attest to from rule-based detection.
 # ---------------------------------------------------------------------------
 CREDIBLE_AFFIRMATIONS = [
     BankEntry(code="CREDIBLE", tier="novice",
-              phrase="Good news — this post names its source, links to a public "
-                     "document, and avoids loaded language. That's what credible "
-                     "looks like.",
-              sift=SIFT_MOVES["find"], bank_id="CREDIBLE/v1/n1"),
+              phrase="Good news — this post does not raise any of our 12 "
+                     "common misinformation flags. That low-noise signal is "
+                     "what credible content tends to look like.",
+              sift=SIFT_MOVES["find"], bank_id="CREDIBLE/v1.1/n1"),
     BankEntry(code="CREDIBLE", tier="novice",
-              phrase="Notice what's *here*: a named outlet, a verifiable date, a "
-                     "neutral tone. Reward yourself for spotting it — that's "
-                     "real-world signal.",
-              sift=SIFT_MOVES["find"], bank_id="CREDIBLE/v1/n2"),
+              phrase="None of the standard misinformation cues fired here — "
+                     "no urgency push, no anonymous attribution, no loaded "
+                     "wording. Reward yourself for noticing the calm.",
+              sift=SIFT_MOVES["find"], bank_id="CREDIBLE/v1.1/n2"),
     BankEntry(code="CREDIBLE", tier="proficient",
-              phrase="Credibility cue stack: named outlet + verifiable URL + "
-                     "neutral tone + dated claim. All four present. Carry this "
-                     "baseline into your real feed.",
-              sift=SIFT_MOVES["find"], bank_id="CREDIBLE/v1/p1"),
+              phrase="Zero misinformation indicators triggered. Use this as a "
+                     "baseline: when several flags fire on a real post in "
+                     "your feed, contrast against the absence-of-flags "
+                     "pattern you see here.",
+              sift=SIFT_MOVES["find"], bank_id="CREDIBLE/v1.1/p1"),
     BankEntry(code="CREDIBLE", tier="advanced",
               phrase="Posts like this are the antidote to the conservative-bias "
                      "trap (Modirrousta-Galian & Higham 2023): they remind you "
                      "that *trust*, calibrated to evidence, is a real-life "
                      "skill — not just *suspicion*.",
-              sift=SIFT_MOVES["find"], bank_id="CREDIBLE/v1/a1"),
+              sift=SIFT_MOVES["find"], bank_id="CREDIBLE/v1.1/a1"),
 ]
 
 

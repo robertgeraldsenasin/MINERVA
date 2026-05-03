@@ -1,33 +1,19 @@
 #!/usr/bin/env python3
 """
-22_pseudonymize_entities.py  (REFACTORED v2.0)
-==============================================
+22_pseudonymize_entities.py  (REFACTORED v2.2)
 
-Deterministic pseudonymisation: replace any real Filipino political
-name reference with one of the three fictional candidate names
-(C-RM Marquez, C-IB Bantayan, C-JS Salonga), routed by archetype cue
-co-occurrence and cached for session-scoped consistency.
-
-WHAT CHANGED FROM v1
---------------------
-v1 emitted random codes ("Candidate GQW", "Candidate DTQ", "Entity B")
-that broke narrative coherence — students could not study a candidate
-they encountered under a different code each card.
-
-v2.0:
-  * Fixed registry of 3 archetype-grounded fictional candidates.
-  * Archetype router (cue-based) selects which candidate plays the
-    role implied by the post's narrative content.
-  * Session cache: same real-name input → same fictional candidate
-    code throughout the run, satisfying Yermilov et al. (2023)'s
-    consistency-preservation criterion.
-  * Output: the card's `text` is rewritten in place; the `candidate`
-    field is set to one of {C-RM, C-IB, C-JS, NONE}.
-
-PIPELINE POSITION
------------------
-Reads:  generated/unity_cards.json   (or balanced version)
-Writes: generated/unity_cards_pseudonymized.json
+v2.2 changes from v2.1:
+  * After replacing real names with the canonical fictional candidate,
+    COLLAPSE repetition: keep the full name on first mention (e.g.
+    'Sen. Reynaldo "Rey" Marquez') and use the short surname for
+    subsequent mentions in the same card. Avoids the "name jammed
+    everywhere" problem that made cards read as broken.
+  * Catch a wider set of GPT-2-invented placeholder patterns:
+    'Candidate W', 'Candidate AW', 'Candidate EK', 'Candidate UU' —
+    any 'Candidate' followed by 1-3 capital letters. The v2.1 regex
+    only caught 3-letter patterns.
+  * Apply legacy-pseudonym rewriting BEFORE the candidate-name
+    substitution so collapse logic sees a clean text.
 """
 
 from __future__ import annotations
@@ -63,37 +49,123 @@ def main():
 
     cards = json.load(open(args.in_file, encoding="utf-8"))
     session_cache: dict[str, str] = {}
+    import re as _re
+
+    # v2.2: catch ALL GPT-2-invented "Candidate XX" patterns
+    # (1-3 uppercase letters; any case for the word "Candidate")
+    LEGACY_RE = _re.compile(r"\b[Cc]andidate\s+[A-Z]{1,3}\b")
+
+    # v2.2: pre-built list of all canonical full names so we can clean
+    # cross-candidate name pollution that may have leaked in earlier runs
+    ALL_FULL_NAMES = [c.name for c in REGISTRY.values()]
+    ALL_SHORT_NAMES = [c.short_name for c in REGISTRY.values()]
 
     out: list[dict] = []
     counts = {"C-RM": 0, "C-IB": 0, "C-JS": 0, "NONE": 0}
+    repetition_collapses = 0
+    cross_pollution_cleaned = 0
 
     for idx, card in enumerate(cards):
         text = card.get("text", "")
         if not text:
             continue
-        # Step A: rewrite real-name references (e.g. Sen. Marcos -> Sen. Marquez)
+
+        # Step A: rewrite real political surnames -> fictional candidate
         rewritten, code, replaced = pseudonymize(
             text, session_cache=session_cache, seed=args.seed
         )
-        # Step B: also rewrite legacy "Candidate XXX" patterns to the
-        # assigned candidate's full name. The legacy pipeline emitted
-        # random codes; we map them all to the cue-routed candidate so
-        # the resulting card mentions the candidate explicitly.
-        has_legacy, offenders = has_legacy_pseudonyms(rewritten)
-        if has_legacy:
+
+        # Step B: rewrite ANY "Candidate XX" placeholder
+        legacy_matches = LEGACY_RE.findall(rewritten)
+        if legacy_matches:
             cand_name = REGISTRY[code].name
-            import re as _re
-            for off in offenders:
+            for off in set(legacy_matches):
                 rewritten = _re.sub(_re.escape(off), cand_name, rewritten)
-            replaced.extend(offenders)
+            replaced.extend(legacy_matches)
+
+        # Step B2 (NEW v2.2): clean cross-candidate name pollution.
+        # If the card was rewritten by a previous run that picked a
+        # different candidate, OTHER candidates' full names may still
+        # appear. Replace any non-assigned candidate's name with the
+        # assigned one BEFORE running collapse, so we don't end up
+        # with frankenstein names like "Salonga \"Rey\" Marquez".
+        if code in REGISTRY:
+            assigned_full = REGISTRY[code].name
+            for other_code, other_cand in REGISTRY.items():
+                if other_code == code:
+                    continue
+                other_full = other_cand.name
+                if other_full in rewritten and assigned_full != other_full:
+                    rewritten = rewritten.replace(other_full, assigned_full)
+                    cross_pollution_cleaned += 1
+                # Also strip dangling short-name fragments from other candidates
+                other_short = other_cand.short_name
+                if other_short in rewritten and other_short != REGISTRY[code].short_name:
+                    # Only replace standalone occurrences (word-bounded)
+                    rewritten = _re.sub(
+                        rf'\b{_re.escape(other_short)}\b',
+                        REGISTRY[code].short_name,
+                        rewritten,
+                    )
+
+        # Step C: collapse repetition of the assigned name.
+        # First mention: full name. Subsequent: short surname.
+        if code in REGISTRY:
+            full_name = REGISTRY[code].name
+            short_name = REGISTRY[code].short_name
+            full_pattern = _re.escape(full_name)
+            occurrences = list(_re.finditer(full_pattern, rewritten))
+            if len(occurrences) > 1:
+                pieces = []
+                last_end = 0
+                for i, m in enumerate(occurrences):
+                    pieces.append(rewritten[last_end:m.start()])
+                    if i == 0:
+                        pieces.append(full_name)
+                    else:
+                        pieces.append(short_name)
+                    last_end = m.end()
+                pieces.append(rewritten[last_end:])
+                rewritten = "".join(pieces)
+                repetition_collapses += 1
+
+        # Step D (NEW v2.2): clean leftover quote artifacts from
+        # the original raw GPT-2 output (e.g. stray '"Rey"' floating
+        # after Marquez was replaced by Salonga). Remove orphaned
+        # quoted-name fragments that don't belong to the assigned
+        # candidate.
+        if code == "C-JS":
+            # Salonga assigned but text might still have '"Rey"' from Marquez
+            rewritten = _re.sub(r'\s*"Rey"\s*', ' ', rewritten)
+            rewritten = _re.sub(r'\s*"JM"\s*"Rey"\s*', ' "JM" ', rewritten)
+        if code == "C-RM":
+            # Marquez assigned but might have '"JM"' from Salonga
+            rewritten = _re.sub(r'\s*"JM"\s*', ' ', rewritten)
+        # Collapse any double spaces left behind
+        rewritten = _re.sub(r'\s+', ' ', rewritten).strip()
+
         card["text"] = rewritten
         card["candidate"] = code
-        # Re-extract indicators on rewritten text (the rewrite may flip POL/IMP cues)
+
+        # Re-extract indicators on rewritten text
         card.update({
             k: v for k, v in indicator_summary_for_card(rewritten).items()
             if k in {"fired_indicators", "indicator_details", "named_features"}
         })
-        # Optionally re-build explanation now that we have a real candidate name
+
+        # v2.2: re-apply verdict-rule alignment guard here too,
+        # since callers may run script 22 on already-verdicted cards
+        # without re-running script 18.
+        verdict = card.get("verdict", "UNCERTAIN")
+        n_indicators = len(card.get("fired_indicators", []))
+        if verdict == "REAL" and n_indicators >= 2:
+            card["verdict"] = "UNCERTAIN"
+            fake_pct = card.get("fake_likelihood_percent", 0.0)
+            card["fake_likelihood_percent"] = max(fake_pct, 41.0)
+            card["credibility_percent"] = 100.0 - card["fake_likelihood_percent"]
+            card.setdefault("provenance", {})["alignment_flag"] = \
+                "demoted_real_to_uncertain_at_22"
+
         if args.re_explain:
             cand_obj = REGISTRY.get(code)
             cand_name = cand_obj.name if cand_obj else None
@@ -107,7 +179,6 @@ def main():
                 candidate_name=cand_name,
             )
 
-        # Provenance update
         prov = card.setdefault("provenance", {})
         prov.setdefault("script_chain", []).append("22")
         prov["pseudonym_session_size"] = len(session_cache)
@@ -119,9 +190,13 @@ def main():
     Path(args.out_file).parent.mkdir(parents=True, exist_ok=True)
     json.dump(out, open(args.out_file, "w", encoding="utf-8"),
               ensure_ascii=False, indent=2)
-    logger.info("Pseudonymised %d cards → %s", len(out), args.out_file)
+    logger.info("Pseudonymised %d cards -> %s", len(out), args.out_file)
     logger.info("Candidate distribution: %s", counts)
     logger.info("Session-cache size: %d unique entities mapped", len(session_cache))
+    logger.info("Repetition-collapse applied to %d cards (v2.2)",
+                repetition_collapses)
+    logger.info("Cross-candidate pollution cleaned in %d cards (v2.2)",
+                cross_pollution_cleaned)
 
 
 if __name__ == "__main__":
