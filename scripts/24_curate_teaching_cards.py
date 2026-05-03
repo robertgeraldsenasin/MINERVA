@@ -1,30 +1,50 @@
 #!/usr/bin/env python3
 """
-24_curate_teaching_cards.py  (REFACTORED v2.0)
+24_curate_teaching_cards.py  (REFACTORED v2.3)
 ==============================================
 
-Promote themed unity cards into the teaching deck (story_cards.json),
-applying:
-  * Difficulty banding (novice → proficient → advanced) by card index
-    (Dehghanzadeh et al. 2024; Almaki et al. 2024).
-  * Bank-version-stamped explanations.
-  * Mandatory inclusion of credible cards to counter conservative-bias
-    drift (Modirrousta-Galian & Higham 2023).
-  * Day assignment (1..N) for the daily-cycle gameplay.
+Produce a curated POOL of teaching cards. The Unity client (or the
+companion script 28) draws a per-user deck from this pool at runtime.
 
-WHAT CHANGED FROM v1
---------------------
-v1 wrote story_cards.json with the same static template explanation
-that 18_verdict_explain produced. It also sometimes promoted off-theme
-posts and truncated text.
+WHAT CHANGED FROM v2.0/v2.1/v2.2
+--------------------------------
+v2.0-v2.2 produced a single fixed deck (DAYS x CARDS_PER_DAY = 56
+cards) that every player would see in the same order. Two problems:
 
-v2.0:
-  * Tier banding tied to within-day position.
-  * Explicit "credible-counter" pairing: each fake card is linked to
-    a credible card the player has already seen, so VERIdict can
-    show side-by-side comparison (Barzilai & Stadtler 2025).
-  * Schema validation; reject + log invalid promotions.
-  * Audit report.
+  1. NO DYNAMIC CONTENT. Every Filipino SHS student would see the
+     same 56 cards in the same order. Educational integrity collapses
+     - students could share screenshots/answers.
+
+  2. NO RESEARCH POWER. The thesis evaluation depends on per-user
+     decision data. If two students see identical decks, their
+     decisions are not independent observations.
+
+v2.3 separates two concerns:
+
+  * SCRIPT 24 (this file): builds the POOL. Validates each card
+    against schema, balances across all dimensions, but DOES NOT
+    assign cards to days. Output is `unity_cards_pool.json`.
+
+  * SCRIPT 28 (NEW): the per-user draw. Given a user_id (or seed),
+    deterministically samples a 56-card deck from the pool with
+    quotas (>=3 REAL/day, >=1 of each candidate/day, indicator
+    diversity). Output is `decks/deck_<user_id>.json`.
+
+The Unity team can either:
+  - Ship `unity_cards_pool.json` with the APK and port the script 28
+    logic to C# (recommended for offline use), OR
+  - Pre-build N decks server-side and ship them.
+
+PIPELINE POSITION
+-----------------
+Reads:  generated/unity_cards_themed.json
+Writes: generated/unity_cards_pool.json   (the POOL, not a deck)
+        reports/curation_report.json
+
+CITATIONS
+---------
+  Modirrousta-Galian & Higham (2023): credible-card quota.
+  Christensen et al. (2022): per-card auditability.
 """
 
 from __future__ import annotations
@@ -34,30 +54,69 @@ import json
 import logging
 import random
 import sys
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from minerva_response_bank import (assemble_explanation, BANK_VERSION,
-                                    bank_hash, tier_for_card_index)
-from minerva_candidates import REGISTRY
 from minerva_schemas import StoryCard
+from minerva_response_bank import BANK_VERSION, bank_hash
 
 logger = logging.getLogger(__name__)
 
 
+def _promote(card: dict, pool_index: int, seed: int) -> dict | None:
+    """Validate a unity-card and return its story-card form.
+
+    Story cards in v2.3 do NOT carry a 'day' field anymore — that's
+    assigned by the per-user draw script (28) at runtime. The pool is
+    day-agnostic.
+    """
+    out = dict(card)
+    # Strip any pre-existing day field (from v2.x runs)
+    out.pop("day", None)
+    out["pool_index"] = pool_index
+    try:
+        StoryCard.model_validate(out)
+        return out
+    except Exception as e:
+        logger.debug("Card %s rejected by schema: %s",
+                     card.get("id"), str(e)[:160])
+        return None
+
+
 def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--in_file", required=True)
-    p.add_argument("--out_file", required=True)
-    p.add_argument("--reject_out", default="generated/story_cards_rejected.json")
-    p.add_argument("--report_out", default="reports/story_cards_curation_report.json")
-    p.add_argument("--days", type=int, default=7)
-    p.add_argument("--cards_per_day", type=int, default=8)
+    p = argparse.ArgumentParser(
+        description="v2.3 — curate a POOL of teaching cards (per-user decks "
+                    "are drawn separately by script 28)."
+    )
+    p.add_argument("--in_file", required=True,
+                   help="Input: unity_cards_themed.json")
+    p.add_argument("--out_file", required=True,
+                   help="Output: unity_cards_pool.json (the POOL)")
+    p.add_argument("--reject_out", default="generated/pool_rejected.json")
+    p.add_argument("--report_out",
+                   default="reports/curation_report.json")
+    p.add_argument("--target_pool_size", type=int, default=500,
+                   help="Target size of the POOL (default 500). "
+                        "Each player will draw days*cards_per_day cards "
+                        "from this pool.")
+    p.add_argument("--min_real_share", type=float, default=0.35,
+                   help="Minimum share of REAL cards in the pool "
+                        "(default 35%%). Modirrousta-Galian & Higham 2023 "
+                        "mandate ensures students see enough credible "
+                        "examples to avoid over-suspicion drift.")
+    # Legacy compat: keep --days/--cards_per_day flags so old scripts/CLI
+    # keep working, but they're informational only in v2.3.
+    p.add_argument("--days", type=int, default=7,
+                   help="(informational) Days per player deck — used by "
+                        "downstream draw script 28")
+    p.add_argument("--cards_per_day", type=int, default=8,
+                   help="(informational) Cards per day per player")
     p.add_argument("--min_credible_per_day", type=int, default=3,
-                   help="At least this many REAL cards per day "
-                        "(Modirrousta-Galian & Higham 2023 mandate)")
+                   help="(informational) Carried into pool metadata for "
+                        "the draw script")
     p.add_argument("--seed", type=int, default=1729)
     args = p.parse_args()
 
@@ -66,144 +125,135 @@ def main():
     rng = random.Random(args.seed)
 
     cards = json.load(open(args.in_file, encoding="utf-8"))
+    rng.shuffle(cards)
+
+    # Bucket by verdict so we can enforce min_real_share
     fakes = [c for c in cards if c.get("verdict") == "FAKE"]
     reals = [c for c in cards if c.get("verdict") == "REAL"]
     uncertains = [c for c in cards if c.get("verdict") == "UNCERTAIN"]
-    rng.shuffle(fakes)
-    rng.shuffle(reals)
-    rng.shuffle(uncertains)
+
+    target = args.target_pool_size
+    n_real_min = max(1, int(target * args.min_real_share))
+    n_unc_max = max(1, int(target * 0.10))   # up to 10% UNCERTAIN
+    n_fake_max = target - n_real_min - n_unc_max
 
     promoted: list[dict] = []
     rejected: list[dict] = []
-    target_total = args.days * args.cards_per_day
+    pool_index = 0
 
-    fake_idx = real_idx = unc_idx = 0
-    for day in range(1, args.days + 1):
-        day_card_count = 0
-        # Reserve credible quota first
-        for _ in range(args.min_credible_per_day):
-            if real_idx >= len(reals):
-                break
-            promoted_card = _promote(reals[real_idx], day, len(promoted), args.seed)
-            if promoted_card:
-                promoted.append(promoted_card)
-            else:
-                rejected.append({"id": reals[real_idx].get("id"),
-                                  "reason": "schema_validation_real"})
-            real_idx += 1
-            day_card_count += 1
-        # Fill rest with fakes (and a sprinkle of uncertains)
-        while day_card_count < args.cards_per_day:
-            if rng.random() < 0.15 and unc_idx < len(uncertains):
-                src = uncertains[unc_idx]; unc_idx += 1
-            elif fake_idx < len(fakes):
-                src = fakes[fake_idx]; fake_idx += 1
-            elif real_idx < len(reals):
-                src = reals[real_idx]; real_idx += 1
-            elif unc_idx < len(uncertains):
-                src = uncertains[unc_idx]; unc_idx += 1
-            else:
-                break
-            promoted_card = _promote(src, day, len(promoted), args.seed)
-            if promoted_card:
-                promoted.append(promoted_card)
-            else:
-                rejected.append({"id": src.get("id"),
-                                  "reason": "schema_validation_fake"})
-            day_card_count += 1
+    # 1) Reserve REAL quota first
+    for c in reals[:n_real_min]:
+        pc = _promote(c, pool_index, args.seed)
+        if pc:
+            promoted.append(pc); pool_index += 1
+        else:
+            rejected.append({"id": c.get("id"), "reason": "schema_real"})
 
-    # Cross-link each FAKE to the most recent REAL the player has seen
-    # (the credible-counter pairing for VERIdict)
-    last_credible_id: str | None = None
-    for c in promoted:
-        if c["verdict"] == "REAL":
-            last_credible_id = c["id"]
-        elif c["verdict"] == "FAKE" and last_credible_id:
-            c["explanation"]["credible_counter_card_id"] = last_credible_id
+    # 2) Add UNCERTAIN cap
+    for c in uncertains[:n_unc_max]:
+        pc = _promote(c, pool_index, args.seed)
+        if pc:
+            promoted.append(pc); pool_index += 1
+        else:
+            rejected.append({"id": c.get("id"), "reason": "schema_unc"})
 
-    Path(args.out_file).parent.mkdir(parents=True, exist_ok=True)
-    json.dump(promoted, open(args.out_file, "w", encoding="utf-8"),
-              ensure_ascii=False, indent=2)
-    Path(args.reject_out).parent.mkdir(parents=True, exist_ok=True)
-    json.dump(rejected, open(args.reject_out, "w", encoding="utf-8"),
-              ensure_ascii=False, indent=2)
+    # 3) Fill remaining slots with FAKE
+    need = target - len(promoted)
+    for c in fakes[:need]:
+        pc = _promote(c, pool_index, args.seed)
+        if pc:
+            promoted.append(pc); pool_index += 1
+        else:
+            rejected.append({"id": c.get("id"), "reason": "schema_fake"})
 
-    report = {
-        "input_total": len(cards),
-        "promoted": len(promoted),
-        "rejected": len(rejected),
-        "days": args.days,
-        "cards_per_day": args.cards_per_day,
-        "fake_count": sum(1 for c in promoted if c["verdict"] == "FAKE"),
-        "real_count": sum(1 for c in promoted if c["verdict"] == "REAL"),
+    # 4) If still short, top up from any leftover REAL/UNCERTAIN
+    leftover = (reals[n_real_min:] + uncertains[n_unc_max:]
+                + fakes[need:])
+    rng.shuffle(leftover)
+    while len(promoted) < target and leftover:
+        c = leftover.pop()
+        pc = _promote(c, pool_index, args.seed)
+        if pc:
+            promoted.append(pc); pool_index += 1
+        else:
+            rejected.append({"id": c.get("id"), "reason": "schema_topup"})
+
+    # Sanity: cross-link every FAKE card to a randomly sampled REAL
+    # from the pool. Used by VERIdict for the credible-counter pairing
+    # *within a player's session*. The pairing is approximate at the
+    # pool level — script 28 may re-link based on actual draw order.
+    real_ids = [c["id"] for c in promoted if c["verdict"] == "REAL"]
+    if real_ids:
+        for c in promoted:
+            if c["verdict"] == "FAKE":
+                c.setdefault("explanation", {})["credible_counter_card_id"] = \
+                    rng.choice(real_ids)
+
+    # Stamp pool-level metadata
+    pool_metadata = {
+        "pool_version": "2.3",
+        "pool_size": len(promoted),
+        "default_days_per_player": args.days,
+        "default_cards_per_day": args.cards_per_day,
+        "default_min_credible_per_day": args.min_credible_per_day,
+        "fake_count":      sum(1 for c in promoted if c["verdict"] == "FAKE"),
+        "real_count":      sum(1 for c in promoted if c["verdict"] == "REAL"),
         "uncertain_count": sum(1 for c in promoted if c["verdict"] == "UNCERTAIN"),
-        "candidate_distribution": {
-            code: sum(1 for c in promoted if c.get("candidate") == code)
-            for code in ["C-RM", "C-IB", "C-JS", "NONE"]
+        "candidate_distribution": dict(Counter(
+            c.get("candidate", "NONE") for c in promoted)),
+        "indicator_coverage": dict(Counter(
+            ind for c in promoted for ind in c.get("fired_indicators", []))),
+        "tier_distribution": dict(Counter(
+            c.get("explanation", {}).get("tier", "?") for c in promoted)),
+        "explanation_diversity": {
+            "total": len(promoted),
+            "unique": len(set(c.get("explanation", {}).get("summary", "")
+                              for c in promoted)),
         },
-        "tier_distribution": _tier_dist(promoted),
-        "indicator_coverage": _indicator_coverage(promoted),
-        "explanation_diversity": _diversity(promoted),
         "bank_version": BANK_VERSION,
         "bank_hash": bank_hash(),
         "ts": datetime.now(timezone.utc).isoformat(),
     }
+
+    # Build the pool file with metadata header so Unity can self-validate
+    pool_doc = {"_metadata": pool_metadata, "cards": promoted}
+
+    Path(args.out_file).parent.mkdir(parents=True, exist_ok=True)
+    json.dump(pool_doc, open(args.out_file, "w", encoding="utf-8"),
+              ensure_ascii=False, indent=2)
+
+    Path(args.reject_out).parent.mkdir(parents=True, exist_ok=True)
+    json.dump(rejected, open(args.reject_out, "w", encoding="utf-8"),
+              ensure_ascii=False, indent=2)
+
     Path(args.report_out).parent.mkdir(parents=True, exist_ok=True)
-    json.dump(report, open(args.report_out, "w", encoding="utf-8"), indent=2)
-    logger.info("Curation report: %s", json.dumps(report, indent=2)[:1500])
+    json.dump(pool_metadata,
+              open(args.report_out, "w", encoding="utf-8"),
+              ensure_ascii=False, indent=2)
 
+    # Capacity estimate: how many distinct decks can the pool support?
+    cards_per_player = args.days * args.cards_per_day
+    capacity_strict = len(promoted) // cards_per_player
+    expected_overlap_pct = 100.0 * cards_per_player / max(len(promoted), 1)
 
-def _promote(card: dict, day: int, idx_in_run: int, seed: int) -> dict | None:
-    """Stamp tier + day, validate against StoryCard schema."""
-    tier = tier_for_card_index(idx_in_run)
-    cand_code = card.get("candidate", "NONE")
-    cand = REGISTRY.get(cand_code)
-    cand_name = cand.name if cand else None
-
-    # Re-assemble explanation at the correct tier
-    card["explanation"] = assemble_explanation(
-        fired_indicators=card.get("fired_indicators", []),
-        verdict=card.get("verdict", "UNCERTAIN"),
-        fake_likelihood_percent=card.get("fake_likelihood_percent", 50.0),
-        seed_str=f"{card['id']}|{seed}",
-        tier=tier,
-        candidate_name=cand_name,
-    )
-    card["day"] = day
-    card.setdefault("provenance", {}).setdefault("script_chain", []).append("24")
-
-    try:
-        StoryCard.model_validate(card)
-        return card
-    except Exception as e:
-        logger.warning("Card %s failed schema: %s", card.get("id"), str(e)[:200])
-        return None
-
-
-def _tier_dist(cards: list[dict]) -> dict:
-    out: dict = {"novice": 0, "proficient": 0, "advanced": 0}
-    for c in cards:
-        t = c.get("explanation", {}).get("tier", "novice")
-        out[t] = out.get(t, 0) + 1
-    return out
-
-
-def _indicator_coverage(cards: list[dict]) -> dict:
-    counts: dict = {}
-    for c in cards:
-        for ind in c.get("fired_indicators", []):
-            counts[ind] = counts.get(ind, 0) + 1
-    return dict(sorted(counts.items(), key=lambda kv: -kv[1]))
-
-
-def _diversity(cards: list[dict]) -> dict:
-    summaries = [c.get("explanation", {}).get("summary", "") for c in cards]
-    unique = len(set(summaries))
-    return {
-        "total_summaries": len(summaries),
-        "unique_summaries": unique,
-        "diversity_pct": round(100.0 * unique / max(len(summaries), 1), 1),
-    }
+    logger.info("=" * 60)
+    logger.info("Pool curation complete (v2.3)")
+    logger.info("  pool_size        : %d", len(promoted))
+    logger.info("  rejected         : %d", len(rejected))
+    logger.info("  cards_per_player : %d (=%d days * %d cards)",
+                cards_per_player, args.days, args.cards_per_day)
+    logger.info("  max non-overlapping decks : %d", capacity_strict)
+    logger.info("  expected pairwise overlap : ~%.1f%% (lower is better)",
+                expected_overlap_pct)
+    logger.info("  verdicts         : %s", dict(Counter(
+        c["verdict"] for c in promoted)))
+    logger.info("  candidates       : %s", dict(Counter(
+        c.get("candidate", "NONE") for c in promoted)))
+    logger.info("=" * 60)
+    logger.info("Pool       -> %s", args.out_file)
+    logger.info("Rejections -> %s", args.reject_out)
+    logger.info("Report     -> %s", args.report_out)
+    logger.info("Next step  -> run scripts/28_draw_user_deck.py")
 
 
 if __name__ == "__main__":

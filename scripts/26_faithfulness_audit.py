@@ -39,6 +39,16 @@ from minerva_response_bank import BANK, CREDIBLE_AFFIRMATIONS, BANK_VERSION
 
 logger = logging.getLogger(__name__)
 
+def _load_cards_or_pool(path: str) -> list:
+    """v2.3: accept either a flat list of cards or a pool doc
+    {"_metadata": ..., "cards": [...]}.
+    """
+    import json
+    payload = json.load(open(path, encoding="utf-8"))
+    if isinstance(payload, dict) and "cards" in payload:
+        return payload["cards"]
+    return payload
+
 
 # Indicator-mention dictionary: words that, if present in an explanation,
 # indicate the explanation is talking about that indicator.
@@ -181,7 +191,7 @@ def main():
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s [%(levelname)s] %(message)s")
 
-    cards = json.load(open(args.in_file, encoding="utf-8"))
+    cards = _load_cards_or_pool(args.in_file)
     audits = [audit_card(c) for c in cards]
     failures = [a for a in audits if not a["passed"]]
 

@@ -201,10 +201,16 @@ class UnityCard(BaseModel):
 
 
 class StoryCard(UnityCard):
-    """A unity card promoted to the daily-cycle story deck."""
-    day: int = Field(ge=1, le=14)
+    """A unity card promoted to the deck pool (v2.3) or daily-cycle deck.
+
+    v2.3: `day` is OPTIONAL. The pool stores cards day-agnostic; the
+    per-user draw script (28) assigns days at draw time. A drawn deck
+    will have day=1..days; a pool card has day=None.
+    """
+    day: int | None = Field(default=None, ge=1, le=14)
     linked_blue_truth: str | None = None
     classification: str | None = None
+    pool_index: int | None = None  # v2.3: position within the pool
 
 
 class RejectionLog(BaseModel):

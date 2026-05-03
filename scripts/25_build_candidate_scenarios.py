@@ -45,6 +45,16 @@ from minerva_candidates import REGISTRY
 
 logger = logging.getLogger(__name__)
 
+def _load_cards_or_pool(path: str) -> list:
+    """v2.3: accept either a flat list of cards or a pool doc
+    {"_metadata": ..., "cards": [...]}.
+    """
+    import json
+    payload = json.load(open(path, encoding="utf-8"))
+    if isinstance(payload, dict) and "cards" in payload:
+        return payload["cards"]
+    return payload
+
 
 def main():
     p = argparse.ArgumentParser()
@@ -56,7 +66,7 @@ def main():
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s [%(levelname)s] %(message)s")
 
-    cards = json.load(open(args.story_cards, encoding="utf-8"))
+    cards = _load_cards_or_pool(args.story_cards)
 
     # Empirical: count how often each indicator fires per candidate
     empirical: dict = {}

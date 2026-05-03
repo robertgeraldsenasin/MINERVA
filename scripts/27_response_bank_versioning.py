@@ -40,9 +40,19 @@ from minerva_candidates import REGISTRY
 
 logger = logging.getLogger(__name__)
 
+def _load_cards_or_pool(path: str) -> list:
+    """v2.3: accept either a flat list of cards or a pool doc
+    {"_metadata": ..., "cards": [...]}.
+    """
+    import json
+    payload = json.load(open(path, encoding="utf-8"))
+    if isinstance(payload, dict) and "cards" in payload:
+        return payload["cards"]
+    return payload
+
 
 def cmd_stamp(args):
-    cards = json.load(open(args.in_file, encoding="utf-8"))
+    cards = _load_cards_or_pool(args.in_file)
     h = bank_hash()
     for c in cards:
         c.setdefault("provenance", {})["bank_version"] = BANK_VERSION
@@ -76,7 +86,7 @@ def cmd_diff(args):
 
 
 def cmd_rerender(args):
-    cards = json.load(open(args.in_file, encoding="utf-8"))
+    cards = _load_cards_or_pool(args.in_file)
     rendered = 0
     for idx, c in enumerate(cards):
         cand_obj = REGISTRY.get(c.get("candidate", "NONE"))

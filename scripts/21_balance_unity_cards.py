@@ -49,7 +49,12 @@ def main():
     p.add_argument("--out_file", required=True)
     p.add_argument("--report_out", default="reports/balance_report.json")
     p.add_argument("--seed", type=int, default=1729)
-    p.add_argument("--target_total", type=int, default=200)
+    p.add_argument("--target_total", type=int, default=500,
+                   help="Pool size. v2.3: default 500 (was 200) to support "
+                        "per-user dynamic decks. With 500 cards / 56 per "
+                        "deck, ~50 students get unique decks with <11% "
+                        "pairwise overlap. Bump higher (800-1000) for "
+                        "larger cohorts.")
     p.add_argument("--fake_real_ratio", type=float, default=0.6,
                    help="Target fraction of FAKE cards (rest split between REAL and UNCERTAIN)")
     p.add_argument("--validate", action="store_true", default=True)
