@@ -1,4 +1,4 @@
-# M.I.N.E.R.V.A. Master Codebook (v2.4)
+# M.I.N.E.R.V.A. Master Codebook (v2.6)
 
 > *Misinformation Investigation through Networked Embeddings for Rumor Verification and Awareness*
 > FEU Institute of Technology — IT Thesis 2026
@@ -12,15 +12,17 @@ Version trail:
 - **v2.1**: Bug fixes (schema mismatch, lenient truncation, audit lexicon)
 - **v2.2**: Post-audit hardening (repetition collapse, off-theme expansion, alignment guard)
 - **v2.3**: Dynamic-content system (500-card pool + per-user deck draw)
-- **v2.4** (current): Three-candidate enforcement (unified placeholder regex, tier-ratio fix, alignment-threshold tuning)
+- **v2.4**: Three-candidate enforcement (unified placeholder regex, tier-ratio fix, alignment-threshold tuning)
+- **v2.5**: Text quality post-processing (truncation trim, gibberish-suffix cleanup, English-quote stripper)
+- **v2.6** (current): Templates-first architecture + universal pseudonymization. Replaces GPT-2-as-primary with rule-constrained content generation per thesis §1.3 Definitions, p.12.
 
 ---
 
-## 0. The Architecture in Three Sentences
+## 0. The Architecture in Three Sentences (v2.6)
 
-GPT-2 generates 3000+ raw posts; QLattice + detectors score them; the explainability layer assigns indicators and produces feedback prose.
-The result is a **500-card pool** where every card is routed to one of exactly three fictional candidates (C-RM Marquez, C-IB Bantayan, C-JS Salonga); any GPT-2 placeholder like Entity X or Candidate Y is rewritten to the cue-routed canonical name.
-At runtime each Filipino SHS student gets their own **56-card deck deterministically drawn from the pool** by their student ID, so no two students see the same content.
+**Templates** generate 470-530 high-quality cards directly from documented Filipino electoral disinformation tactics (red-tagging, historical revisionism, fake survey, conspiracy theory, etc. drawn from Arugay 2022, Schipper 2025, Ong & Cabañes 2018, and Roozenbeek's DEPICT taxonomy); the **universal pseudonymizer** replaces every non-canonical person-name with a deterministic generic role placeholder (e.g. "Bikoy" → "isang testigo"); the rest of the pipeline (balance → theme → curate → draw → audit) consumes the same schema unchanged.
+The result is a **~470-card pool** where every card is on-tactic, on-theme, names only the three canonical candidates (C-RM Marquez, C-IB Bantayan, C-JS Salonga) plus generic placeholders, and ends with proper terminal punctuation.
+At runtime each Filipino SHS student gets their own **56-card deck deterministically drawn from the pool** by their student ID, so no two students see the same content (pairwise overlap 13.93% mean, under the <15% target).
 
 ---
 
@@ -178,18 +180,84 @@ Total: 38 tests passing in v2.4.
 
 ## 8. Selected Bibliography
 
-* Roozenbeek, J., & van der Linden, S. (2019). The fake news game. *Journal of Risk Research*.
+* Roozenbeek, J., & van der Linden, S. (2019). Fake news game confers psychological resistance against online misinformation. *Humanities and Social Sciences Communications*, 5(1).
+* Roozenbeek, J., & van der Linden, S. (2020). Breaking Harmony Square. *HKS Misinformation Review*, 1(8).
 * Basol, M., Roozenbeek, J., & van der Linden, S. (2020). Good news about Bad News. *Journal of Cognition*.
+* Costello, T., et al. (2024). Towards generalizable AI-assisted misinformation inoculation. *arxiv:2410.19202*. — Backs v2.6 template + slot architecture.
 * Caulfield, M. (2019). SIFT (the four moves). *Hapgood blog*.
 * Caulfield, M., & Wineburg, S. (2023). *Verified*. University of Chicago Press.
 * Modirrousta-Galian, A., & Higham, P. A. (2023). Conservative response bias in misinformation training. *J. Experimental Psychology: Applied*.
-* Arugay, A. A., & Baquisal, J. K. A. (2022). Mobilized and polarized. *Pacific Affairs*.
-* Schipper, B. C. (2025). Disinformation tactics in Philippine electoral discourse. *Data & Policy*.
+* Arugay, A. A., & Baquisal, J. K. A. (2022). Mobilized and polarized: Disinformation networks in the 2022 Philippine elections. *Pacific Affairs*, 95(3).
+* Schipper, B. C. (2025). Disinformation by design. *Data & Policy*, 7.
+* Ong, J. C., & Cabañes, J. V. A. (2018). Architects of networked disinformation. *Newton Tech4Dev Network*.
+* PCIJ (2022, May 8). Marcos leads presidential race amid massive disinformation.
 * Christensen, T., et al. (2022). Symbolic regression with QLattice. *Discover Computing*.
 * Brolós, K., Christensen, T., et al. (2021). QLattice. *arXiv:2104.05417*.
-* Yermilov, P., et al. (2023). Consistency-preserving pseudonymisation. *EACL*.
+* Yermilov, P., et al. (2023). Privacy- and utility-preserving NLP with anonymized data. *EACL*.
+* Pilán, I., et al. (2022). The Text Anonymization Benchmark. *Computational Linguistics*, 48(4).
 * Cruz, J. C. B., Tan, J. K. C., & Cheng, C. K. (2020). JCBlaise/Filipino corpus.
 
 ---
 
-*Last updated: v2.4 release (03 May 2026).*
+## 9. v2.6 Additions: Template Generation + Universal Pseudonymization
+
+### 9.1 `scripts/30_template_scenario_generator.py` (NEW)
+
+**Purpose.** Replace ~90% of GPT-2 generation with template-based scenarios drawn from documented Filipino electoral disinformation tactics. The thesis paper (§1.3 Definitions, p.12) defines this approach as "Rule-Constrained Content Generation."
+
+**Architecture.** Nine templates × 1-3 candidate archetypes × N_PER_TEMPLATE iterations × random slot fill = 470-530 cards per run. Each template is keyed to:
+- one of 8 documented Filipino disinformation tactics (historical_revisionism, red_tagging, fake_celebrity_endorsement, urgency_sharing, fake_survey, credible_policy_announcement, ambiguous_allegation, conspiracy_theory)
+- one or more candidate archetypes (DYNASTIC for C-RM, REFORMIST for C-IB, POPULIST for C-JS)
+- a tier (novice/proficient/advanced)
+- the indicators that should fire on the resulting text
+
+Slot vocabulary covers 22 generic role placeholders (`isang opisyal`, `isang kritiko`, `isang testigo`, etc.), 20 Filipino place names, 8 platforms, 11 relative date phrases, 9 money amounts, 8 percentages, 9 news prefixes. Slot-fill randomization ensures no two output cards land identical.
+
+**Output schema.** Identical to GPT-2 generations — drops directly into scripts 21, 23, 24, 28, 26 unchanged. Includes `provenance.tactic`, `provenance.tier`, `provenance.archetype_target` for downstream analysis.
+
+**Indicator coverage.** v2.6 templates fire 8 of 12 indicators (MISS, ANON, FAB, URG, EMO, CONS, REV, ENDO). Adding 4 more templates would close to 12/12 (POL, DISC, IMP, RECF).
+
+### 9.2 `scripts/31_universal_pseudonymize.py` (NEW)
+
+**Purpose.** Enforce thesis §1.5 Limitation #2 ("All candidates, events, organizations, and narratives presented in the game are fictional"). Every person-name that is not one of the three canonical candidates gets replaced with a deterministic generic role placeholder.
+
+**Detection.** Four regex passes:
+1. Title + Name (`Sen./Rep./Mayor` + Capitalized) — most reliable
+2. Tagalog particle + Name (`si/ni/kay` + Capitalized)
+3. First Last (two adjacent capitalized words)
+4. Context trigger + Name (`ayon kay/sabi ni/pahayag ni` + Capitalized)
+
+**Whitelist.** The three canonical candidates verbatim, Tagalog sentence-starts (Update, Sinabi, Hindi…), Filipino places (Maynila, Cebu…), Filipino institutions (DepEd, COMELEC, Pulse Asia, Bangko Sentral, Department of Education, Presidential Communications Operations Office…), and the 22 generic role placeholders themselves (so the script is idempotent).
+
+**Determinism.** SHA-256 hash of `<session_seed>:<lowercase_name>` modulo 22-role inventory yields the placeholder. Per-card cache ensures the same name maps to the same role within one card (narrative continuity); the cross-run seed ensures reproducibility.
+
+**Verified on v2.5 deliverable.** Caught 53 real-person leaks the v2.5 SURNAME_ALLOWLIST missed: Bikoy Advincula (4×), Tulfo (3×), Nieto (3×), Albayalde, Coloma, Brettes, Rowena Guanzon, Eleazar, Mobley, Banac, Toto, Toni, Jove, Bumanglag, Rodman, Lee, Deniece, Paredes.
+
+### 9.3 Pipeline integration modes
+
+**Mode A (default, recommended).** `30 → 31 → 21 → 23 → 24 → 28 → 26`. Templates only. Pool 470-530 cards. Runtime ~3 minutes (no GPU needed for cards).
+
+**Mode B (optional).** `30 + 12 → 13 → 18 → 22 → 31 → 21 → 23 → 24 → 28 → 26`. Templates plus ~15% GPT-2 augmentation. For panel defense if asked about "neural augmentation."
+
+**Mode C (legacy).** v2.5 path. Deprecated for production cards; templates are simply better.
+
+### 9.4 v2.6 Verified Metrics (end-to-end)
+
+| Metric | v2.4 | v2.5 | v2.6 |
+|---|---|---|---|
+| Pool size | 442 | 442 | 472 |
+| Mid-sentence truncation | 93.5% | 2.0% | 0% |
+| Name jamming | 50.1% | 28.3% | 0% |
+| Gibberish codes | 31.7% | 2.9% | 0% |
+| Confusing-name leaks | 69.9% | 69.9% | 0% |
+| Indicator coverage | 4/12 | 4/12 | 8/12 |
+| REAL cards (need ≥21) | 91 | 86 | 84 |
+| Faithfulness audit | 99.78% | 100% | 100% |
+| Pairwise overlap (target <15%) | 15.71% | 15.71% | 13.93% |
+| Unit tests | 38/38 | 38/38 | 38/38 |
+
+Detector accuracy unchanged: RoBERTa 95.6% F1, DistilBERT 91.0% F1, DE-GNN 95.8% F1. v2.6 changes generation only.
+
+---
+
+*Last updated: v2.6 release (03 May 2026).*

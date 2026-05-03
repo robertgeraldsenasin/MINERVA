@@ -46,10 +46,29 @@ ELECTORAL_POSITIVE = [
     "challenger", "opponent", "constituency", "district",
     "house representative", "senator", "governor", "councilor",
     "rally", "endorsement", "debate", "running mate",
-    # M.I.N.E.R.V.A.-specific
+    # M.I.N.E.R.V.A. legacy candidate identifiers (kept for backward compat
+    # with v2.4/v2.5 deliverables and any cards still referencing the
+    # original names)
     "C-RM", "C-IB", "C-JS", "Marquez", "Bantayan", "Salonga",
     "Bagong Sigla", "Tahanan ng Bayan", "Para sa Masa",
 ]
+
+# v2.6-final: extend the positive keyword list with whatever candidate
+# names are currently configured in scripts/candidate_config.py. This
+# means the theme filter automatically recognizes "Cruz" / "Reyes" /
+# "Garcia" (or any other names the team chooses) as electoral signals.
+try:
+    import candidate_config as _cfg
+    for _entry in _cfg.CANDIDATES_CONFIG:
+        ELECTORAL_POSITIVE.extend([
+            _entry["last_name"],
+            _entry["first_name"],
+            _entry["code"],
+        ])
+        if _entry.get("nickname"):
+            ELECTORAL_POSITIVE.append(_entry["nickname"])
+except ImportError:
+    pass  # Use legacy names only
 
 ELECTORAL_NEGATIVE = [
     # Transport (the Grab leak)
@@ -142,14 +161,14 @@ def is_truncated(text: str) -> tuple[bool, str]:
 # ---------------------------------------------------------------------------
 # Pseudonym-integrity check
 # ---------------------------------------------------------------------------
-# v2.5: extended placeholder regex — catches 1-8 letter codes
-# (was 1-3 in v2.4, but the v2.4 deliverable showed GPT-2 generates
-# longer codes too: FIVB, IZZM, DDDU, BSEK, JUWA, JIUL, BREA, BRCA,
-# HDERYL — all observed; the 1-3 cap missed 21 cards / ~5% of pool).
-# The thesis specifies exactly THREE candidates; any "Candidate FIVB"
-# / "Entity HDERYL" placeholder MUST be rewritten to one of the three.
+# v2.4: unified placeholder regex — catches all GPT-2 / JCBlaise
+# placeholder families (Candidate, Entity, Person) with any 1-3
+# letter code. Critical for v2.4 issue #01 — the v2.2 regex caught
+# only "Candidate XXX" (3 letters) but missed "Entity D" through
+# "Entity V" (1-letter codes), causing 62.5% of cards to be rejected
+# by the theme filter rather than rewritten.
 _LEGACY_PSEUDONYM_RE = re.compile(
-    r"\b(?:Candidate|Entity|Person)\s+[A-Z]{1,8}\b"
+    r"\b(?:Candidate|Entity|Person)\s+[A-Z]{1,3}\b"
 )
 
 

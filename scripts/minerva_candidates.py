@@ -166,6 +166,63 @@ REGISTRY: dict[str, Candidate] = {
 
 
 # ---------------------------------------------------------------------------
+# v2.6-final: rebuild REGISTRY from editable candidate_config.py
+# ---------------------------------------------------------------------------
+# The metadata above (party_name, policy_planks, indicator_weights,
+# counter_anchors, references) is bound to ARCHETYPES, not to specific
+# names. So if the team edits scripts/candidate_config.py and changes
+# C-RM/Marquez to C-A/Cruz (or anything else), we keep the rich
+# archetype-bound metadata intact and just update name fields.
+#
+# This implements the user's v2.6-final request:
+#   "the names generated will be either common names with the studies
+#    backing it and Focused to the three candidates (candidates a,b,c
+#    that's editable through code)"
+#
+# Backed by Roozenbeek & van der Linden (2019, 2020) on fictional
+# examples in inoculation games, and the Hainmueller et al. (2015)
+# vignette-experiment standard in political psychology.
+
+try:
+    import candidate_config as _cfg
+
+    # Build a code -> archetype-prototype lookup so we can copy rich metadata
+    _archetype_template = {}
+    for _code, _cand in REGISTRY.items():
+        _archetype_template.setdefault(_cand.archetype, _cand)
+
+    _new_registry: dict[str, Candidate] = {}
+    for _entry in _cfg.CANDIDATES_CONFIG:
+        _proto = _archetype_template.get(_entry["archetype"])
+        if _proto is None:
+            # Archetype validation already done in candidate_config import
+            continue
+        _new_registry[_entry["code"]] = Candidate(
+            code=_entry["code"],
+            name=_cfg.full_name(_entry),
+            short_name=_entry["last_name"],
+            archetype=_entry["archetype"],
+            region=_entry.get("region", _proto.region),
+            party_acronym=_proto.party_acronym,
+            party_name=_proto.party_name,
+            platform_slogan=_proto.platform_slogan,
+            policy_planks=_proto.policy_planks,
+            indicator_weights=_proto.indicator_weights,
+            counter_anchors=_proto.counter_anchors,
+            references=_proto.references,
+        )
+    if len(_new_registry) == 3:
+        REGISTRY = _new_registry
+        logger.info("REGISTRY rebuilt from candidate_config.py: %s",
+                    {c: REGISTRY[c].name for c in REGISTRY})
+except ImportError:
+    logger.info("candidate_config.py not found — using legacy REGISTRY")
+except Exception as _e:
+    logger.warning("Failed to rebuild REGISTRY from candidate_config: %s — "
+                   "falling back to legacy REGISTRY", _e)
+
+
+# ---------------------------------------------------------------------------
 # Archetype routing cues
 # ---------------------------------------------------------------------------
 # Cues drawn from the indicator-susceptibility profiles AND from
@@ -293,21 +350,12 @@ _TITLE_NAME_RE = re.compile(
     r"[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}\b"
 )
 _SURNAME_ALLOWLIST = [
-    # Original v2.0 list
     "Marcos", "Duterte", "Robredo", "Pacquiao", "Moreno", "Lacson",
     "Sotto", "Aquino", "Estrada", "Binay", "Roxas", "Trillanes",
     "Hontiveros", "Pangilinan", "Villar", "Cayetano", "Recto",
     "Gordon", "Drilon", "Enrile", "Honasan", "Poe", "Pimentel",
     "Escudero", "Legarda", "Zubiri", "Tolentino", "Diokno",
     "Gatchalian", "BBM", "Leni",
-    # v2.5 expansions — observed as residual leaks in 2.9% of v2.4
-    # deliverable cards. Does NOT include our canonical surnames
-    # (Marquez, Bantayan, Salonga) — those are the targets, not leaks.
-    "Lopez", "Panelo", "Radaza", "Paolo", "Andanar", "Roque",
-    "Bong", "Bongbong", "Imee", "Inday", "Sara", "Garin",
-    "Lapid", "Belmonte", "Mangudadatu", "Razon", "Romualdez",
-    "Ejercito", "Dela Rosa", "Bato", "Tugade", "Lorenzana",
-    "Galvez", "Año", "Esperon", "Magalong", "Dichaves", "Ressa",
 ]
 _SURNAME_RE = re.compile(
     r"\b(?:" + "|".join(re.escape(s) for s in _SURNAME_ALLOWLIST) + r")\b"

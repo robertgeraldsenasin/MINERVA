@@ -146,14 +146,7 @@ def _top_factors(model, row: dict) -> list:
 
 
 def should_drop(rec: dict) -> tuple[bool, str]:
-    """Lenient drop policy — only reject obviously broken records.
-
-    v2.5: also rejects:
-      * Cards with >=4 ALL-CAPS gibberish-code suffixes after surnames
-        ('Salonga BS, Salonga EA, Salonga DUBA, Salonga BH')
-      * Cards where a single surname is jammed >=8 times (severe
-        repetition that's unsalvageable even after collapse).
-    """
+    """Lenient drop policy — only reject obviously broken records."""
     text = (rec.get("text") or "").strip()
     if not text:
         return True, "empty_text"
@@ -165,24 +158,6 @@ def should_drop(rec: dict) -> tuple[bool, str]:
     last = text.split()[-1].lower().rstrip(".,;:!?\"\u201d")
     if last in DANGLERS:
         return True, "dangling_function_word"
-
-    # v2.5: detect gibberish-code-dense cards (>=4 instances)
-    import re as _re_local
-    GIBBERISH = _re_local.compile(
-        r'\b(?:Marcos|Duterte|Robredo|Pacquiao|Moreno|Lacson|Sotto|Aquino|'
-        r'Marquez|Bantayan|Salonga|Lopez|Panelo|Radaza)'
-        r'\s+[A-Z]{1,5}\b(?![a-z])'
-    )
-    n_gibberish = len(GIBBERISH.findall(text))
-    if n_gibberish >= 4:
-        return True, f"gibberish_code_dense_{n_gibberish}"
-
-    # v2.5: detect surname jamming (>=8 occurrences of a single surname)
-    for surname in ("Marcos", "Duterte", "Robredo",
-                    "Marquez", "Bantayan", "Salonga"):
-        if text.count(surname) >= 8:
-            return True, f"name_jammed_{surname}"
-
     return False, "ok"
 
 

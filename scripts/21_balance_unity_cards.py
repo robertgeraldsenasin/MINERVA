@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-21_balance_unity_cards.py  (REFACTORED v2.0)
-============================================
+21_balance_unity_cards.py  (REFACTORED v2.0; config-aware in v2.6-final)
+========================================================================
 
 Balance the unity_cards.json across:
   * verdicts (FAKE / REAL / UNCERTAIN)
-  * candidates (C-RM / C-IB / C-JS)
+  * candidates (codes from candidate_config.py — v2.6-final)
   * indicator coverage (ensure all 12 are represented)
   * difficulty (easy / medium / hard)
 
@@ -92,7 +92,17 @@ def main():
     n_fake = int(args.target_total * args.fake_real_ratio)
     n_real = int(args.target_total * (1 - args.fake_real_ratio) * 0.85)
     n_uncertain = args.target_total - n_fake - n_real
-    candidate_codes = ["C-RM", "C-IB", "C-JS"]
+    # v2.6-final: pull candidate codes from editable config so the
+    # balance script picks up name swaps automatically. Falls back
+    # to legacy hard-coded list if candidate_config is missing.
+    try:
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+        import candidate_config as _cfg
+        candidate_codes = [c["code"] for c in _cfg.CANDIDATES_CONFIG]
+    except ImportError:
+        candidate_codes = ["C-RM", "C-IB", "C-JS"]
     per_cand_fake = max(1, n_fake // 3)
     per_cand_real = max(1, n_real // 3)
 

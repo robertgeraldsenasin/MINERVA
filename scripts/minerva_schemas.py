@@ -24,7 +24,7 @@ Refs: Khosravi et al. 2022 (auditability); Longo et al. 2024
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -35,7 +35,20 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 Verdict = Literal["FAKE", "REAL", "UNCERTAIN"]
 DifficultyBin = Literal["easy", "medium", "hard"]
 ExplanationTier = Literal["novice", "proficient", "advanced"]
-CandidateCode = Literal["C-RM", "C-IB", "C-JS", "NONE"]
+
+# v2.6-final: CandidateCode used to be Literal["C-RM", "C-IB", "C-JS", "NONE"]
+# but the v2.6-final editable config (scripts/candidate_config.py) lets
+# the team rename codes (e.g. to C-A/C-B/C-C with common Filipino surnames
+# per Roozenbeek 2020 fictional-examples principle). We relax this to a
+# pattern-validated string so the schema picks up whatever codes the
+# config currently specifies. The pattern still rejects malformed codes
+# (must start with "C-" and contain only uppercase letters/dashes/digits)
+# or "NONE". Validation against the configured candidates happens at
+# the application layer (script 21's bucket logic, etc.).
+CandidateCode = Annotated[
+    str,
+    Field(pattern=r"^(?:NONE|C-[A-Z0-9\-]{1,8})$"),
+]
 
 INDICATOR_CODES = [
     "EMO", "URG", "ANON", "MISS", "FAB", "POL",

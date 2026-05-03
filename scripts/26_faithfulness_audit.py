@@ -81,23 +81,51 @@ INDICATOR_MENTIONS = {
             "treat as alleged"],
     "POL": ["polariz", "us-vs-them", "real filipinos", "traitors",
             "in-group", "out-group", "us vs them", "us-vs", "tribal",
-            "less than human"],
+            "less than human",
+            # v2.6-final additions
+            "us versus them", "divisive", "framing", "paghihiwalay",
+            "manghahati", "lipunan", "elitistang"],
     "CONS": ["conspirac", "secret", "cover-up", "they don't want you",
             "hidden", "cabal", "secret-cabal", "footprints", "unfalsifiable",
-            "leaves footprints"],
+            "leaves footprints",
+            # v2.6-final additions
+            "deep state", "lihim", "konspirasiya", "shadowy"],
     "DISC": ["discredit", "personal attack", "ad hominem", "red-tag",
             "smear", "communist", "npa", "evidence", "set it aside",
-            "attacks the person"],
+            "attacks the person",
+            # v2.6-final additions
+            "engaging with arguments", "engaging with their argument",
+            "without engaging", "personal", "atake", "insulto",
+            "without engaging with"],
     "IMP": ["impersonat", "spoofed", "copy-cat", "fake outlet", "logo",
             "real news brand", "domain is wrong", "off by a letter",
-            "borrow its credibility"],
+            "borrow its credibility",
+            # v2.6-final additions
+            "fake authority", "uses titles", "fake account",
+            "pekeng", "nagpapanggap", "fake profile", "fake page"],
     "REV": ["revisionism", "golden age", "historical", "rewriting",
             "martial law", "rewrites a historical period",
-            "who benefits"],
+            "who benefits",
+            # v2.6-final additions
+            "alternative narrative", "without sources",
+            "ginintuang panahon", "binabago ang"],
     "ENDO": ["survey", "endorsement", "85%", "manufactured", "polling firm",
             "sample size", "real surveys disclose", "graphic, not data",
-            "without a polling firm"],
-    "RECF": ["fabrication", "invented project", "fake award", "credential",
+            "without a polling firm",
+            # v2.6-final additions
+            "claimed endorsement", "official statement",
+            "without official"],
+    "RECF": [
+            # v2.6-final REWRITTEN — RECF means "recycled content"
+            # (old material reused/relabeled as new), not fabricated
+            # credentials. The original lexicon was wrong.
+            "recycled", "reshared", "reused", "old photo", "old video",
+            "old clip", "from a previous", "metadata shows",
+            "originally from", "ginagamit muli", "lumang", "matagal na",
+            "reupload", "reshare", "old content",
+            # legacy fabrication markers (kept for backward compat with
+            # old cards that used RECF in the fabrication sense)
+            "fabrication", "invented project", "fake award", "credential",
             "harvard", "nobel", "record", "official site or coa",
             "verifiable record", "voting record"],
 }
