@@ -293,12 +293,21 @@ _TITLE_NAME_RE = re.compile(
     r"[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}\b"
 )
 _SURNAME_ALLOWLIST = [
+    # Original v2.0 list
     "Marcos", "Duterte", "Robredo", "Pacquiao", "Moreno", "Lacson",
     "Sotto", "Aquino", "Estrada", "Binay", "Roxas", "Trillanes",
     "Hontiveros", "Pangilinan", "Villar", "Cayetano", "Recto",
     "Gordon", "Drilon", "Enrile", "Honasan", "Poe", "Pimentel",
     "Escudero", "Legarda", "Zubiri", "Tolentino", "Diokno",
     "Gatchalian", "BBM", "Leni",
+    # v2.5 expansions — observed as residual leaks in 2.9% of v2.4
+    # deliverable cards. Does NOT include our canonical surnames
+    # (Marquez, Bantayan, Salonga) — those are the targets, not leaks.
+    "Lopez", "Panelo", "Radaza", "Paolo", "Andanar", "Roque",
+    "Bong", "Bongbong", "Imee", "Inday", "Sara", "Garin",
+    "Lapid", "Belmonte", "Mangudadatu", "Razon", "Romualdez",
+    "Ejercito", "Dela Rosa", "Bato", "Tugade", "Lorenzana",
+    "Galvez", "Año", "Esperon", "Magalong", "Dichaves", "Ressa",
 ]
 _SURNAME_RE = re.compile(
     r"\b(?:" + "|".join(re.escape(s) for s in _SURNAME_ALLOWLIST) + r")\b"

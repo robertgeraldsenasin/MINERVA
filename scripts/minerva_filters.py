@@ -142,14 +142,14 @@ def is_truncated(text: str) -> tuple[bool, str]:
 # ---------------------------------------------------------------------------
 # Pseudonym-integrity check
 # ---------------------------------------------------------------------------
-# v2.4: unified placeholder regex — catches all GPT-2 / JCBlaise
-# placeholder families (Candidate, Entity, Person) with any 1-3
-# letter code. Critical for v2.4 issue #01 — the v2.2 regex caught
-# only "Candidate XXX" (3 letters) but missed "Entity D" through
-# "Entity V" (1-letter codes), causing 62.5% of cards to be rejected
-# by the theme filter rather than rewritten.
+# v2.5: extended placeholder regex — catches 1-8 letter codes
+# (was 1-3 in v2.4, but the v2.4 deliverable showed GPT-2 generates
+# longer codes too: FIVB, IZZM, DDDU, BSEK, JUWA, JIUL, BREA, BRCA,
+# HDERYL — all observed; the 1-3 cap missed 21 cards / ~5% of pool).
+# The thesis specifies exactly THREE candidates; any "Candidate FIVB"
+# / "Entity HDERYL" placeholder MUST be rewritten to one of the three.
 _LEGACY_PSEUDONYM_RE = re.compile(
-    r"\b(?:Candidate|Entity|Person)\s+[A-Z]{1,3}\b"
+    r"\b(?:Candidate|Entity|Person)\s+[A-Z]{1,8}\b"
 )
 
 

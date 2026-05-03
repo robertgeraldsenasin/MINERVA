@@ -35,6 +35,122 @@ from minerva_response_bank import assemble_explanation, tier_for_card_index
 logger = logging.getLogger(__name__)
 
 
+def _strip_incoherent_english_quotes(text: str) -> str:
+    """v2.5 P4: strip long English-only quoted chunks that don't fit
+    the surrounding Tagalog narrative.
+
+    The fine-tuned GPT-2 frequently inserts incoherent English quotes
+    (60+ chars, 15+ words) inside Tagalog cards — observed in 2.7% of
+    v2.4 deliverable cards. Detection: quoted block of >=15 words
+    containing zero common Tagalog function words.
+    """
+    import re as _re_local
+
+    TAGALOG_MARKERS = {
+        'ang', 'ng', 'sa', 'ay', 'mga', 'kay', 'ko', 'mo', 'ni', 'natin',
+        'tayo', 'kami', 'kayo', 'sila', 'siya', 'po', 'ito', 'iyon',
+        'naman', 'lang', 'din', 'rin', 'kasi', 'pero', 'kahit', 'pa',
+        'na', 'noon', 'dahil', 'matapos', 'ayon', 'sabi', 'wika', 'isang',
+    }
+
+    def _check_quote(match):
+        content = match.group(0)
+        inner = content.strip('"\u201c\u201d')
+        words = inner.split()
+        if len(words) < 15:
+            return content
+        lower_words = {w.lower().strip('.,;:!?"') for w in words}
+        if lower_words & TAGALOG_MARKERS:
+            return content
+        return ''  # pure English 15+ word quote → strip
+
+    text = _re_local.sub(r'"[^"]{60,}"', _check_quote, text)
+    text = _re_local.sub(r'\u201c[^\u201d]{60,}\u201d', _check_quote, text)
+    text = _re_local.sub(r'\s+', ' ', text).strip()
+    text = _re_local.sub(r'\s+([.,;:!?])', r'\1', text)
+    return text
+
+
+def _trim_trailing_fragment(text: str) -> str:
+    """v2.5 P3: trim mid-word and mid-sentence truncation from GPT-2 output.
+
+    GPT-2 with max_new_tokens=120 cuts off mid-word in 93.5% of
+    v2.4 deliverable cards. Strategy:
+      1. If the text already ends with terminal punctuation, return as-is.
+      2. Find the last terminal punctuation ('.','!','?','"','\u201d')
+         in the last 250 chars; if found and >=50 chars of content
+         precede it, trim everything after.
+      3. Otherwise split on sentence boundaries and drop the last
+         (truncated) sentence if remaining content is >=50 chars.
+      4. Last resort: append '...' to mark the truncation honestly.
+    """
+    import re as _re_local
+    if not text:
+        return text
+    text = text.rstrip()
+    if text and text[-1] in '.!?"\u201d':
+        return text
+
+    # Find last terminal-punctuation cut point in last 250 chars
+    search_window = text[-250:]
+    last_idx = -1
+    for sep in ('. ', '! ', '? ', '." ', '!" ', '?" ', '.\n', '!\n', '?\n'):
+        i = search_window.rfind(sep)
+        if i > last_idx:
+            last_idx = i + len(sep) - 1  # include the punctuation
+
+    if last_idx > 50:
+        abs_idx = len(text) - 250 + last_idx + 1
+        trimmed = text[:abs_idx].rstrip()
+        if len(trimmed) >= 50:
+            return trimmed
+
+    # Drop last (truncated) sentence
+    sentences = _re_local.split(r'(?<=[.!?"\u201d])\s+', text)
+    if len(sentences) > 1:
+        kept = ' '.join(sentences[:-1]).rstrip()
+        if len(kept) >= 50:
+            return kept
+
+    # Last resort: mark truncation honestly
+    return text + '...'
+
+
+def _strip_gibberish_codes(text: str) -> str:
+    """v2.5 P2: strip GPT-2's gibberish role-code suffixes after surnames.
+
+    Observed patterns: 'Salonga BS', 'Marquez EA', 'Bantayan BBE',
+    'Marquez A DW', 'Salonga DUBA' — JCBlaise corpus artifacts
+    (the original Filipino news data uses honorific suffixes like
+    'Marcos Jr.' that GPT-2 hallucinates as nonsense letter combos).
+
+    Strategy: any ALL-CAPS 1-5 letter token directly following one of
+    our 3 canonical surnames gets stripped, EXCEPT short legitimate
+    honorifics. Also strips parenthesized variants like 'Marquez (BS)'.
+    """
+    import re as _re_local
+    LEGITIMATE_SUFFIXES = {"Jr", "Sr", "II", "III", "IV"}
+
+    for surname in ("Marquez", "Bantayan", "Salonga"):
+        pattern = rf'\b({surname})\s+([A-Z]{{1,5}})\b(?![a-z])'
+
+        def _strip_code(m, _s=surname):
+            if m.group(2) in LEGITIMATE_SUFFIXES:
+                return m.group(0)
+            return m.group(1)
+
+        text = _re_local.sub(pattern, _strip_code, text)
+        # Strip "Surname (XYZ)" and "Surname (Surname)" patterns
+        text = _re_local.sub(
+            rf'\b{surname}\s*\([A-Za-z]{{1,8}}\)',
+            surname, text
+        )
+
+    text = _re_local.sub(r'\s+', ' ', text).strip()
+    text = _re_local.sub(r'\s+([.,;:!?])', r'\1', text)
+    return text
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--in_file", required=True)
@@ -51,13 +167,13 @@ def main():
     session_cache: dict[str, str] = {}
     import re as _re
 
-    # v2.4: UNIFIED placeholder regex — catches all GPT-2 / JCBlaise
-    # placeholder families. The thesis specifies exactly THREE fictional
-    # candidates (C-RM, C-IB, C-JS); any other "Candidate X" / "Entity Y"
-    # / "Person Z" placeholder MUST be rewritten to one of those three.
-    # Anything else is a leak.
+    # v2.5: EXTENDED placeholder regex — catches 1-8 letter codes
+    # (was 1-3 in v2.4). v2.4 deliverable analysis found GPT-2 also
+    # emits longer codes: FIVB, IZZM, DDDU, BSEK, JUWA, BREA, HDERYL.
+    # Any "Candidate XYZW" / "Entity ABCDE" placeholder MUST be
+    # rewritten to one of the three canonical candidates.
     LEGACY_RE = _re.compile(
-        r"\b(?:Candidate|Entity|Person)\s+[A-Z]{1,3}\b"
+        r"\b(?:Candidate|Entity|Person)\s+[A-Z]{1,8}\b"
     )
 
     # v2.2: pre-built list of all canonical full names so we can clean
@@ -146,6 +262,39 @@ def main():
         if code == "C-RM":
             # Marquez assigned but might have '"JM"' from Salonga
             rewritten = _re.sub(r'\s*"JM"\s*', ' ', rewritten)
+
+        # Step D2 (NEW v2.5): strip GPT-2's hallucinated role-code
+        # suffixes after surnames ('Salonga BS', 'Marquez EA',
+        # 'Bantayan BBE'). Affected 31.7% of v2.4 deliverable cards.
+        rewritten = _strip_gibberish_codes(rewritten)
+
+        # Step D3 (NEW v2.5): strip incoherent English-only quoted
+        # chunks (>=15 words, zero Tagalog markers). Affected 2.7%.
+        rewritten = _strip_incoherent_english_quotes(rewritten)
+
+        # Step D4 (NEW v2.5): collapse ADJACENT surname repetitions
+        # left behind by gibberish stripping. Without this, text like
+        # "Salonga BS, Salonga DUBA, Salonga BH" becomes
+        # "Salonga, Salonga, Salonga" — same total surname count.
+        # This pass drops adjacent or near-adjacent repeats.
+        if code in REGISTRY:
+            short = REGISTRY[code].short_name
+            # Collapse "Salonga, Salonga[, Salonga]" → "Salonga"
+            rewritten = _re.sub(
+                rf'\b{short}(?:[,\s]+(?:at\s+)?{short}){{1,5}}\b',
+                short, rewritten
+            )
+            # Collapse "Salonga at Salonga" / "Salonga ni Salonga"
+            rewritten = _re.sub(
+                rf'\b{short}\s+(?:at|ni|sa|ng)\s+{short}\b',
+                short, rewritten
+            )
+
+        # Step D5 (NEW v2.5): trim mid-word and mid-sentence
+        # truncation. Affected 93.5% of v2.4 deliverable cards
+        # because GPT-2 max_new_tokens=120 cuts off mid-thought.
+        rewritten = _trim_trailing_fragment(rewritten)
+
         # Collapse any double spaces left behind
         rewritten = _re.sub(r'\s+', ' ', rewritten).strip()
 
