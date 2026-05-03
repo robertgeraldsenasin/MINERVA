@@ -446,11 +446,35 @@ def select_credible(
     return entries[_stable_index(seed_str + "CREDIBLE" + tier, len(entries))]
 
 
-def tier_for_card_index(idx_within_session: int) -> str:
-    """Difficulty banding: tier graduates as the player advances."""
-    if idx_within_session < 10:
+def tier_for_card_index(idx_within_session: int,
+                         total_in_session: int | None = None) -> str:
+    """Difficulty banding: tier graduates as the player advances.
+
+    v2.4: when total_in_session is provided, uses proportional
+    thresholds (40% novice, 35% proficient, 25% advanced) instead of
+    absolute thresholds. The absolute-threshold version produced 91%
+    advanced-tier cards in pools larger than ~40, which is wrong for
+    SHS pedagogy that needs novice-first scaffolding.
+
+    Pass total_in_session=None for legacy single-session per-card
+    indexing (kept for backward compat).
+    """
+    if total_in_session is None or total_in_session <= 0:
+        # Legacy absolute-threshold mode (kept for backward compat)
+        if idx_within_session < 10:
+            return "novice"
+        if idx_within_session < 25:
+            return "proficient"
+        return "advanced"
+
+    # v2.4: proportional thresholds based on actual pool size.
+    # 40% novice -> 35% proficient -> 25% advanced. Reflects the
+    # tiered-difficulty pedagogy from V.E.R.I.T.A.S. (thesis §3.2).
+    novice_cap     = int(total_in_session * 0.40)
+    proficient_cap = int(total_in_session * 0.75)  # 0.40 + 0.35
+    if idx_within_session < novice_cap:
         return "novice"
-    if idx_within_session < 25:
+    if idx_within_session < proficient_cap:
         return "proficient"
     return "advanced"
 

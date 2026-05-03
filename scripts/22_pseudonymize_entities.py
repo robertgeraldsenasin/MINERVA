@@ -51,9 +51,14 @@ def main():
     session_cache: dict[str, str] = {}
     import re as _re
 
-    # v2.2: catch ALL GPT-2-invented "Candidate XX" patterns
-    # (1-3 uppercase letters; any case for the word "Candidate")
-    LEGACY_RE = _re.compile(r"\b[Cc]andidate\s+[A-Z]{1,3}\b")
+    # v2.4: UNIFIED placeholder regex — catches all GPT-2 / JCBlaise
+    # placeholder families. The thesis specifies exactly THREE fictional
+    # candidates (C-RM, C-IB, C-JS); any other "Candidate X" / "Entity Y"
+    # / "Person Z" placeholder MUST be rewritten to one of those three.
+    # Anything else is a leak.
+    LEGACY_RE = _re.compile(
+        r"\b(?:Candidate|Entity|Person)\s+[A-Z]{1,3}\b"
+    )
 
     # v2.2: pre-built list of all canonical full names so we can clean
     # cross-candidate name pollution that may have leaked in earlier runs
@@ -153,12 +158,13 @@ def main():
             if k in {"fired_indicators", "indicator_details", "named_features"}
         })
 
-        # v2.2: re-apply verdict-rule alignment guard here too,
+        # v2.4: re-apply verdict-rule alignment guard here too,
         # since callers may run script 22 on already-verdicted cards
-        # without re-running script 18.
+        # without re-running script 18. Threshold raised from >=2 to
+        # >=3 to match v2.4 script 18 — see issue #03 in v2.3 audit.
         verdict = card.get("verdict", "UNCERTAIN")
         n_indicators = len(card.get("fired_indicators", []))
-        if verdict == "REAL" and n_indicators >= 2:
+        if verdict == "REAL" and n_indicators >= 3:
             card["verdict"] = "UNCERTAIN"
             fake_pct = card.get("fake_likelihood_percent", 0.0)
             card["fake_likelihood_percent"] = max(fake_pct, 41.0)
@@ -169,7 +175,10 @@ def main():
         if args.re_explain:
             cand_obj = REGISTRY.get(code)
             cand_name = cand_obj.name if cand_obj else None
-            tier = tier_for_card_index(idx)
+            # v2.4: pass total card count so tier ratio is 40/35/25
+            # proportionally, not using legacy absolute thresholds that
+            # produced 91% advanced tier in the v2.3 run.
+            tier = tier_for_card_index(idx, total_in_session=len(cards))
             card["explanation"] = assemble_explanation(
                 fired_indicators=card.get("fired_indicators", []),
                 verdict=card.get("verdict", "UNCERTAIN"),

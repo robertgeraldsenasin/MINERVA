@@ -141,14 +141,15 @@ def _build_card_dict(
     indicator_summary = indicator_summary_for_card(text)
     fired = indicator_summary["fired_indicators"]
 
-    # v2.2: VERDICT-RULE ALIGNMENT GUARD
+    # v2.2 + v2.4: VERDICT-RULE ALIGNMENT GUARD
     # If the symbolic-regression score says REAL but indicator rules
-    # find >=2 misinformation cues, the two interpretation paths
-    # disagree. Showing students "this post is credible" when the
-    # rule layer found multiple red flags would actively confuse the
-    # learner. Demote to UNCERTAIN — keeps the post in the deck for
-    # critical-thinking practice but doesn't claim credibility.
-    if verdict == "REAL" and len(fired) >= 2:
+    # find >=3 misinformation cues, the two interpretation paths
+    # disagree. v2.4 raised the threshold from 2 to 3 because GPT-2
+    # output is naturally noisy (MISS/FAB fire on most outputs because
+    # the synthetic posts lack URLs by construction); demoting at >=2
+    # was too aggressive and produced only 4 REAL cards in the v2.3
+    # run instead of the ~85 needed for the credible-card quota.
+    if verdict == "REAL" and len(fired) >= 3:
         verdict = "UNCERTAIN"
         # Adjust fake_pct upward into the uncertainty band so the
         # displayed percentage doesn't contradict the new verdict.
