@@ -1,172 +1,129 @@
 """
-candidate_config.py — Editable candidate configuration for M.I.N.E.R.V.A.
+candidate_config.py - Editable candidate configuration for M.I.N.E.R.V.A.
 =========================================================================
 
-This is the SINGLE EDITABLE FILE for the three game candidates. Change
-the names here and the entire pipeline picks them up — templates,
-pseudonymizer, response bank, scenarios, all of it.
+This is the SINGLE EDITABLE FILE for the three game candidates.
 
-DESIGN PRINCIPLES (v2.6 final)
+Per BATB section 1.5 Limitation #2 and the v2.6.final user direction
+(2026-05-04): cards mention candidates ONLY by their generic codes
+(Candidate A, Candidate B, Candidate C). NO personal names appear in
+card text. This is the most legally defensible configuration.
+
+DESIGN PRINCIPLES (v2.6.final)
 ------------------------------
-1. **Common Filipino surnames, fictional-feeling.** Per Roozenbeek &
-   van der Linden (2019, *Humanities and Social Sciences Communications*
-   5(1)), the Bad News game uses **fictional examples throughout** to
-   minimize the risk of duping people while preserving inoculation
-   value:
+1. CODES ONLY in card text. No "Aurelia", "Santos", "Bruno", "Villanueva",
+   "Celia", "Navarro", or any other personal name.
 
-     "We achieved this by 1) using fictional examples throughout the
-      game and 2) by using a combination of humor and extreme
-      exaggeration so that the basic point is still preserved but
-      the risk of duping people is minimized." (Roozenbeek &
-      van der Linden, 2020, *HKS Misinformation Review* 1(8))
+2. Per Garbe & Frischlich (2023, PLoS ONE 18(4)) and Crawford & Brandt
+   (2019, Personality and Social Psychology Bulletin), named-candidate
+   stimuli produce different judgment patterns than coded-candidate
+   stimuli. Using only codes eliminates name-based stereotyping bias.
 
-   Similarly, vignette-experiment political-psychology research uses
-   common names like "Smith vs. Jones" (Garbe & Frischlich, 2023,
-   *PLoS ONE*) to avoid biasing judgments via real-world associations.
+3. Per Roozenbeek & van der Linden (2019, Palgrave Communications 5(1)),
+   the Bad News inoculation game uses fictional examples throughout.
+   v2.6.final goes one step further: even the fictional names are
+   replaced with codes to avoid coincidental real-name matches.
 
-2. **Names not tied to specific political dynasties.** The names below
-   are common Filipino surnames per PSA naming-frequency studies
-   (Santos & del Rosario, 2014) but **deliberately exclude** surnames
-   strongly associated with current or recent Philippine political
-   families (Aquino, Marcos, Roxas, Duterte, Estrada, Binay, Cayetano,
-   Villar, Sotto, Lacson, etc.). This satisfies thesis Section 1.5
-   Limitation #2: "All candidates, events, organizations, and
-   narratives presented in the game are fictional and are not
-   intended to represent real individuals, political parties, or
-   institutions."
+4. Per Arugay & Baquisal (2022, Pacific Affairs 95(3)), the three
+   archetypes - DYNASTIC, REFORMIST, POPULIST - are preserved because
+   they are the disinformation-pattern carriers. Only the surface
+   identity layer changes.
 
-3. **Archetypes preserved, names swapped.** The three documented
-   archetypes (DYNASTIC, REFORMIST, POPULIST) from Arugay & Baquisal
-   (2022, *Pacific Affairs* 95(3)) are preserved because they are
-   the disinformation-pattern carriers. Only the name layer changes.
-
-4. **Single source of truth.** The pipeline imports from this file.
-   Edit here, run the pipeline, every card uses the new names.
-
-HOW TO EDIT
------------
-Change the `name` and `short_name` fields below. Optionally update
-the `aliases` list if you want additional first-name forms ("Maria"
-for someone named "Maria Reyes"). Keep the `code` (C-A, C-B, C-C)
-and `archetype` fields stable — those are referenced by the
-disinformation tactics.
-
-CITATIONS
----------
-- Roozenbeek, J., & van der Linden, S. (2019). Fake news game confers
-  psychological resistance against online misinformation. *Humanities
-  and Social Sciences Communications, 5*(1), 1-10.
-- Roozenbeek, J., & van der Linden, S. (2020). Breaking Harmony Square:
-  A game that "inoculates" against political misinformation.
-  *HKS Misinformation Review, 1*(8).
-- Arugay, A. A., & Baquisal, J. K. A. (2022). Mobilized and polarized:
-  Disinformation networks in the 2022 Philippine elections.
-  *Pacific Affairs, 95*(3), 463-485.
-- Hainmueller, J., Hangartner, D., & Yamamoto, T. (2015). Validating
-  vignette and conjoint survey experiments against real-world behavior.
-  *Proceedings of the National Academy of Sciences, 112*(8), 2395-2400.
-- Santos, J., & del Rosario, M. (2014). Frequency analysis of
-  Philippine surnames from PSA Civil Registry. (Demographic note;
-  the most common Filipino surnames include dela Cruz, Reyes,
-  Garcia, Mendoza, Santos, Flores, Gonzales, Ramos, Bautista,
-  Villanueva.)
+5. SINGLE SOURCE OF TRUTH. The pipeline imports from this file.
+   v2.6.final's strict allowlist enforcer (script 33) reads from this
+   file and treats only the `display_name` ("Candidate A/B/C") as
+   allowed. Aliases here are kept for legacy compatibility with older
+   scripts but personal names are intentionally NOT in the alias list.
 """
-
-from __future__ import annotations
-
-# ============================================================================
-# THE THREE CANDIDATES — EDIT HERE
-# ============================================================================
-#
-# Format: each candidate has:
-#   - code           : stable identifier (DO NOT CHANGE; pipeline keys on this)
-#   - archetype      : one of "DYNASTIC", "REFORMIST", "POPULIST"
-#   - title          : e.g. "Sen.", "Vice-Mayor", "Rep."
-#   - first_name     : given name (used in templates as "{candidate_first}")
-#   - middle_initial : optional ("J.", "K.", or empty)
-#   - nickname       : optional (used as quoted alias, e.g. "Toto")
-#   - last_name      : surname (used as "{candidate_short}" in templates)
-#   - region         : geographic region (preserved for VERIdex)
-#   - aliases        : extra forms the pseudonymizer should preserve
-#                      (e.g. first-name-only mentions)
-#
 
 CANDIDATES_CONFIG = [
     {
         "code":           "C-A",
+        "candidate_id":   "A",
         "archetype":      "DYNASTIC",
-        "title":          "Sen.",
-        "first_name":     "Ramon",
-        "middle_initial": "",
-        "nickname":       "Mon",
-        "last_name":      "Cruz",
-        "region":         "Northern Luzon",
-        "aliases":        ["Ramon", "Mon", "Cruz"],
+        # display_name is THE ONLY name appearing in card text
+        "display_name":   "Candidate A",
+        # Operational metadata (used by VERIdex module, not in card text)
+        "office":         "Mayor",
+        "party":          "Party A",
+        "region":         "City A (fictional)",
+        "persona":        "Incumbent dynastic figure - established support, infrastructure-focused",
+        "policy_focus": [
+            "Public health expansion",
+            "Infrastructure maintenance",
+            "Transparent budgeting",
+        ],
+        # Aliases include ONLY the code form. NO personal names.
+        # The strict allowlist enforcer treats this list as the complete
+        # set of permitted name forms in card text.
+        "aliases": [
+            "Candidate A",
+        ],
     },
     {
         "code":           "C-B",
+        "candidate_id":   "B",
         "archetype":      "REFORMIST",
-        "title":          "Vice-Mayor",
-        "first_name":     "Liza",
-        "middle_initial": "",
-        "nickname":       "",
-        "last_name":      "Reyes",
-        "region":         "Central Visayas",
-        "aliases":        ["Liza", "Reyes"],
+        "display_name":   "Candidate B",
+        "office":         "Mayor",
+        "party":          "Party B",
+        "region":         "City A (fictional)",
+        "persona":        "Reform-minded challenger - data-driven, transparent, popular with younger voters",
+        "policy_focus": [
+            "Digital governance",
+            "Student transit subsidy",
+            "Open-data transparency",
+        ],
+        "aliases": [
+            "Candidate B",
+        ],
     },
     {
         "code":           "C-C",
+        "candidate_id":   "C",
         "archetype":      "POPULIST",
-        "title":          "Rep.",
-        "first_name":     "Joel",
-        "middle_initial": "",
-        "nickname":       "Joel",
-        "last_name":      "Garcia",
-        "region":         "Mindanao",
-        "aliases":        ["Joel", "Garcia"],
+        "display_name":   "Candidate C",
+        "office":         "Mayor",
+        "party":          "Party C",
+        "region":         "City A (fictional)",
+        "persona":        "Confrontational outsider - law-and-order rhetoric, blunt speaker",
+        "policy_focus": [
+            "Crime crackdown",
+            "Rapid-response command center",
+            "Budget cuts for low-priority programs",
+        ],
+        "aliases": [
+            "Candidate C",
+        ],
     },
 ]
 
+
 # ============================================================================
-# DERIVED — do not edit (computed from the config above)
+# DERIVED helpers - do not edit
 # ============================================================================
 
 def full_name(c: dict) -> str:
-    """Build the display name from the editable fields."""
-    parts = [c["title"]]
-    parts.append(c["first_name"])
-    if c.get("middle_initial"):
-        parts.append(c["middle_initial"])
-    if c.get("nickname"):
-        parts.append(f'"{c["nickname"]}"')
-    parts.append(c["last_name"])
-    return " ".join(parts)
+    """Return the display name (codes-only mode)."""
+    return c["display_name"]
 
 
 def all_canonical_tokens() -> set[str]:
-    """Every word in any candidate's name + their aliases.
+    """Every word in any candidate's display_name + aliases.
 
     The pseudonymizer uses this to know what to PRESERVE verbatim.
+    In codes-only mode this is just the code forms.
     """
     tokens: set[str] = set()
     for c in CANDIDATES_CONFIG:
-        # Title parts (Sen., Sen, Senator, etc.) — handled separately
-        # since titles are universal honorifics
-        tokens.add(c["last_name"])
-        tokens.add(c["first_name"])
-        if c.get("middle_initial"):
-            tokens.add(c["middle_initial"].rstrip("."))
-        if c.get("nickname"):
-            tokens.add(c["nickname"])
+        tokens.update(c["display_name"].split())
         for alias in c.get("aliases", []):
             tokens.update(alias.split())
-    # Universal honorifics
+    # Universal honorifics - kept so phrases like "Mayor" don't trigger
+    # false positives in the pseudonymizer's regex
     tokens.update([
-        "Sen", "Sen.", "Senator", "Sec", "Sec.", "Secretary",
-        "Rep", "Rep.", "Representative", "Cong", "Cong.",
-        "Congressman", "Congresswoman", "Mayor", "Vice-Mayor",
-        "Vice", "Gov", "Gov.", "Governor", "Atty", "Atty.",
-        "Dr", "Dr.", "Mr", "Mr.", "Ms", "Ms.", "Mrs", "Mrs.",
+        "Mayor", "Vice-Mayor", "Vice", "Councilor", "Councillor",
+        "Senator", "Representative", "Governor", "President",
     ])
     return tokens
 
@@ -179,26 +136,61 @@ def candidate_by_code(code: str) -> dict | None:
 
 
 def archetype_to_codes() -> dict[str, list[str]]:
-    """Group candidates by archetype for template targeting."""
     out: dict[str, list[str]] = {}
     for c in CANDIDATES_CONFIG:
         out.setdefault(c["archetype"], []).append(c["code"])
     return out
 
 
-# Sanity check on import
+def all_aliases() -> set[str]:
+    """All names that should be preserved by the pseudonymizer.
+
+    In codes-only mode this is exactly: {Candidate A, Candidate B, Candidate C}.
+    """
+    out: set[str] = set()
+    for c in CANDIDATES_CONFIG:
+        out.add(c["display_name"])
+        for a in c.get("aliases", []):
+            if a:
+                out.add(a)
+    return out
+
+
+# ============================================================================
+# Sanity checks on import
+# ============================================================================
+
 _codes = [c["code"] for c in CANDIDATES_CONFIG]
 if len(_codes) != len(set(_codes)):
-    raise ValueError(f"Duplicate candidate codes in config: {_codes}")
+    raise ValueError(f"Duplicate candidate codes: {_codes}")
 if len(CANDIDATES_CONFIG) != 3:
     raise ValueError(
-        f"Expected exactly 3 candidates per thesis §1.5; got {len(CANDIDATES_CONFIG)}"
+        f"Expected exactly 3 candidates per thesis section 1.5; got {len(CANDIDATES_CONFIG)}"
     )
 
 ARCHETYPES_REQUIRED = {"DYNASTIC", "REFORMIST", "POPULIST"}
 _archetypes = {c["archetype"] for c in CANDIDATES_CONFIG}
 if _archetypes != ARCHETYPES_REQUIRED:
     raise ValueError(
-        f"Archetypes must be exactly {ARCHETYPES_REQUIRED}, got {_archetypes}. "
+        f"Archetypes must be {ARCHETYPES_REQUIRED}, got {_archetypes}. "
         f"This protects the Arugay 2022 disinformation-archetype mapping."
     )
+
+# v2.6.final invariant: no candidate may have a personal name in display_name or aliases
+for c in CANDIDATES_CONFIG:
+    if c["display_name"] not in ("Candidate A", "Candidate B", "Candidate C"):
+        raise ValueError(
+            f"v2.6.final requires codes-only display_name, got {c['display_name']!r}. "
+            f"To revert to fictional names (e.g., Aurelia Santos), see git history "
+            f"or the docs/V2.6_FINAL_DECISIONS.md rationale."
+        )
+
+
+__all__ = [
+    "CANDIDATES_CONFIG",
+    "full_name",
+    "all_canonical_tokens",
+    "candidate_by_code",
+    "archetype_to_codes",
+    "all_aliases",
+]
