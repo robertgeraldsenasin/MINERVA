@@ -77,7 +77,7 @@ if str(REPO_ROOT) not in sys.path:
 
 def main() -> None:
     p = argparse.ArgumentParser(
-        description="v2.6.final neuro-symbolic GPT-2 fine-tuning."
+        description="neuro-symbolic GPT-2 fine-tuning (v2.8.5)."
     )
     p.add_argument("--corpus_dir", default="data/gpt2_neurosymbolic",
                    help="Output directory of script 10b "
@@ -100,7 +100,7 @@ def main() -> None:
     # Lazy imports — heavy and only needed at runtime
     try:
         import torch
-        from datasets import load_dataset
+        from datasets import Dataset, DatasetDict
         from transformers import (
             AutoModelForCausalLM,
             AutoTokenizer,
@@ -157,11 +157,22 @@ def main() -> None:
     logger.info("Pretrained linguistic weights preserved: only %d new "
                 "embedding rows are randomly initialized.", n_added)
 
-    # 4. Build training datasets from text files
-    raw = load_dataset(
-        "text",
-        data_files={"train": str(train_file), "validation": str(val_file)},
-    )
+    # 4. Build training datasets from text files.
+    # v2.8.5: Bypass `datasets.load_dataset("text", ...)` because it triggers
+    # `NotImplementedError: Loading a dataset cached in a LocalFileSystem is
+    # not supported` on `datasets >= 2.14` due to an inverted FS-type check
+    # in `as_dataset()`. We just want to wrap two text files as Datasets;
+    # `Dataset.from_dict` does that fully in-memory with no fsspec involvement.
+    def _read_lines(path: Path) -> list:
+        with open(path, "r", encoding="utf-8") as f:
+            return [line.rstrip("\n") for line in f if line.strip()]
+
+    raw = DatasetDict({
+        "train": Dataset.from_dict({"text": _read_lines(train_file)}),
+        "validation": Dataset.from_dict({"text": _read_lines(val_file)}),
+    })
+    logger.info("Built in-memory DatasetDict: train=%d val=%d (no fsspec cache)",
+                len(raw["train"]), len(raw["validation"]))
 
     def tokenize(batch):
         return tok(batch["text"])
