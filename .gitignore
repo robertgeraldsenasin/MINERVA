@@ -47,3 +47,7 @@ checkpoints/
 .env.local
 *.key
 *.pem
+
+# Local backups
+*.bak.py
+candidate_config_*.bak.py

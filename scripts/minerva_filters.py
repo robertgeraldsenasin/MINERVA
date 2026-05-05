@@ -53,22 +53,28 @@ ELECTORAL_POSITIVE = [
     "Bagong Sigla", "Tahanan ng Bayan", "Para sa Masa",
 ]
 
-# v2.6-final: extend the positive keyword list with whatever candidate
-# names are currently configured in scripts/candidate_config.py. This
-# means the theme filter automatically recognizes "Cruz" / "Reyes" /
-# "Garcia" (or any other names the team chooses) as electoral signals.
+# v2.6.final: extend the positive keyword list with whatever candidate
+# identifiers are currently configured in scripts/candidate_config.py.
+# CRITICAL: filter out empty strings — in v2.6.final's generic-only
+# config, first_name/last_name/nickname are empty, and "" in any text
+# is always True, which would break keyword scoring.
 try:
     import candidate_config as _cfg
     for _entry in _cfg.CANDIDATES_CONFIG:
-        ELECTORAL_POSITIVE.extend([
-            _entry["last_name"],
-            _entry["first_name"],
-            _entry["code"],
-        ])
-        if _entry.get("nickname"):
-            ELECTORAL_POSITIVE.append(_entry["nickname"])
+        for _field in ("display_name", "public_name", "short_name",
+                       "last_name", "first_name", "code", "nickname"):
+            _val = _entry.get(_field)
+            if isinstance(_val, str) and _val.strip():
+                ELECTORAL_POSITIVE.append(_val.strip())
+        for _alias in _entry.get("aliases", []) or []:
+            if isinstance(_alias, str) and _alias.strip():
+                ELECTORAL_POSITIVE.append(_alias.strip())
 except ImportError:
     pass  # Use legacy names only
+
+# Final dedup + remove any stray empty strings
+ELECTORAL_POSITIVE = [w for w in dict.fromkeys(ELECTORAL_POSITIVE)
+                      if isinstance(w, str) and w.strip()]
 
 ELECTORAL_NEGATIVE = [
     # Transport (the Grab leak)
@@ -161,23 +167,29 @@ def is_truncated(text: str) -> tuple[bool, str]:
 # ---------------------------------------------------------------------------
 # Pseudonym-integrity check
 # ---------------------------------------------------------------------------
-# v2.4: unified placeholder regex — catches all GPT-2 / JCBlaise
-# placeholder families (Candidate, Entity, Person) with any 1-3
-# letter code. Critical for v2.4 issue #01 — the v2.2 regex caught
-# only "Candidate XXX" (3 letters) but missed "Entity D" through
-# "Entity V" (1-letter codes), causing 62.5% of cards to be rejected
-# by the theme filter rather than rewritten.
+# v2.6.final: 'Candidate A/B/C' are the CANONICAL display names per the
+# generic-only naming policy. They must NOT be flagged as legacy.
+# Other placeholders (Candidate D-Z, Entity X, Person X) ARE still flagged
+# as leftover unprocessed placeholders that need rewriting.
 _LEGACY_PSEUDONYM_RE = re.compile(
     r"\b(?:Candidate|Entity|Person)\s+[A-Z]{1,3}\b"
 )
+# Whitelist for v2.6.final canonical candidate names
+_CANONICAL_CANDIDATE_NAMES = {"Candidate A", "Candidate B", "Candidate C"}
 
 
 def has_legacy_pseudonyms(text: str) -> tuple[bool, list[str]]:
-    """Returns (any_found, list_of_offenders)."""
+    """Returns (any_found, list_of_offenders).
+
+    v2.6.final: 'Candidate A', 'Candidate B', 'Candidate C' are canonical
+    and not flagged. Anything else matching the placeholder regex IS flagged.
+    """
     if not text:
         return False, []
     matches = list({m.group(0) for m in _LEGACY_PSEUDONYM_RE.finditer(text)})
-    return bool(matches), matches
+    # Filter out canonical names
+    offenders = [m for m in matches if m not in _CANONICAL_CANDIDATE_NAMES]
+    return bool(offenders), offenders
 
 
 # ---------------------------------------------------------------------------

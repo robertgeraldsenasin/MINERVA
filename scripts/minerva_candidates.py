@@ -197,10 +197,21 @@ try:
         if _proto is None:
             # Archetype validation already done in candidate_config import
             continue
+        # v2.6.final: handle generic-only configs where last_name is empty.
+        # Falls back to display_name / public_name / short_name.
+        _name = _cfg.full_name(_entry).strip()
+        if not _name:
+            _name = (_entry.get("display_name")
+                     or _entry.get("public_name")
+                     or f"Candidate {_entry.get('candidate_id', '?')}")
+        _short = (_entry.get("last_name")
+                  or _entry.get("short_name")
+                  or _entry.get("display_name")
+                  or _name)
         _new_registry[_entry["code"]] = Candidate(
             code=_entry["code"],
-            name=_cfg.full_name(_entry),
-            short_name=_entry["last_name"],
+            name=_name,
+            short_name=_short,
             archetype=_entry["archetype"],
             region=_entry.get("region", _proto.region),
             party_acronym=_proto.party_acronym,
