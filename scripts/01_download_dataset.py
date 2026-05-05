@@ -2,14 +2,18 @@
 """
 M.I.N.E.R.V.A. v2.8 — Script 01: Download JCBlaise Fake News Filipino dataset.
 
-Three-tier fallback chain:
-  Tier 1: datasets.load_dataset()                 (fastest if compatible)
-  Tier 2: direct parquet via pandas               (bypasses fsspec issues)
-  Tier 3: direct CSV via urllib                   (last resort)
+The dataset (jcblaise/fake_news_filipino) uses a custom Python loading script,
+NOT static parquet/CSV files. There's no realistic direct download fallback —
+HuggingFace is the only canonical source. So this script focuses on making the
+HuggingFace path robust:
 
-This robustness was added in v2.8 after v2.7 runs hit the
-`NotImplementedError: Loading a dataset cached in a LocalFileSystem
-is not supported` failure on Colab images with mismatched fsspec/datasets.
+  Tier 1: load_dataset(..., trust_remote_code=True)         (canonical)
+  Tier 2: same but with disable_caching to bypass fsspec     (fallback)
+
+The earlier v2.8 attempt to fall back to parquet/CSV URLs was based on the wrong
+assumption that the dataset was static. It isn't. Per HF's notice on the dataset
+card: "The viewer is disabled because this dataset repo requires arbitrary
+Python code execution." That's a custom loader, not a parquet table.
 
 Citation:
   Cruz, J. C. B., Tan, J. A., & Cheng, C. K. (2020).
@@ -17,14 +21,12 @@ Citation:
   LREC 2020.
 
 Output:
-  data/raw/jcblaise_fake_news_filipino_train.csv  (and val/test if upstream provides)
-  data/raw/jcblaise.csv                           (canonical alias for downstream scripts)
+  data/raw/jcblaise.csv  (canonical CSV the rest of the pipeline reads)
 """
 
 from __future__ import annotations
 
 import sys
-import urllib.request
 from pathlib import Path
 from typing import Optional
 
@@ -32,14 +34,6 @@ import pandas as pd
 
 MINERVA_VERSION = "v2.8"
 JCBLAISE_ID = "jcblaise/fake_news_filipino"
-JCBLAISE_PARQUET_URL = (
-    "https://huggingface.co/datasets/jcblaise/fake_news_filipino/"
-    "resolve/main/data/train-00000-of-00001.parquet"
-)
-JCBLAISE_CSV_URL = (
-    "https://huggingface.co/datasets/jcblaise/fake_news_filipino/"
-    "resolve/main/fake_news_filipino.csv"
-)
 
 RAW_DIR = Path("data/raw")
 RAW_DIR.mkdir(parents=True, exist_ok=True)
@@ -57,7 +51,6 @@ def _print_banner() -> None:
 def _save_canonical(df: pd.DataFrame, source: str) -> Path:
     """Write the canonical CSV that downstream scripts (02, 03) expect."""
     out_path = RAW_DIR / "jcblaise.csv"
-    # Normalize column names to a canonical schema downstream expects
     if "label" not in df.columns and "labels" in df.columns:
         df = df.rename(columns={"labels": "label"})
     if "text" not in df.columns and "article" in df.columns:
@@ -67,34 +60,24 @@ def _save_canonical(df: pd.DataFrame, source: str) -> Path:
             f"Expected columns 'text' and 'label' in dataset; found {list(df.columns)}"
         )
     df.to_csv(out_path, index=False)
-    print(f"[OK] {source} → {out_path} ({len(df)} rows)")
+    print(f"\n[OK] {source} → {out_path} ({len(df)} rows)")
     print(f"     columns: {list(df.columns)}")
     if "label" in df.columns:
         print(f"     label distribution: {dict(df['label'].value_counts())}")
     return out_path
 
 
-def _try_datasets_library() -> Optional[pd.DataFrame]:
-    """Tier 1: HuggingFace `datasets` library. Sensitive to fsspec version."""
-    print("\n[Tier 1] Trying datasets.load_dataset()...")
+def _try_tier_1_standard() -> Optional[pd.DataFrame]:
+    """Tier 1: standard load_dataset with trust_remote_code=True."""
+    print("\n[Tier 1] load_dataset(trust_remote_code=True) ...")
     try:
-        from datasets import load_dataset  # type: ignore
+        from datasets import load_dataset
 
-        ds = load_dataset(JCBLAISE_ID)
-        # Multiple splits possible; concat them all (pipeline does its own re-split in script 03)
-        if hasattr(ds, "keys"):
-            frames = []
-            for split in ds.keys():
-                frames.append(ds[split].to_pandas())
-                print(f"       [+] split '{split}': {len(frames[-1])} rows")
-            df = pd.concat(frames, ignore_index=True)
-        else:
-            df = ds.to_pandas()
-        print(f"  [OK] Tier 1 succeeded — {len(df)} total rows")
-        return df
+        ds = load_dataset(JCBLAISE_ID, trust_remote_code=True)
+        return _datasetdict_to_df(ds, source="Tier 1 (standard)")
     except NotImplementedError as e:
         print(f"  [SKIP] Tier 1 failed: NotImplementedError ({e})")
-        print(f"         (fsspec/datasets version mismatch — falling back)")
+        print(f"         (fsspec/datasets caching incompatibility — falling back)")
         return None
     except ImportError as e:
         print(f"  [SKIP] Tier 1 failed: ImportError ({e})")
@@ -104,31 +87,61 @@ def _try_datasets_library() -> Optional[pd.DataFrame]:
         return None
 
 
-def _try_direct_parquet() -> Optional[pd.DataFrame]:
-    """Tier 2: direct parquet read via pandas + pyarrow. Bypasses datasets/fsspec."""
-    print("\n[Tier 2] Trying direct parquet via pandas...")
+def _try_tier_2_no_cache() -> Optional[pd.DataFrame]:
+    """Tier 2: same as Tier 1 but with caching disabled.
+
+    The NotImplementedError from Tier 1 happens during the cache write step.
+    Disabling caching bypasses it — at the cost of re-downloading on every
+    invocation, but for a 1.32 MB dataset that's fine.
+    """
+    print("\n[Tier 2] load_dataset with caching disabled ...")
     try:
-        df = pd.read_parquet(JCBLAISE_PARQUET_URL)
-        print(f"  [OK] Tier 2 succeeded — {len(df)} rows from parquet")
-        return df
+        from datasets import disable_caching, load_dataset
+
+        disable_caching()
+        ds = load_dataset(JCBLAISE_ID, trust_remote_code=True)
+        return _datasetdict_to_df(ds, source="Tier 2 (no cache)")
     except Exception as e:
         print(f"  [SKIP] Tier 2 failed: {type(e).__name__}: {e}")
         return None
 
 
-def _try_direct_csv() -> Optional[pd.DataFrame]:
-    """Tier 3: direct urllib download of CSV. Last resort."""
-    print("\n[Tier 3] Trying direct CSV via urllib...")
+def _try_tier_3_streaming() -> Optional[pd.DataFrame]:
+    """Tier 3: streaming mode — bypasses the cache entirely by streaming rows."""
+    print("\n[Tier 3] load_dataset in streaming mode ...")
     try:
-        local_csv = RAW_DIR / "_jcblaise_direct.csv"
-        urllib.request.urlretrieve(JCBLAISE_CSV_URL, local_csv)
-        df = pd.read_csv(local_csv)
-        local_csv.unlink()  # cleanup intermediate
-        print(f"  [OK] Tier 3 succeeded — {len(df)} rows from direct CSV")
+        from datasets import load_dataset
+
+        ds_stream = load_dataset(JCBLAISE_ID, trust_remote_code=True, streaming=True)
+        rows = []
+        for split_name in ds_stream:
+            print(f"       [+] streaming split '{split_name}'...")
+            for i, row in enumerate(ds_stream[split_name]):
+                rows.append(row)
+                if i > 0 and i % 500 == 0:
+                    print(f"           {i} rows...")
+        if not rows:
+            return None
+        df = pd.DataFrame(rows)
+        print(f"  [OK] Tier 3 succeeded — {len(df)} total rows from streaming")
         return df
     except Exception as e:
         print(f"  [SKIP] Tier 3 failed: {type(e).__name__}: {e}")
         return None
+
+
+def _datasetdict_to_df(ds, source: str) -> pd.DataFrame:
+    """Convert a DatasetDict (or single Dataset) to a pandas DataFrame."""
+    if hasattr(ds, "keys"):
+        frames = []
+        for split in ds.keys():
+            frames.append(ds[split].to_pandas())
+            print(f"       [+] split '{split}': {len(frames[-1])} rows")
+        df = pd.concat(frames, ignore_index=True)
+    else:
+        df = ds.to_pandas()
+    print(f"  [OK] {source} succeeded — {len(df)} total rows")
+    return df
 
 
 def main() -> None:
@@ -137,28 +150,31 @@ def main() -> None:
     df: Optional[pd.DataFrame] = None
     sources_tried = []
 
-    # Tier 1
-    df = _try_datasets_library()
-    sources_tried.append("datasets.load_dataset()")
+    df = _try_tier_1_standard()
+    sources_tried.append("Tier 1 (standard)")
 
-    # Tier 2
     if df is None:
-        df = _try_direct_parquet()
-        sources_tried.append("direct parquet")
+        df = _try_tier_2_no_cache()
+        sources_tried.append("Tier 2 (no cache)")
 
-    # Tier 3
     if df is None:
-        df = _try_direct_csv()
-        sources_tried.append("direct CSV")
+        df = _try_tier_3_streaming()
+        sources_tried.append("Tier 3 (streaming)")
 
     if df is None or len(df) == 0:
         print("\n" + "=" * 60)
         print("[FATAL] All download tiers failed.")
         print(f"        Tried: {sources_tried}")
-        print(f"        Check internet connectivity and try again.")
-        print(f"        Manual fallback: download fake_news_filipino.csv from")
-        print(f"          https://huggingface.co/datasets/{JCBLAISE_ID}/tree/main")
-        print(f"        and place it at data/raw/jcblaise.csv.")
+        print()
+        print("Possible causes:")
+        print("  1. fsspec/datasets version mismatch — check the install cell.")
+        print("     Required: fsspec<=2024.6.1, datasets>=2.14,<3.0")
+        print("  2. No internet connectivity in this Colab session.")
+        print("  3. Dataset was renamed or made private.")
+        print()
+        print("Manual fallback:")
+        print(f"  1. Download from https://huggingface.co/datasets/{JCBLAISE_ID}/tree/main")
+        print(f"  2. Place the CSV at data/raw/jcblaise.csv with columns 'text','label'")
         print("=" * 60)
         sys.exit(1)
 
