@@ -61,6 +61,7 @@ CITATIONS
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import logging
 import sys
@@ -186,10 +187,12 @@ def main() -> None:
     log_dir.mkdir(parents=True, exist_ok=True)
 
     collator = DataCollatorForLanguageModeling(tok, mlm=False)
-    targs = TrainingArguments(
+
+    # TrainingArguments — version-compatible build.
+    # transformers 4.46+ uses `eval_strategy`; older versions use `evaluation_strategy`.
+    targs_kwargs = dict(
         output_dir=str(out_dir),
         logging_dir=str(log_dir),
-        eval_strategy="epoch",
         save_strategy="epoch",
         learning_rate=args.lr,
         per_device_train_batch_size=args.per_device_batch,
@@ -205,14 +208,26 @@ def main() -> None:
         report_to="none",
         seed=args.seed,
     )
-    trainer = Trainer(
+    _ta_params = inspect.signature(TrainingArguments.__init__).parameters
+    if "eval_strategy" in _ta_params:
+        targs_kwargs["eval_strategy"] = "epoch"
+    else:
+        targs_kwargs["evaluation_strategy"] = "epoch"
+    targs = TrainingArguments(**targs_kwargs)
+    trainer_kwargs = dict(
         model=model,
         args=targs,
         train_dataset=lm_ds["train"],
         eval_dataset=lm_ds["validation"],
-        tokenizer=tok,
         data_collator=collator,
     )
+    # transformers 4.46+ renamed `tokenizer` → `processing_class` on Trainer
+    _tr_params = inspect.signature(Trainer.__init__).parameters
+    if "processing_class" in _tr_params:
+        trainer_kwargs["processing_class"] = tok       # transformers 4.46+
+    else:
+        trainer_kwargs["tokenizer"] = tok              # transformers <4.46
+    trainer = Trainer(**trainer_kwargs)
 
     logger.info("Starting fine-tuning...")
     train_result = trainer.train()
