@@ -67,7 +67,7 @@ accelerate>=0.24,<2.0
 
 # feyn (the QLattice engine). Required by scripts/08_train_qlattice.py
 # and consumed by scripts/13_score_generated_with_qlattice.py.
-feyn>=4.0
+feyn=3.4.1 
 
 
 # ============================================================
