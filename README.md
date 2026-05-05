@@ -1,6 +1,6 @@
 # M.I.N.E.R.V.A.
 
-**M**isinformation **I**nspector for **N**ew **E**lection-cycle **R**isks via **V**erifiable **A**rtifacts.
+
 
 An Android Unity educational game that teaches Senior High School Filipino voters to recognize political-candidate misinformation through psychological inoculation (in the tradition of Cambridge's [Bad News](https://www.getbadnews.com/) and [Harmony Square](https://www.harmonysquare.game/)). FEU IT undergraduate thesis.
 
