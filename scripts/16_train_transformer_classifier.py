@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import os
 import random
@@ -237,42 +238,58 @@ def main() -> None:
 
     use_fp16 = bool(args.fp16 and torch.cuda.is_available())
 
-    # TrainingArguments (Transformers 4.33.x uses evaluation_strategy)
-    train_args = TrainingArguments(
+    # ------------------------------------------------------------------
+    # TrainingArguments — version-compatible build.
+    # transformers 4.46+ renamed `evaluation_strategy` → `eval_strategy`.
+    # We inspect the actual signature and use whichever name is accepted.
+    # This works on transformers 4.33 through current.
+    # ------------------------------------------------------------------
+    ta_kwargs = dict(
         output_dir=out_dir,
         logging_dir=log_dir,
-        evaluation_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model="f1",
         greater_is_better=True,
-
         num_train_epochs=args.epochs,
         learning_rate=args.lr,
         per_device_train_batch_size=args.batch,
         per_device_eval_batch_size=args.batch,
         gradient_accumulation_steps=args.grad_accum,
-
         warmup_ratio=args.warmup_ratio,
         weight_decay=args.weight_decay,
-
         save_total_limit=args.save_total_limit,
-
         fp16=use_fp16,
         report_to="none",
         seed=args.seed,
         data_seed=args.seed,
     )
+    _ta_params = inspect.signature(TrainingArguments.__init__).parameters
+    if "eval_strategy" in _ta_params:
+        ta_kwargs["eval_strategy"] = "epoch"           # transformers 4.46+
+    else:
+        ta_kwargs["evaluation_strategy"] = "epoch"     # transformers <4.46
+    train_args = TrainingArguments(**ta_kwargs)
 
-    trainer = Trainer(
+    # ------------------------------------------------------------------
+    # Trainer — version-compatible build.
+    # transformers 4.46+ renamed `tokenizer` → `processing_class` on
+    # Trainer.__init__. We detect which name is accepted.
+    # ------------------------------------------------------------------
+    trainer_kwargs = dict(
         model=model,
         args=train_args,
         train_dataset=ds_train,
         eval_dataset=ds_val,
-        tokenizer=tokenizer,
         data_collator=collator,
         compute_metrics=compute_metrics,
     )
+    _tr_params = inspect.signature(Trainer.__init__).parameters
+    if "processing_class" in _tr_params:
+        trainer_kwargs["processing_class"] = tokenizer  # transformers 4.46+
+    else:
+        trainer_kwargs["tokenizer"] = tokenizer         # transformers <4.46
+    trainer = Trainer(**trainer_kwargs)
 
     # Resume logic
     resume = None
