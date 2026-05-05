@@ -1,8 +1,9 @@
-# M.I.N.E.R.V.A. — Python dependencies
-# v2.6-final-consolidated + P1.2
+# M.I.N.E.R.V.A. v2.8 — Python dependencies
+# All pins are TESTED against the full architecture (BATB §1.4 SO 1-4).
+# This is the canonical install for blank-slate Colab runs.
 
 # ============================================================
-# CORE — Required for the v2.6 template-based pipeline (Mode A)
+# CORE — schema, tabular, classic ML
 # ============================================================
 
 # Schema validation (CandidateCode, UnityCard, etc.)
@@ -11,6 +12,7 @@ pydantic>=2.0,<3.0
 # Numerical + tabular
 numpy>=1.24,<2.0
 pandas>=2.0,<3.0
+pyarrow>=14.0,<21.0   # parquet read/write (script 01 fallback path)
 
 # Random Forest, KNN, StandardScaler used by detector training
 scikit-learn>=1.3,<2.0
@@ -23,45 +25,68 @@ pytest>=7.4,<9.0
 
 
 # ============================================================
-# DETECTORS — Needed if you re-train RoBERTa / DistilBERT / DE-GNN
-# (skip if you only run the card-generation pipeline scripts 30-40)
+# DATASETS + HUGGINGFACE — required for scripts 01, 04, 05, 11
+#
+# CRITICAL: fsspec is pinned to the range that works with datasets>=2.14
+# Without this pin, Colab's default fsspec (post-2024.6.1) raises
+# NotImplementedError on load_dataset() — this killed v2.7 runs.
 # ============================================================
 
-# Hugging Face transformers + tokenizers (RoBERTa-Tagalog, DistilBERT-mult)
+# fsspec must be pinned. 2024.6.1 is the last known-good version that
+# datasets 2.14+ accepts as a backend. >=2024.7 introduces the
+# LocalFileSystem caching incompatibility.
+fsspec>=2023.10.0,<=2024.6.1
+
+# datasets — script 01 primary path
+datasets>=2.14,<3.0
+
+# Hub access (used by transformers + datasets)
+# Cap at <1.0 because some transformers versions don't yet support
+# the breaking 1.0 release.
+huggingface_hub>=0.20,<1.0
+
+
+# ============================================================
+# DETECTORS — RoBERTa-Tagalog + DistilBERT-multilingual + GPT-2 Tagalog
+# ============================================================
+
 transformers>=4.35,<5.0
+tokenizers>=0.15,<0.22
+sentencepiece>=0.1.99   # Tokenizer dep for both detectors
 
 # PyTorch — pre-installed on Colab, listed for completeness
 torch>=2.0
-# torch-geometric  # Uncomment if running scripts/09_train_degnn.py
 
-# QLattice — symbolic explainability (Feyn). Optional; fallback exists.
-# feyn>=4.0  # Install separately on Colab if needed: !pip install feyn
-
-
-# ============================================================
-# OPTIONAL — Mode B (GPT-2 augmentation pipeline, scripts 10-13)
-# ============================================================
-# Uncomment if you set USE_GPT2=True in the Colab notebook.
-
-# accelerate>=0.24
-# datasets>=2.14
-# sentencepiece>=0.1.99
+# accelerate — required by HF Trainer for proper device placement
+accelerate>=0.24,<2.0
 
 
 # ============================================================
-# OPTIONAL — Web/IO helpers (used by some scripts)
+# QLATTICE — symbolic regression
 # ============================================================
 
-# requests>=2.31  # Only needed if scripts/01_download_dataset.py is rerun
+# feyn (the QLattice engine). Required by scripts/08_train_qlattice.py
+# and consumed by scripts/13_score_generated_with_qlattice.py.
+feyn>=4.0
+
 
 # ============================================================
-# NOTES
+# OPTIONAL — DE-GNN graph backends
 # ============================================================
-# Run scripts 30 -> 31 -> 21 -> 23 -> 24 -> 28 -> 26 -> 32 -> 40
-# requires only the CORE block above. ~30 seconds to install on Colab.
+# scripts/09_train_degnn.py uses a from-scratch GraphSAGE that depends
+# only on torch + numpy. torch_geometric is NOT required.
+
+# torch-geometric  # Uncomment ONLY if you migrate DE-GNN to PyG layers
+
+
+# ============================================================
+# Notes on install order
+# ============================================================
+# Recommended Colab install:
+#   pip install --upgrade pip
+#   pip install -r requirements.txt
 #
-# Run scripts 04, 05, 09 (detector training) requires the DETECTORS
-# block. ~3 minutes to install + GPU.
-#
-# Run scripts 11, 12, 13 (GPT-2 augmentation) requires the OPTIONAL
-# Mode B block. ~5 minutes + heavy GPU.
+# DO NOT install fsspec or datasets after this pip install — Colab's
+# default packages may overwrite the pinned versions and re-introduce
+# the LocalFileSystem error. If you must reinstall, repeat the full
+# requirements.txt install with --force-reinstall on those two pkgs.

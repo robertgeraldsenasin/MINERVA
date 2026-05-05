@@ -4,7 +4,17 @@
 
 An Android Unity educational game that teaches Senior High School Filipino voters to recognize political-candidate misinformation through psychological inoculation (in the tradition of Cambridge's [Bad News](https://www.getbadnews.com/) and [Harmony Square](https://www.harmonysquare.game/)). FEU IT undergraduate thesis.
 
-**Status:** v2.6-final-consolidated + P1.2 (pre-pilot pack) — 668-card pool, 12/12 DEPICT indicator coverage, 100% faithfulness audit, 39/39 unit tests passing.
+**Status:** v2.8 (paper-aligned + dependency-pinned release) — 668-card pool, 12/12 DEPICT indicator coverage, 100% faithfulness audit, 100% strict allowlist pass rate, 125/125 unit tests passing.
+> **v2.8 release** — paper-aligned architecture + dependency pin fixes.
+> See `docs/V2.8_AUDIT.html` for the panel-defense audit trail,
+> `docs/V2.8_CODEBOOK.md` for the comprehensive system explanation,
+> and `docs/V2.8_RELEASE_NOTES.md` for the v2.5 → v2.8 evolution.
+> Default Colab notebook: `full_retrain` mode + `USE_GPT2=True`
+> (full architecture every blank-slate run). 125 / 125 tests passing.
+> RF now sequential after DE-GNN per BATB §3.5.2.
+
+---
+
 
 ---
 

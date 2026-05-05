@@ -50,20 +50,33 @@ def normalize_label(series: pd.Series) -> pd.Series:
 
 
 def load_jcblaise() -> pd.DataFrame:
-    path = RAW_DIR / "jcblaise_fake_news_filipino_train.csv"
-    if not path.exists():
+    """Load JCBlaise CSV — accepts multiple filenames written by different
+    script-01 versions (v2.7 wrote 'jcblaise_fake_news_filipino_train.csv';
+    v2.8 writes the canonical 'jcblaise.csv')."""
+    candidate_paths = [
+        RAW_DIR / "jcblaise.csv",                              # v2.8 canonical
+        RAW_DIR / "jcblaise_fake_news_filipino_train.csv",     # v2.7 datasets-lib path
+        RAW_DIR / "jcblaise_fake_news_filipino.csv",           # v2.5 fallback
+    ]
+    path = next((p for p in candidate_paths if p.exists()), None)
+    if path is None:
         raise FileNotFoundError(
-            f"Missing {path}. Run 01_download_dataset.py first.")
+            f"No JCBlaise CSV found. Tried: {[str(p) for p in candidate_paths]}.\n"
+            f"Run scripts/01_download_dataset.py first."
+        )
 
     df = pd.read_csv(path)
+    print(f"[02] Loaded {path.name}: {len(df)} rows, columns={list(df.columns)}")
 
-    # Expected columns: label, article
-    if "article" not in df.columns or "label" not in df.columns:
+    # Accept either schema: (article, label) [v2.5] or (text, label) [v2.8 canonical].
+    text_col = "article" if "article" in df.columns else "text"
+    if text_col not in df.columns or "label" not in df.columns:
         raise ValueError(
-            f"Unexpected columns in {path.name}: {df.columns.tolist()} (expected: article,label)")
+            f"Unexpected columns in {path.name}: {df.columns.tolist()} "
+            f"(expected: text or article + label)")
 
     out = pd.DataFrame()
-    out["text"] = df["article"].astype(str).map(clean_text)
+    out["text"] = df[text_col].astype(str).map(clean_text)
     out["label"] = normalize_label(df["label"])
     out["dataset"] = "jcblaise_fake_news_filipino"
     out["lang"] = "tl"
