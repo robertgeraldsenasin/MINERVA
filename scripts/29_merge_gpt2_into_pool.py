@@ -245,36 +245,143 @@ def _build_indicator_details(named_features: dict, fired: list[str]) -> dict:
     return out
 
 
-def _build_explanation(target_label: str, fired: list[str], tier: str) -> dict:
-    """Minimal explanation block. Templates have a much richer one but
-    downstream scripts only require these fields to exist + be a dict."""
+# ---------------------------------------------------------------------------
+# v2.9.0: Response bank loader + indicator-coverage filter
+# ---------------------------------------------------------------------------
+
+_RESPONSE_BANK: dict | None = None
+_RESPONSE_BANK_PATH = "templates/response_bank_v2.json"
+
+
+def _load_response_bank(path: str = _RESPONSE_BANK_PATH) -> dict:
+    """Load the v2.9 response bank into a module-level cache.
+
+    The bank is keyed `{INDICATOR}/{role}/{tier}` where role ∈ {fake, real}
+    and tier ∈ {novice, proficient, advanced}. Each value is a list of phrase
+    variants {phrase_tl, phrase_en, verifier_action}. Loaded lazily so unit
+    tests that don't touch the bank don't pay the cost.
+    """
+    global _RESPONSE_BANK
+    if _RESPONSE_BANK is not None:
+        return _RESPONSE_BANK
+    bank_path = Path(path)
+    if not bank_path.exists():
+        # Fallback to v1 stub schema so the script still runs in test envs
+        # that don't have the bank file. We log a warning so production runs
+        # don't silently degrade.
+        logger.warning(
+            "Response bank not found at %s — falling back to stub phrases. "
+            "Faithfulness audit will likely regress. Build the bank with "
+            "templates/response_bank_v2.json.", path)
+        _RESPONSE_BANK = {"phrases": {}, "version": "stub"}
+        return _RESPONSE_BANK
+    _RESPONSE_BANK = json.loads(bank_path.read_text(encoding="utf-8"))
+    return _RESPONSE_BANK
+
+
+def gpt2_indicators_supported_by_bank(fired: list[str], target_label: str,
+                                      tier: str,
+                                      bank: dict | None = None) -> tuple[bool, list[str]]:
+    """Check whether ALL of `fired` have a matching response-bank entry for
+    this (role, tier). Returns (all_supported, list_of_unsupported).
+
+    GPT-2 cards whose fired indicators are NOT a subset of the bank's keys
+    will produce explanation phrases that don't match the indicator — exactly
+    the failure mode the v2.8.7 faithfulness audit caught (231 mismatches).
+    Filtering before promotion eliminates this class of failures entirely.
+    """
+    if bank is None:
+        bank = _load_response_bank()
+    keys = set(bank.get("phrases", {}).keys())
+    role = "fake" if target_label == "fake" else "real"
+    unsupported = []
+    for ind in fired:
+        bank_key = f"{ind}/{role}/{tier}"
+        if bank_key not in keys:
+            unsupported.append(ind)
+    return (len(unsupported) == 0, unsupported)
+
+
+def _pick_phrase_variant(bank: dict, key: str, idx_seed: int) -> dict | None:
+    """Deterministically pick one of the variants for a given bank key."""
+    variants = bank.get("phrases", {}).get(key, [])
+    if not variants:
+        return None
+    return variants[idx_seed % len(variants)]
+
+
+def _build_explanation(target_label: str, fired: list[str], tier: str,
+                       card_idx: int = 0) -> dict:
+    """Build a faithfulness-passing explanation block using the v2.9
+    response bank. Replaces the v2.8.7 stub that produced phrases like
+    "GPT-2 generation flagged X" — those triggered 231 indicator-phrase
+    mismatches in the faithfulness audit.
+
+    `card_idx` is used to deterministically rotate through phrase variants
+    so that two cards with the same fired indicators don't get identical
+    explanations. This is what pushes explanation diversity above 30%.
+    """
+    bank = _load_response_bank()
+    role = "fake" if target_label == "fake" else "real"
     sift_move = "STOP" if target_label == "fake" else "TRACE"
-    summary_intro = ("This GPT-2-generated post looks suspicious."
+
+    summary_intro = ("This post shows misinformation cues."
                      if target_label == "fake"
-                     else "This GPT-2-generated post appears credible.")
+                     else "This post shows credibility cues.")
     if fired:
-        summary = f"{summary_intro} {len(fired)} indicator(s) fired: {', '.join(fired)}."
+        summary = (f"{summary_intro} {len(fired)} indicator(s) fired: "
+                   f"{', '.join(fired)}.")
     else:
         summary = f"{summary_intro} No strong indicators fired."
+
+    indicator_phrases = []
+    for j, ind in enumerate(fired):
+        bank_key = f"{ind}/{role}/{tier}"
+        variant = _pick_phrase_variant(bank, bank_key, idx_seed=card_idx + j)
+        if variant is None:
+            # Bank missing this combination — fall back to a generic phrase
+            # but log it so the gap can be filled. The pre-filter
+            # (gpt2_indicators_supported_by_bank) should have caught this
+            # but we degrade gracefully if filter was bypassed.
+            phrase = (f"This card's {ind} indicator needs a hand-authored "
+                      f"explanation in the response bank.")
+            verifier_action = ""
+            phrase_en = phrase
+        else:
+            phrase = variant["phrase_tl"]
+            phrase_en = variant.get("phrase_en", "")
+            verifier_action = variant.get("verifier_action", "")
+
+        indicator_phrases.append({
+            "indicator": ind,
+            "phrase": phrase,
+            "phrase_en": phrase_en,
+            "verifier_action": verifier_action,
+            "bank_ref": f"{ind}/{role}/{tier}/v{(card_idx + j) % 3}",
+            "sift_move": sift_move,
+        })
+
+    # For real-verdict cards, append a CREDIBLE phrase like the templates do
+    if target_label == "real":
+        cred_variant = _pick_phrase_variant(bank, f"CREDIBLE/real/{tier}",
+                                            idx_seed=card_idx)
+        if cred_variant is not None:
+            indicator_phrases.append({
+                "indicator": "CREDIBLE",
+                "phrase": cred_variant["phrase_tl"],
+                "phrase_en": cred_variant.get("phrase_en", ""),
+                "verifier_action": cred_variant.get("verifier_action", ""),
+                "bank_ref": f"CREDIBLE/real/{tier}/v{card_idx % 3}",
+                "sift_move": "TRACE",
+            })
 
     return {
         "tier": tier,
         "summary": summary,
-        "indicator_phrases": [
-            {"indicator": ind,
-             "phrase": f"GPT-2 generation flagged {ind}.",
-             "bank_ref": f"{ind}/v1/{tier[0]}1",
-             "sift_move": sift_move}
-            for ind in fired
-        ] + ([{
-            "indicator": "CREDIBLE",
-            "phrase": "This post links to an official source you can verify.",
-            "bank_ref": f"CREDIBLE/v1/{tier[0]}1",
-            "sift_move": "TRACE",
-        }] if target_label == "real" else []),
+        "indicator_phrases": indicator_phrases,
         "sift_move": sift_move,
         "credible_counter_card_id": None,
-        "bank_version": "1.1",
+        "bank_version": bank.get("version", "v2.9.0"),
     }
 
 
@@ -286,7 +393,6 @@ def gpt2_card_to_template_shape(g: dict, idx: int) -> dict:
     nf = g.get("named_features", {}) or {}
     det = g.get("detectors", {}) or {}
     tier = (g.get("control_tokens", {}) or {}).get("tier", "novice")
-
     verdict = _verdict_from_pfake(p_fake)
 
     # Find which allowed candidate code appears first in the text — that's
@@ -340,7 +446,7 @@ def gpt2_card_to_template_shape(g: dict, idx: int) -> dict:
             "is_neutral_volume": False,
             "classifier_label": "electoral",
         },
-        "explanation": _build_explanation(target, fired, tier),
+        "explanation": _build_explanation(target, fired, tier, card_idx=idx),
         "provenance": {
             "seed": idx,
             "git_sha": "gpt2_neurosymbolic_v2.8.7",
@@ -444,6 +550,34 @@ def merge(templates_path: Path,
                     "stage": "candidate_allowlist",
                     "label": source_label,
                     "reason": reason_c,
+                    "text_preview": remapped_text[:140],
+                })
+                continue
+
+            # v2.9.0: Indicator-coverage filter.
+            # Determine which indicators would fire for this GPT-2 card,
+            # then check the response bank can produce a phrase for each
+            # (indicator × role × tier) combination. If not, drop the card —
+            # promoting it would introduce a faithfulness mismatch (which
+            # was the v2.8.7 audit's #3 critical finding: 231 mismatches).
+            nf_check = g.get("named_features", {}) or {}
+            fired_check: list[str] = []
+            for k, v in nf_check.items():
+                if k.endswith("_fired") and float(v) >= 1.0:
+                    fired_check.append(
+                        k.replace("ind_", "").replace("_fired", "").upper()
+                    )
+            if not fired_check:
+                fired_check = ["MISS"]
+            tier_check = (g.get("control_tokens", {}) or {}).get("tier", "novice")
+            ok_b, missing = gpt2_indicators_supported_by_bank(
+                fired_check, source_label, tier_check
+            )
+            if not ok_b:
+                rejected.append({
+                    "stage": "response_bank_coverage",
+                    "label": source_label,
+                    "reason": f"unsupported_indicators: {missing}",
                     "text_preview": remapped_text[:140],
                 })
                 continue

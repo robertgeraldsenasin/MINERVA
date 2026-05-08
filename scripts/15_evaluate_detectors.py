@@ -14,6 +14,13 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 
 def load_split(path: Path) -> tuple[list[str], np.ndarray]:
+    if not path.exists():
+        raise SystemExit(
+            f"\n[15_evaluate_detectors] Test split not found: {path}\n"
+            f"  This file is produced by scripts/03_split_dataset.py.\n"
+            f"  Run scripts 01 -> 02 -> 03 first, or use PIPELINE_MODE='templates_only'\n"
+            f"  if you don't need detector evaluation for your run."
+        )
     df = pd.read_csv(path)
     if "text" not in df.columns or "label" not in df.columns:
         raise ValueError(f"{path} must contain columns: text, label")

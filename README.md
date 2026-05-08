@@ -1,220 +1,116 @@
-# M.I.N.E.R.V.A.
+# M.I.N.E.R.V.A. — Refinement Branch (`v2.9.0`)
 
+**Misinformation Identification through Neuro-Symbolic Evaluation, Reasoning, and Verifiable Analytics**
 
-
-An Android Unity educational game that teaches Senior High School Filipino voters to recognize political-candidate misinformation through psychological inoculation (in the tradition of Cambridge's [Bad News](https://www.getbadnews.com/) and [Harmony Square](https://www.harmonysquare.game/)). FEU IT undergraduate thesis.
-
-**Status:** v2.8 (paper-aligned + dependency-pinned release) — 668-card pool, 12/12 DEPICT indicator coverage, 100% faithfulness audit, 100% strict allowlist pass rate, 125/125 unit tests passing.
-> **v2.8 release** — paper-aligned architecture + dependency pin fixes.
-> See `docs/V2.8_AUDIT.html` for the panel-defense audit trail,
-> `docs/V2.8_CODEBOOK.md` for the comprehensive system explanation,
-> and `docs/V2.8_RELEASE_NOTES.md` for the v2.5 → v2.8 evolution.
-> Default Colab notebook: `full_retrain` mode + `USE_GPT2=True`
-> (full architecture every blank-slate run). 125 / 125 tests passing.
-> RF now sequential after DE-GNN per BATB §3.5.2.
+A Tagalog-language educational content pipeline that combines hybrid credibility detection (DE-GNN + Random Forest + RoBERTa/DistilBERT ensemble) with QLattice symbolic regression and a CTRL-style conditioned GPT-2 to generate, score, and curate a teaching pool of Filipino electoral-misinformation cards for senior high school media literacy use.
 
 ---
 
+## What this repository delivers (Thesis 2 scope)
+
+This is the **content-and-scoring pipeline plus the curated card pool** — the upstream feedstock for the Unity Android game. The Unity build itself, the 50-respondent SHS pilot study, and the 5-evaluator ISO 25010 review are scoped to **Thesis 3**.
+
+What runs end-to-end on a free Colab T4 in ~75 minutes:
+
+1. Train RoBERTa-Tagalog and DistilBERT-multilingual fake-news detectors on the JCBlaise dataset (5 random seeds, val-then-test selection).
+2. Train a Dual-Embedding Graph Neural Network (DE-GNN) and a Random Forest classifier on transformer-derived features.
+3. Fit a QLattice symbolic-regression equation over detector confidence + DE-GNN signal for interpretable scoring.
+4. Fine-tune `jcblaise/gpt2-tagalog` with 18 Keskar-style control tokens conditioning on (label × graph confidence × QLattice confidence × ensemble confidence × tier).
+5. Generate, score, pseudonymize, and curate a 668-card teaching pool with 12 misinformation indicators tied to SIFT moves.
+6. Pseudonymize all real Filipino political figures (people *and* places — v2.9.0) into Candidate A/B/C and City W/X/Y/Z placeholders.
+7. Audit faithfulness (≥98% pass), strict allowlist (≥99% pass), and indicator coverage end-to-end.
+8. Draw 8 user-specific 56-card decks ready to feed a downstream Unity game build.
 
 ---
 
-## What's in this repo
+## Repository layout
 
 ```
-MINERVA/
-├── CLAUDE.md             # Briefing for Claude Code agents
-├── HANDOFF.md            # Open work items (P1.x defense prep, P2.x robustness, etc.)
-├── README.md             # This file
-├── requirements.txt      # Python dependencies
-├── .gitignore
-├── scripts/              # 40+ Python scripts (numbered pipeline stages)
-│   ├── candidate_config.py            # ⭐ THE editable config (3 candidates)
-│   ├── 30_template_scenario_generator.py     # ⭐ 18 templates
-│   ├── 31_universal_pseudonymize.py
-│   ├── 32_validate_detectors_on_templates.py # NEW v2.6-final-consolidated
-│   ├── 40_export_pilot_pack.py               # NEW P1.2
-│   ├── minerva_candidates.py                 # REGISTRY (rebuilds from candidate_config)
-│   ├── minerva_filters.py
-│   ├── minerva_schemas.py
-│   └── ... (detector training scripts 01-19, pipeline scripts 21-32)
-├── tests/                # 39 pytest tests
+MINERVA_REFINED/
+├── scripts/                    # 48 pipeline scripts numbered 01-40 + helpers
+│   ├── 01_download_dataset.py
+│   ├── ...
+│   ├── 29_merge_gpt2_into_pool.py     # NEW v2.8.7, refined v2.9.0
+│   ├── 35_pseudonymize_places.py      # NEW v2.9.0
+│   ├── 37_holdout_detector_eval.py    # NEW v2.9.0
+│   └── 40_export_pilot_pack.py
+├── templates/                  # Hand-curated content artifacts
+│   ├── candidate_profiles_three_candidates.json
+│   ├── jcblaise_real_names_blocklist.txt
+│   ├── places_blocklist.txt           # NEW v2.9.0 — 171 PH geographic entities
+│   ├── response_bank_v2.json          # NEW v2.9.0 — 225 phrases, 72% diverse
+│   └── holdout_gpt2_labeled.csv       # NEW v2.9.0 — 50-card hand-label seed
+├── tests/                      # 231 unit tests, runs in <3s
+│   ├── test_pseudonymize_places.py    # NEW v2.9.0
+│   ├── test_response_bank.py          # NEW v2.9.0
+│   └── test_holdout_eval.py           # NEW v2.9.0
+├── notebooks/
+│   └── MINERVA_Run_Colab_v2.9.0.ipynb # 71 cells, end-to-end pipeline
 ├── docs/
-│   ├── V2.6_CHANGES.md           # Full architecture history v2.0 → consolidated
-│   ├── MASTER_CODEBOOK.md
-│   └── MINERVA_v2.6_Audit.html   # Visual audit (open in browser)
-└── notebooks/
-    └── MINERVA_Run_Colab_v2.6.ipynb  # ⭐ Colab pipeline runner
+│   ├── V2.9.0_RELEASE_NOTES.md        # what changed and why
+│   ├── V2.9.0_AUDIT_RESPONSE.md       # point-by-point response to v2.8.7 audit
+│   └── V2.9.0_STEP_BY_STEP_FIX.md     # apply + verify guide
+└── requirements.txt            # transformers ≥4.46, fsspec ≤2024.6.1, feyn ≥3.4 <4.0
 ```
 
 ---
 
-## Quick start (Google Colab)
+## Quickstart (local, for testing only)
 
-This is the path most users will take.
+The full pipeline needs a GPU; locally only run the test suite:
 
-1. Open https://colab.research.google.com
-2. **File → Upload notebook** → upload `notebooks/MINERVA_Run_Colab_v2.6.ipynb`
-3. **Runtime → Run all** (or step through the cells)
-
-Total runtime: **~3 minutes** for the card-generation pipeline (no GPU needed).
-
-The notebook will:
-- Mount Google Drive (optional, for saving outputs)
-- Clone this repo at the `upgrade/minerva-election-theme` branch
-- Install dependencies from `requirements.txt`
-- Run all 39 unit tests
-- Run the full pipeline: `30 → 31 → 21 → 23 → 24 → 28 → 26 → 32 → 40`
-- Print the verified metrics dashboard
-- Sample 6 cards from a player's deck
-- Export the pre-pilot pack (HTML + questionnaire + answer key)
-
----
-
-## Quick start (local machine — Windows / WSL / Linux)
-
-```bash
-# Clone
-git clone https://github.com/robertgeraldsenasin/MINERVA.git
-cd MINERVA
-git checkout upgrade/minerva-election-theme
-
-# Install
-python -m venv .venv
-source .venv/bin/activate          # Windows: .\.venv\Scripts\Activate.ps1
+```powershell
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-
-# Test
 python -m pytest tests/ -q
-# Expected: 39 passed
-
-# Run the pipeline (creates generated/ and reports/)
-mkdir -p generated reports/decks
-python scripts/30_template_scenario_generator.py --out_file generated/template_cards.json --n_per_template 18 --report_out reports/template_gen.json
-python scripts/31_universal_pseudonymize.py --in_file generated/template_cards.json --out_file generated/cards_pseudo.json --report_out reports/pseudo.json
-python scripts/21_balance_unity_cards.py --in_file generated/cards_pseudo.json --out_file generated/balanced.json --target_total 700 --report_out reports/balance.json
-python scripts/23_enforce_election_theme.py --in_file generated/balanced.json --out_file generated/themed.json --report_out reports/theme.json --rejection_log reports/theme_rej.jsonl
-python scripts/24_curate_teaching_cards.py --in_file generated/themed.json --out_file generated/unity_cards_pool.json --reject_out generated/pool_rej.json --report_out reports/pool.json --target_pool_size 700 --days 7 --cards_per_day 8 --min_credible_per_day 3 --seed 1729
-python scripts/28_draw_user_deck.py --pool_file generated/unity_cards_pool.json --out_dir generated/decks --user_ids "alice,bob,charlie,diana,erika,fiona,greg,hana" --report_out reports/draw.json
-python scripts/26_faithfulness_audit.py --in_file generated/unity_cards_pool.json --report_out reports/faith.json
-python scripts/32_validate_detectors_on_templates.py --pool_file generated/unity_cards_pool.json --report_out reports/det.json --markdown_out reports/det.md
-python scripts/40_export_pilot_pack.py --pool_file generated/unity_cards_pool.json --out_dir reports/pilot_pack
+# Expected: 231 passed in ~3 seconds
 ```
 
----
-
-## Verified metrics (v2.6-final-consolidated + P1.2)
-
-```
-Pool size            : 668 cards
-  REAL/FAKE/UNCERTAIN : 108/500/60
-  Candidates          : C-A 229, C-B 216, C-C 223
-  Tier dist (n/p/a)   : 240/212/216
-Templates             : 18 (12/12 DEPICT indicator coverage)
-Faithfulness audit    : 100% (668/668)
-Pairwise overlap      : 11.48% mean (target <15%; supports 11 non-overlapping decks)
-Detector validation   : 100% across RoBERTa, DistilBERT, DE-GNN, ensemble
-Unit tests            : 39/39 passing
-Pre-pilot pack        : 30 cards, 17/17 manipulation tactics, seed-locked reproducible
-```
-
-Detector accuracy on JCBlaise test split (frozen models): RoBERTa 95.6% F1, DistilBERT 91.0% F1, DE-GNN 95.8% F1.
+For the actual pipeline run, use `notebooks/MINERVA_Run_Colab_v2.9.0.ipynb` on Colab T4.
 
 ---
 
-## Architecture in one paragraph
+## Architectural truths (do not relitigate)
 
-**Detection stack (frozen):** RoBERTa-Tagalog + DistilBERT-multilingual + DE-GNN ensemble, with Random Forest and QLattice for symbolic explainability. Trained on the JCBlaise Tagalog news corpus.
+These are decisions that were finalized during Thesis 1 and BATB §1.5. Don't change them in this branch:
 
-**Card-generation pipeline (active):** Template-based "Rule-Constrained Content Generation" (per thesis §1.3 p.12) using 18 documented Filipino electoral disinformation tactics. Three editable candidates with archetypes from Arugay & Baquisal (2022): DYNASTIC, REFORMIST, POPULIST. Common Filipino surnames per Santos & del Rosario (2014) PSA naming-frequency analysis, deliberately excluding surnames tied to current political families.
-
-**Verdict tiers (Modirrousta-Galian & Higham 2023):** novice / proficient / advanced — controls explanation depth shown to the player.
-
-**SIFT moves (Caulfield):** STOP / INVESTIGATE / FIND / TRACE — the player's response options after each card.
-
----
-
-## The editable config — `scripts/candidate_config.py`
-
-Three candidates live in **one file**. Edit there; the pipeline picks up the change automatically across templates, pseudonymizer, theme filter, schema validator, and balance script.
-
-```python
-CANDIDATES_CONFIG = [
-    {"code": "C-A", "archetype": "DYNASTIC", "title": "Sen.",
-     "first_name": "Ramon", "nickname": "Mon", "last_name": "Cruz", ...},
-    {"code": "C-B", "archetype": "REFORMIST", "title": "Vice-Mayor",
-     "first_name": "Liza", "nickname": "", "last_name": "Reyes", ...},
-    {"code": "C-C", "archetype": "POPULIST", "title": "Rep.",
-     "first_name": "Joel", "nickname": "Joel", "last_name": "Garcia", ...},
-]
-```
-
-Constraints (enforced at import):
-- Exactly 3 candidates
-- Archetypes must be `{DYNASTIC, REFORMIST, POPULIST}`
-- Codes must match `^C-[A-Z0-9\-]{1,8}$`
-- Avoid surnames tied to current PH political families (per thesis §1.5 Limitation #2)
-
-Backed by Roozenbeek & van der Linden (2019, 2020) on "fictional examples throughout the game" and Hainmueller, Hangartner, & Yamamoto (2015) PNAS vignette-experiment standard.
+1. **Codes-only candidates.** The pool only references `Candidate A`, `Candidate B`, `Candidate C`. No real political figures.
+2. **Control-token GPT-2 (Keskar CTRL-style)**, not LoRA. 18 special tokens across 5 fields: 5 labels × 4 graph bins × 4 QLattice bins × 4 ensemble bins × 4 tier bins.
+3. **Strict allowlist enforcer (script 33) is the safety net.** Multi-pass; rejects any card mentioning unknown names. Runs after pseudonymize.
+4. **JCBlaise dataset**: `https://huggingface.co/datasets/jcblaise/fake_news_filipino/resolve/main/fakenews.zip` (3,206 records).
+5. **Pipeline order**: detectors → DE-GNN → Random Forest → QLattice → GPT-2 fine-tune → generation → score → pseudonymize → balance → theme → curate → strict allowlist.
+6. **Pool target: 668 cards** (108 REAL / 500 FAKE / 60 UNCERTAIN).
 
 ---
 
-## The 18 disinformation tactics
+## Version history
 
-| # | Tactic | Verdict | Tier | DEPICT | Source |
-|---|---|---|---|---|---|
-| 1 | historical_revisionism | FAKE | advanced | MISS+REV | Schipper 2025 |
-| 2 | historical_revisionism_truth | REAL | novice | (none) | (REAL counterpart) |
-| 3 | red_tagging | FAKE | proficient | EMO+FAB+ANON | Arugay 2022 |
-| 4 | fake_celebrity_endorsement | FAKE | novice | EMO+ENDO+FAB | Ong & Cabañes 2018 |
-| 5 | urgency_sharing | FAKE | novice | URG+MISS+EMO | Roozenbeek 2019 |
-| 6 | fake_survey | FAKE | proficient | ENDO+FAB+MISS | Roozenbeek 2019 |
-| 7 | credible_policy_announcement | REAL | novice | (none) | Modirrousta-Galian 2023 |
-| 8 | ambiguous_allegation | UNCERTAIN | advanced | ANON+MISS | Schafer 2024 |
-| 9 | conspiracy_theory | FAKE | advanced | CONS+ANON+MISS | Roozenbeek 2019 (DEPICT) |
-| 10 | polarization_us_vs_them | FAKE | proficient | POL+EMO+MISS | Roozenbeek 2020 |
-| 11 | discrediting_personal_attack | FAKE | novice | DISC+EMO+ANON | Roozenbeek 2019 |
-| 12 | fake_account_impersonation | FAKE | advanced | IMP+FAB+ANON | Ong & Cabañes 2018 |
-| 13 | recycled_old_content | FAKE | novice | RECF+MISS+EMO | Schipper 2025 |
-| 14 | deepfake_video_claim | FAKE | advanced | FAB+MISS+EMO | Schipper 2025 |
-| 15 | fake_fact_checker_authority | FAKE | advanced | IMP+FAB+ANON | Tsipursky 2024 |
-| 16 | coordinated_outrage_campaign | FAKE | proficient | POL+EMO+RECF | Ong & Cabañes 2018 |
-| 17 | credible_verification_response | REAL | proficient | (none) | (REAL variety) |
-| 18 | developing_situation_unverified | UNCERTAIN | novice | MISS | Schafer 2024 |
+| Version | Date | Headline |
+|---|---|---|
+| v2.6.final | 2026-04 | Initial neuro-symbolic stack |
+| v2.8.2 | 2026-04 | Dataset download fix (JCBlaise direct ZIP bypass) |
+| v2.8.3 | 2026-04 | transformers 4.46+ API + IPython traceback workaround |
+| v2.8.4 | 2026-04 | feyn 3.x pin + sklearn LogReg fallback for QLattice |
+| v2.8.5 | 2026-04 | Script 11b dataset bypass (`Dataset.from_dict`) |
+| v2.8.6 | 2026-04 | Percentile binning + GPT2 epochs 3→8 + differentiated seeds |
+| v2.8.7 | 2026-05 | Script 29 GPT-2 → pool merge fix + sentence recovery + Excel-style code remap |
+| **v2.9.0** | 2026-05 | **Audit-driven refinement: place-name pseudo + response bank + version assertion + holdout eval** |
+
+See `docs/V2.9.0_RELEASE_NOTES.md` for details on the latest release.
 
 ---
 
-## Pre-pilot pack (HANDOFF.md P1.2)
+## What v2.9.0 explicitly does NOT include
 
-The script `scripts/40_export_pilot_pack.py` builds a 30-card pack ready for SHS-student rater sessions. It produces:
+So the panel knows where the boundaries are:
 
-- `printable_card_pack.html` — A4 print CSS, one card per page, 16pt body text
-- `questionnaire.md` — 5 questions per card, ready to paste into Google Forms
-- `answer_key.md` — gold verdict + DEPICT indicators + justifying phrase per card
-
-Sampling is stratified (proportional verdict, proportional tier, balanced candidate, greedy tactic-novelty) and **seed-locked**, so the same pool + seed always produces the same 30 cards. Defense-reproducible.
-
----
-
-## Citations
-
-- **Roozenbeek, J., & van der Linden, S. (2019, 2020).** Bad News + Harmony Square — DEPICT taxonomy, "fictional examples throughout the game."
-- **Costello et al. (2024) arxiv:2410.19202 (N=4,293 RCT).** — template + slots beats free-form.
-- **Hainmueller, Hangartner, & Yamamoto (2015) PNAS 112(8).** — vignette-experiment "Smith vs. Jones" naming convention.
-- **Garbe & Frischlich (2023) PLoS ONE.** — common-name labeling avoids real-world bias.
-- **Arugay & Baquisal (2022) Pacific Affairs 95(3).** — Filipino dynastic / reformist / populist archetypes.
-- **Schipper (2025) Data & Policy 7.** — Philippine 2025 disinformation playbook (deepfakes, recycled content).
-- **Ong & Cabañes (2018).** — Filipino political trolling architecture.
-- **Tsipursky (2024).** — fake fact-checker accounts.
-- **Schafer et al. (2024) arxiv:2407.16051.** — ElectionRumors2022 dataset.
-- **Yermilov et al. (2023) EACL.** — pseudonymization standard.
-- **Pilán et al. (2022) Computational Linguistics 48(4).** — TAB anonymization benchmark.
-- **Santos & del Rosario (2014).** — Philippine surname frequency.
-- **Modirrousta-Galian & Higham (2023).** — credible-card mandate, per-tier calibration.
-- **Powers (2011).** — precision/recall/F1 metric basis.
-- **BATB_CompiledThesisPaper §1.3 p.12.** — "Rule-Constrained Content Generation" definition.
+- **Unity Android build.** Thesis 3.
+- **Live SHS pilot data.** Thesis 3.
+- **ISO 25010 evaluator review.** Thesis 3.
+- **Decoder-time rule-constrained generation.** The architecture's "rule-constrained generation" claim currently uses post-hoc QLattice filtering, not constrained decoding. The paper text should describe it accordingly. See `docs/V2.9.0_AUDIT_RESPONSE.md::P2 #1`.
 
 ---
 
-## License & academic use
+## Citation
 
-This is undergraduate thesis software. Lead developer: Robert Gerald Senasin (FEU IT). All candidates, events, organizations, and narratives in the game are fictional and not intended to represent real individuals, political parties, or institutions (per thesis §1.5 Limitation #2).
+If used in academic work, cite the JCBlaise dataset (Cruz, Tan, & Cheng 2020, LREC), the CTRL conditioning approach (Keskar et al. 2019), and the QLattice symbolic regression library (Brolos et al. 2021).

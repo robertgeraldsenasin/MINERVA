@@ -1,6 +1,28 @@
-# M.I.N.E.R.V.A. v2.8 — Python dependencies
+# M.I.N.E.R.V.A. v2.9.1 — Python dependencies (full pipeline)
 # All pins are TESTED against the full architecture (BATB §1.4 SO 1-4).
-# This is the canonical install for blank-slate Colab runs.
+# This is the canonical install for blank-slate Colab T4 runs.
+#
+# ============================================================
+# PYTHON COMPATIBILITY
+# ============================================================
+# Production:    Python 3.11 (Colab T4 default) — fully tested.
+# Also supported: Python 3.10, 3.12 (with caveats noted on each section).
+#
+# NOT recommended for full installs:
+#   * Python 3.13 — `feyn` does not yet ship 3.13 wheels; pipeline
+#     auto-falls back to sklearn LogReg (architecturally equivalent),
+#     but `pip install feyn` itself will fail. Use Colab for the
+#     actual pipeline run; use 3.11 or 3.12 for local dev.
+#
+# For LOCAL TEST RUNS only (no torch, no transformers, no feyn):
+#     pip install -r dev-requirements.txt
+#     python -m pytest tests/ -q
+#
+# For FULL pipeline runs (Colab T4 or equivalent GPU machine):
+#     pip install --upgrade pip
+#     pip install -r requirements.txt
+#
+# ============================================================
 
 # ============================================================
 # CORE — schema, tabular, classic ML
@@ -27,7 +49,7 @@ pytest>=7.4,<9.0
 # ============================================================
 # DATASETS + HUGGINGFACE — required for scripts 01, 04, 05, 11
 #
-# CRITICAL: fsspec is pinned to the range that works with datasets>=2.14
+# CRITICAL: fsspec is pinned to the range that works with datasets>=2.14.
 # Without this pin, Colab's default fsspec (post-2024.6.1) raises
 # NotImplementedError on load_dataset() — this killed v2.7 runs.
 # ============================================================
@@ -41,8 +63,6 @@ fsspec>=2023.10.0,<=2024.6.1
 datasets>=2.14,<3.0
 
 # Hub access (used by transformers + datasets)
-# Cap at <1.0 because some transformers versions don't yet support
-# the breaking 1.0 release.
 huggingface_hub>=0.20,<1.0
 
 
@@ -54,7 +74,12 @@ transformers>=4.35,<5.0
 tokenizers>=0.15,<0.22
 sentencepiece>=0.1.99   # Tokenizer dep for both detectors
 
-# PyTorch — pre-installed on Colab, listed for completeness
+# PyTorch — pre-installed on Colab.
+# LOCAL INSTALL NOTE: torch is ~2 GB. If you only need to run the test
+# suite locally, use dev-requirements.txt instead — the DE-GNN tests
+# auto-skip when torch isn't installed (v2.9.1).
+# To install torch locally on Python 3.11/3.12 (CPU-only, smaller):
+#     pip install torch --index-url https://download.pytorch.org/whl/cpu
 torch>=2.0
 
 # accelerate — required by HF Trainer for proper device placement
@@ -67,7 +92,21 @@ accelerate>=0.24,<2.0
 
 # feyn (the QLattice engine). Required by scripts/08_train_qlattice.py
 # and consumed by scripts/13_score_generated_with_qlattice.py.
-feyn=3.4.1 
+#
+# IMPORTANT VERSION NOTES:
+#   - feyn never released a v4.x. The latest is the 3.x series.
+#   - Python 3.11 (Colab) → use feyn 3.4.x or 3.5.x (wheels available).
+#   - Python 3.12         → use feyn 3.5.x (wheels available).
+#   - Python 3.13         → NO wheels available; install will fail with
+#                           a build error. Pipeline auto-falls back to
+#                           a sklearn LogisticRegression equation in the
+#                           same `logreg(...)` format. Functionally
+#                           equivalent for downstream scoring.
+#
+# If feyn fails to install on YOUR platform, scripts/08 will detect this
+# at runtime and use the fallback. The rest of the pipeline runs normally.
+# This is verified by tests/test_qlattice_fallback.py (v2.8.4+).
+feyn>=3.4,<4.0
 
 
 # ============================================================
@@ -83,10 +122,16 @@ feyn=3.4.1
 # Notes on install order
 # ============================================================
 # Recommended Colab install:
-#   pip install --upgrade pip
-#   pip install -r requirements.txt
+#     pip install --upgrade pip
+#     pip install -r requirements.txt
 #
 # DO NOT install fsspec or datasets after this pip install — Colab's
 # default packages may overwrite the pinned versions and re-introduce
 # the LocalFileSystem error. If you must reinstall, repeat the full
 # requirements.txt install with --force-reinstall on those two pkgs.
+#
+# If `pip install -r requirements.txt` fails on `feyn` and you're on
+# Python 3.13, you have two options:
+#   1. Switch to Python 3.11 or 3.12 (recommended for full install).
+#   2. Comment out the `feyn` line and run anyway — the sklearn fallback
+#      will activate. Pipeline still produces a valid QLattice equation.

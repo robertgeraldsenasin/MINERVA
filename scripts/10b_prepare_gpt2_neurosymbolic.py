@@ -216,6 +216,62 @@ def bin3(p: float | None, t_low: float, t_high: float, hi, mid, lo, unk):
     return lo
 
 
+def compute_percentile_thresholds(values, low_pct: float = 33.0,
+                                   high_pct: float = 67.0,
+                                   fallback: tuple[float, float] = (0.6, 0.8)
+                                   ) -> tuple[float, float]:
+    """Compute low/high thresholds at given percentiles of `values`.
+
+    Used to guarantee ~33/33/33 splits across the low/mid/high bins instead
+    of the heavily-imbalanced (~96% high) splits the original fixed-threshold
+    approach produced on a well-separated dataset like JCBlaise.
+
+    NaN/None entries are excluded. If fewer than ~10 valid values, returns
+    `fallback` so we don't compute meaningless thresholds on tiny samples.
+    """
+    arr = np.asarray([v for v in values if v is not None and not pd.isna(v)],
+                     dtype=float)
+    if arr.size < 10:
+        return fallback
+    t_low = float(np.percentile(arr, low_pct))
+    t_high = float(np.percentile(arr, high_pct))
+    # Defensive: if the distribution is degenerate (all values equal), the
+    # percentiles collapse to the same number. Spread them slightly so bin3
+    # still produces three distinct categories.
+    if t_high <= t_low:
+        eps = max(1e-6, abs(t_low) * 1e-6)
+        t_high = t_low + eps
+    return (t_low, t_high)
+
+
+def compute_percentile_margin_thresholds(margins,
+                                         novice_pct: float = 67.0,
+                                         proficient_pct: float = 33.0,
+                                         fallback: tuple[float, float] = (0.10, 0.30)
+                                         ) -> tuple[float, float]:
+    """Percentile thresholds for QLattice margin → tier mapping.
+
+    tier_from_margin treats LARGE margins as 'novice' (clear-cut, easy) and
+    SMALL margins as 'advanced' (genuinely ambiguous). To get ~33% in each
+    of novice/proficient/advanced we need:
+      novice_max     = 67th percentile of margins (top third = novice)
+      proficient_max = 33rd percentile of margins (bottom third = advanced)
+
+    Returns (proficient_max, novice_max) — same ordering as the
+    `--tier_bins` thresholds the original code used.
+    """
+    arr = np.asarray([m for m in margins if m is not None and not pd.isna(m)],
+                     dtype=float)
+    if arr.size < 10:
+        return fallback
+    t_proficient = float(np.percentile(arr, proficient_pct))
+    t_novice = float(np.percentile(arr, novice_pct))
+    if t_novice <= t_proficient:
+        eps = max(1e-6, abs(t_proficient) * 1e-6)
+        t_novice = t_proficient + eps
+    return (t_proficient, t_novice)
+
+
 def tier_from_margin(p_qlattice_fake: float | None, t_novice_max: float = 0.10,
                      t_proficient_max: float = 0.30) -> str:
     """Map QLattice margin (|p - 0.5|) to difficulty tier.
@@ -224,11 +280,16 @@ def tier_from_margin(p_qlattice_fake: float | None, t_novice_max: float = 0.10,
     easiest for teachers to scaffold around) → wait, typically teachers
     use the OPPOSITE pedagogy: easy cases first (high margin, clear
     label), then ambiguous cases. So:
-      margin >= 0.30 → novice (clear-cut, easy starting case)
-      0.10 <= margin < 0.30 → proficient (some ambiguity, real practice)
-      margin < 0.10 → advanced (genuinely hard, requires nuanced reasoning)
-    This matches Bloom's taxonomy progression and the BATB pilot pack
-    distribution (10/9/11 novice/proficient/advanced).
+      margin >= t_proficient_max → novice (clear-cut, easy starting case)
+      t_novice_max <= margin < t_proficient_max → proficient (some ambiguity)
+      margin < t_novice_max → advanced (genuinely hard)
+
+    NOTE on parameter naming (kept for back-compat): `t_novice_max` is the
+    UPPER bound below which we DROP into 'advanced'; `t_proficient_max`
+    is the upper bound below which we DROP into 'proficient'. Read as:
+    "the maximum margin still considered novice-difficulty" is misleading —
+    the original code uses these as ordered thresholds. v2.8.6 percentile
+    binning supplies them dynamically from the actual margin distribution.
     """
     if p_qlattice_fake is None or pd.isna(p_qlattice_fake):
         return TIER_UNK
@@ -369,6 +430,57 @@ def build_corpus(
     t_low_g, t_high_g = args.graph_bins
     t_low_q, t_high_q = args.qlat_bins
     t_low_e, t_high_e = args.ensem_bins
+    t_advanced_max = 0.10  # default thresholds for tier_from_margin
+    t_proficient_max = 0.30
+
+    # ----------------------------------------------------------------------
+    # v2.8.6: Percentile pre-pass.
+    # The original fixed thresholds (0.6/0.8 for confidences, 0.10/0.30 for
+    # margins) produced ~96% of training rows in the "high"/"novice" bins on
+    # JCBlaise, because the dataset is well-separated and most predictions
+    # land near 0 or 1. With ~96% imbalance, GPT-2 can't learn the control
+    # tokens — there's no contrast.
+    #
+    # When --bin_strategy=percentile (the v2.8.6 default), we replace those
+    # fixed thresholds with the 33rd/67th percentile of the actual conf
+    # distribution. That guarantees roughly 33/33/33 splits and gives the
+    # model real contrast between low/mid/high tokens during training.
+    # --bin_strategy=fixed restores the legacy v2.6.final behavior.
+    # ----------------------------------------------------------------------
+    if getattr(args, "bin_strategy", "percentile") == "percentile":
+        graph_confs = []
+        qlat_confs = []
+        ensem_confs = []
+        margins_for_tier = []
+        for i, row in merged.iterrows():
+            label = int(row["label"])
+            p_dg = row.get("p_degnn_fake", np.nan)
+            if pd.notna(p_dg):
+                graph_confs.append(float(p_dg) if label == 1 else 1.0 - float(p_dg))
+            p_q = p_qlat[i] if i < len(p_qlat) else np.nan
+            if pd.notna(p_q):
+                qlat_confs.append(float(p_q) if label == 1 else 1.0 - float(p_q))
+                margins_for_tier.append(abs(float(p_q) - 0.5))
+            p_e = ensemble.iloc[i] if i < len(ensemble) else np.nan
+            if pd.notna(p_e):
+                ensem_confs.append(float(p_e) if label == 1 else 1.0 - float(p_e))
+
+        t_low_g, t_high_g = compute_percentile_thresholds(
+            graph_confs, fallback=tuple(args.graph_bins))
+        t_low_q, t_high_q = compute_percentile_thresholds(
+            qlat_confs, fallback=tuple(args.qlat_bins))
+        t_low_e, t_high_e = compute_percentile_thresholds(
+            ensem_confs, fallback=tuple(args.ensem_bins))
+        t_advanced_max, t_proficient_max = compute_percentile_margin_thresholds(
+            margins_for_tier)
+
+        print("[v2.8.6 percentile binning] thresholds derived from "
+              "actual data distribution:")
+        print(f"  graph: low<{t_low_g:.4f}  mid<{t_high_g:.4f}  high>={t_high_g:.4f}")
+        print(f"  qlat:  low<{t_low_q:.4f}  mid<{t_high_q:.4f}  high>={t_high_q:.4f}")
+        print(f"  ensem: low<{t_low_e:.4f}  mid<{t_high_e:.4f}  high>={t_high_e:.4f}")
+        print(f"  tier:  advanced<{t_advanced_max:.4f}  proficient<{t_proficient_max:.4f}  "
+              f"novice>={t_proficient_max:.4f}")
 
     for i, row in merged.iterrows():
         label = int(row["label"])
@@ -406,8 +518,10 @@ def build_corpus(
                          ENSEM_HIGH, ENSEM_MID, ENSEM_LOW, ENSEM_UNK)
         bin_counts["ensem"][ensem_tok.split("=")[1].rstrip("|>")] += 1
 
-        # Teaching tier from QLattice margin
-        tier_tok = tier_from_margin(p_q_fake)
+        # Teaching tier from QLattice margin (v2.8.6 percentile-derived thresholds)
+        tier_tok = tier_from_margin(p_q_fake,
+                                    t_novice_max=t_advanced_max,
+                                    t_proficient_max=t_proficient_max)
         tier_key = tier_tok.split("=")[1].rstrip("|>")
         bin_counts["tier"][tier_key] += 1
 
@@ -455,11 +569,22 @@ def main() -> None:
                    default="reports/gpt2_neurosymbolic_corpus.json")
 
     p.add_argument("--graph_bins", default="0.60,0.80",
-                   help="DE-GNN low/high thresholds (default: 0.60,0.80)")
+                   help="DE-GNN low/high thresholds (used when --bin_strategy=fixed; "
+                        "default: 0.60,0.80)")
     p.add_argument("--qlat_bins", default="0.60,0.80",
-                   help="QLattice low/high thresholds (default: 0.60,0.80)")
+                   help="QLattice low/high thresholds (used when --bin_strategy=fixed; "
+                        "default: 0.60,0.80)")
     p.add_argument("--ensem_bins", default="0.60,0.80",
-                   help="Detector ensemble low/high thresholds")
+                   help="Detector ensemble low/high thresholds "
+                        "(used when --bin_strategy=fixed)")
+
+    p.add_argument("--bin_strategy",
+                   choices=["percentile", "fixed"], default="percentile",
+                   help="How to bin graph/qlat/ensem confidences and tier margin. "
+                        "'percentile' (v2.8.6 default) computes 33rd/67th percentile "
+                        "from actual data → ~33/33/33 splits, learnable contrast. "
+                        "'fixed' uses the --*_bins thresholds (legacy v2.6.final behavior, "
+                        "produced ~96% high on JCBlaise).")
 
     p.add_argument("--no_pseudonymize", action="store_true",
                    help="Disable pseudonymization (NOT RECOMMENDED)")
@@ -553,15 +678,23 @@ def main() -> None:
     # Report
     report = {
         "ts": datetime.now(timezone.utc).isoformat(),
-        "version": "v2.6.final",
+        "version": "v2.9.0",
+        "bin_strategy": getattr(args, "bin_strategy", "percentile"),
         "out_dir": str(out_dir),
         "train_lines": len(train_lines),
         "val_lines": len(val_lines),
         "special_tokens": ALL_SPECIAL_TOKENS,
         "thresholds": {
-            "graph_bins": list(args.graph_bins),
-            "qlat_bins": list(args.qlat_bins),
-            "ensem_bins": list(args.ensem_bins),
+            "graph_bins": [t_low_g, t_high_g],
+            "qlat_bins": [t_low_q, t_high_q],
+            "ensem_bins": [t_low_e, t_high_e],
+            "tier_margin_advanced_max": t_advanced_max,
+            "tier_margin_proficient_max": t_proficient_max,
+            "configured_fixed_thresholds": {
+                "graph_bins": list(args.graph_bins),
+                "qlat_bins": list(args.qlat_bins),
+                "ensem_bins": list(args.ensem_bins),
+            },
         },
         "train_bin_counts": train_bins,
         "val_bin_counts": val_bins,
@@ -577,6 +710,29 @@ def main() -> None:
             "Cruz, Tan, & Cheng (2020). Localization of Fake News Detection. LREC.",
         ],
     }
+
+    # v2.9.0: Audit assertion. If percentile binning is supposed to be active
+    # but the dominant bin is still >70%, the conditioning will be unlearnable.
+    # Print a loud warning so the panel sees it immediately.
+    if report["bin_strategy"] == "percentile":
+        worst_bin_pct = 0
+        for axis_name, counts in train_bins.items():
+            if axis_name == "label":
+                continue
+            total = sum(counts.values())
+            if total == 0:
+                continue
+            top = max(counts.values()) / total * 100
+            worst_bin_pct = max(worst_bin_pct, top)
+        if worst_bin_pct > 70:
+            logger.warning(
+                "v2.9.0 audit: percentile binning is on, but dominant bin "
+                "is %.1f%% (>70%%). Conditioning may still be weak. "
+                "Check the input distribution for degeneracy.", worst_bin_pct)
+        else:
+            logger.info("v2.9.0 audit: bin balance OK — dominant bin is "
+                        "%.1f%% (≤70%% target).", worst_bin_pct)
+        report["audit_dominant_bin_pct"] = worst_bin_pct
     Path(args.report_out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.report_out).write_text(
         json.dumps(report, ensure_ascii=False, indent=2),

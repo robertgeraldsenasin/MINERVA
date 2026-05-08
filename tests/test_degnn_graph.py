@@ -7,6 +7,12 @@ Covers:
 - GraphSAGE training-mode vs eval-mode determinism
 
 These tests verify the graph-construction half of BATB §1.4 SO 1.
+
+NOTE (v2.9.1): torch is a heavy optional dep (~2 GB). When testing locally
+without torch installed, this entire file is skipped via
+`pytest.importorskip`. On Colab (where torch ships preinstalled) all tests
+run normally. This avoids the v2.9.0 collection-time error and removes the
+need for `--ignore=tests/test_degnn_graph.py` in local pytest invocations.
 """
 
 from __future__ import annotations
@@ -17,7 +23,14 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import torch
+
+# Skip the entire file cleanly when torch isn't available locally.
+# Must come before `import torch` so the import never executes.
+torch = pytest.importorskip(
+    "torch",
+    reason="torch not installed — DE-GNN tests are Colab-only. "
+           "Install torch locally if you need to run these.",
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEGNN_PATH = REPO_ROOT / "scripts" / "minerva_degnn.py"
