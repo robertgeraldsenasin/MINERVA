@@ -17,9 +17,18 @@
 pytest>=7.4,<9.0
 
 # ---- Core data libs (used by many tests) ----
-numpy>=1.24,<2.0
+# numpy upper bound relaxed v2.9.2: numpy<2.0 forced source-build on
+# Python 3.13 because no 1.x wheels exist for 3.13. numpy 2.x has 3.13
+# wheels and is API-compatible for the test paths used here.
+numpy>=1.24,<3.0
 pandas>=2.0,<3.0
 pydantic>=2.0,<3.0
+
+# ---- scikit-learn ----
+# Needed by tests/test_qlattice_fallback.py, which verifies the
+# script 08 sklearn LogReg fallback path (v2.8.4). Wheels available
+# for all supported Python versions.
+scikit-learn>=1.3,<2.0
 
 # ---- HuggingFace datasets ONLY (script 11b dataset-bypass tests) ----
 # fsspec pin matters because datasets >= 2.14 needs <=2024.6.1.
