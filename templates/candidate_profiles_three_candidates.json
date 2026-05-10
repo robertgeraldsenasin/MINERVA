@@ -1,0 +1,47 @@
+{
+  "A": {
+    "candidate_id": "A",
+    "code": "C-A",
+    "archetype": "DYNASTIC",
+    "display_name": "Candidate A",
+    "office": "Mayor",
+    "party": "Party A",
+    "region": "City A (fictional)",
+    "aliases": ["Candidate A"],
+    "policy_focus": [
+      "Public health expansion",
+      "Infrastructure maintenance",
+      "Transparent budgeting"
+    ]
+  },
+  "B": {
+    "candidate_id": "B",
+    "code": "C-B",
+    "archetype": "REFORMIST",
+    "display_name": "Candidate B",
+    "office": "Mayor",
+    "party": "Party B",
+    "region": "City A (fictional)",
+    "aliases": ["Candidate B"],
+    "policy_focus": [
+      "Digital governance",
+      "Student transit subsidy",
+      "Open-data transparency"
+    ]
+  },
+  "C": {
+    "candidate_id": "C",
+    "code": "C-C",
+    "archetype": "POPULIST",
+    "display_name": "Candidate C",
+    "office": "Mayor",
+    "party": "Party C",
+    "region": "City A (fictional)",
+    "aliases": ["Candidate C"],
+    "policy_focus": [
+      "Crime crackdown",
+      "Rapid-response command center",
+      "Budget cuts for low-priority programs"
+    ]
+  }
+}

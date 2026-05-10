@@ -1,0 +1,35 @@
+# M.I.N.E.R.V.A. v2.9.1 — Lightweight DEV / TEST dependencies
+#
+# Install ONLY what's needed to run `pytest tests/ -q` locally.
+# Excludes torch (~2 GB), transformers, accelerate, sentencepiece, feyn —
+# those are required only for the actual pipeline run on Colab T4.
+#
+# Usage (from D:\MINERVA_REFINED with .venv activated):
+#     pip install -r dev-requirements.txt
+#     python -m pytest tests/ -q
+#
+# Expected result: 231 passed, 1 skipped (test_degnn_graph skips cleanly
+# because torch is absent — this is correct behavior for local testing).
+#
+# For the FULL install (Colab pipeline runs), use requirements.txt instead.
+
+# ---- Test runner ----
+pytest>=7.4,<9.0
+
+# ---- Core data libs (used by many tests) ----
+numpy>=1.24,<2.0
+pandas>=2.0,<3.0
+pydantic>=2.0,<3.0
+
+# ---- HuggingFace datasets ONLY (script 11b dataset-bypass tests) ----
+# fsspec pin matters because datasets >= 2.14 needs <=2024.6.1.
+fsspec>=2023.10.0,<=2024.6.1
+datasets>=2.14,<3.0
+
+# ---- joblib for any pickled-fixture loads ----
+joblib>=1.3,<2.0
+
+# Notes:
+#   - test_degnn_graph.py auto-skips when torch isn't installed (v2.9.1).
+#   - test_11b_dataset_bypass.py auto-skips when datasets isn't installed.
+#   - All other 231 tests are pure-Python and run on this lightweight set.

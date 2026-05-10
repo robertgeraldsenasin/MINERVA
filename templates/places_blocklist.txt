@@ -1,0 +1,260 @@
+# Filipino geographic entities that must be pseudonymized in card content.
+# v2.9.0 — added in response to v2.8.7 audit finding §10 critical #4 (4 Philippine
+# cities leaked into the strict allowlist report: Lapu-Lapu City, Baguio City,
+# Pasay City, Metropolitan Manila).
+#
+# Format: one entity per line, lowercase. Comments start with #.
+# Entities are matched case-insensitively against text.
+# Multi-word entities are matched as exact phrases.
+#
+# Coverage:
+#   - All 17 PH administrative regions
+#   - All 81 PH provinces
+#   - All 33 highly urbanized cities + top 50 component cities
+#   - Common metropolitan areas
+#   - Common landmark / district names that read as geographic in news context
+
+# === REGIONS ===
+ilocos region
+cagayan valley
+central luzon
+calabarzon
+mimaropa
+bicol region
+western visayas
+central visayas
+eastern visayas
+zamboanga peninsula
+northern mindanao
+davao region
+soccsksargen
+caraga
+bangsamoro
+cordillera administrative region
+national capital region
+metro manila
+metropolitan manila
+
+# === HIGHLY URBANIZED CITIES (Metro Manila + chartered HUCs) ===
+manila
+quezon city
+caloocan
+las pinas
+las piñas
+makati
+malabon
+mandaluyong
+marikina
+muntinlupa
+navotas
+paranaque
+parañaque
+pasay
+pasay city
+pasig
+pateros
+san juan
+taguig
+valenzuela
+angeles city
+olongapo
+baguio
+baguio city
+dagupan
+santiago city
+tarlac city
+batangas city
+lipa city
+lucena
+puerto princesa
+naga city
+iriga city
+legazpi
+ligao
+masbate city
+sorsogon city
+tabaco
+iloilo city
+bacolod
+cadiz
+escalante
+himamaylan
+kabankalan
+la carlota
+sagay
+san carlos
+silay
+sipalay
+talisay
+victorias
+cebu city
+danao
+lapu-lapu
+lapu-lapu city
+mandaue
+mandaue city
+naga
+talisay city
+toledo
+ormoc
+tacloban
+maasin
+calbayog
+catbalogan
+borongan
+dapitan
+dipolog
+isabela city
+pagadian
+zamboanga
+zamboanga city
+cagayan de oro
+gingoog
+iligan
+malaybalay
+oroquieta
+ozamiz
+ozamis
+tangub
+valencia
+davao city
+digos
+mati
+panabo
+samal
+tagum
+general santos
+gensan
+kidapawan
+koronadal
+tacurong
+butuan
+bayugan
+bislig
+cabadbaran
+surigao city
+tandag
+cotabato city
+lamitan
+marawi
+
+# === PROVINCES ===
+abra
+agusan del norte
+agusan del sur
+aklan
+albay
+antique
+apayao
+aurora
+basilan
+bataan
+batanes
+batangas
+benguet
+biliran
+bohol
+bukidnon
+bulacan
+cagayan
+camarines norte
+camarines sur
+camiguin
+capiz
+catanduanes
+cavite
+cebu
+cotabato
+davao de oro
+davao del norte
+davao del sur
+davao occidental
+davao oriental
+dinagat islands
+eastern samar
+guimaras
+ifugao
+ilocos norte
+ilocos sur
+iloilo
+isabela
+kalinga
+la union
+laguna
+lanao del norte
+lanao del sur
+leyte
+maguindanao del norte
+maguindanao del sur
+marinduque
+masbate
+misamis occidental
+misamis oriental
+mountain province
+negros occidental
+negros oriental
+northern samar
+nueva ecija
+nueva vizcaya
+occidental mindoro
+oriental mindoro
+palawan
+pampanga
+pangasinan
+quezon
+quirino
+rizal
+romblon
+samar
+sarangani
+siquijor
+sorsogon
+south cotabato
+southern leyte
+sultan kudarat
+sulu
+surigao del norte
+surigao del sur
+tarlac
+tawi-tawi
+tawi tawi
+zambales
+zamboanga del norte
+zamboanga del sur
+zamboanga sibugay
+
+# === COMMON LANDMARK / DISTRICT NAMES that read as geographic ===
+malacanang
+malacañang
+malacanang palace
+malacañang palace
+batasan
+batasan complex
+batasang pambansa
+edsa
+mendiola
+intramuros
+fort bonifacio
+bonifacio global city
+bgc
+ortigas
+ortigas center
+poblacion
+binondo
+divisoria
+quiapo
+escolta
+makati cbd
+ayala avenue
+roxas boulevard
+manila bay
+laguna de bay
+pasig river
+luneta
+rizal park
+luzon
+visayas
+mindanao
+visayan
+mindanaoan
+luzonian

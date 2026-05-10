@@ -1,0 +1,1354 @@
+{
+  "version": "v2.9.0",
+  "ts_built": "2026-05-08T09:00:00+00:00",
+  "language_primary": "tl",
+  "language_secondary": "en",
+  "indicators": {
+    "EMO": {
+      "label": "Emotional / loaded language",
+      "description": "Uses emotionally charged words to bypass critical thinking",
+      "default_sift_move": "STOP"
+    },
+    "URG": {
+      "label": "Urgency / pressure",
+      "description": "Creates artificial time pressure to discourage verification",
+      "default_sift_move": "STOP"
+    },
+    "ANON": {
+      "label": "Anonymous / unverified source",
+      "description": "Cites unnamed sources or absent attribution",
+      "default_sift_move": "STOP"
+    },
+    "MISS": {
+      "label": "Missing context / sourcing",
+      "description": "Omits key facts a reader would need to verify the claim",
+      "default_sift_move": "TRACE"
+    },
+    "FAB": {
+      "label": "Fabricated specifics",
+      "description": "Includes invented numbers, dates, or quotes",
+      "default_sift_move": "STOP"
+    },
+    "POL": {
+      "label": "Polarization framing",
+      "description": "Frames the issue as us-vs-them to amplify outrage",
+      "default_sift_move": "STOP"
+    },
+    "CONS": {
+      "label": "Consistency with prior statement",
+      "description": "Contradicts or distorts what the candidate previously said",
+      "default_sift_move": "TRACE"
+    },
+    "DISC": {
+      "label": "Discrediting frame",
+      "description": "Attempts to delegitimize a person/institution without evidence",
+      "default_sift_move": "STOP"
+    },
+    "IMP": {
+      "label": "Impersonation cue",
+      "description": "Imitates a credible source's branding or voice",
+      "default_sift_move": "STOP"
+    },
+    "REV": {
+      "label": "Historical revisionism",
+      "description": "Rewrites a known historical fact in a misleading way",
+      "default_sift_move": "STOP"
+    },
+    "ENDO": {
+      "label": "False endorsement",
+      "description": "Falsely attributes endorsement to a person/group",
+      "default_sift_move": "STOP"
+    },
+    "RECF": {
+      "label": "Recycled / context-stripped media",
+      "description": "Reuses old footage/photos out of their original context",
+      "default_sift_move": "TRACE"
+    },
+    "CREDIBLE": {
+      "label": "Credible / verifiable",
+      "description": "Links to or names a verifiable source",
+      "default_sift_move": "TRACE"
+    }
+  },
+  "phrases": {
+    "EMO/fake/novice": [
+      {
+        "phrase_tl": "Ang post na ito ay puno ng salitang gumigising sa galit imbis na magbigay ng patunay.",
+        "phrase_en": "This post leans on anger-triggering words instead of evidence.",
+        "verifier_action": "Tanungin: 'May ebidensya ba o emosyon lang?'"
+      },
+      {
+        "phrase_tl": "Maraming \"matinding\" salita pero kakaunti ang konkretong impormasyon — palatandaan ng manipulasyon.",
+        "phrase_en": "Lots of intense words, very little concrete information — a manipulation cue.",
+        "verifier_action": "Hanapin ang aktwal na pangyayari, hindi ang reaksyon."
+      },
+      {
+        "phrase_tl": "Kapag binubuhos sa iyo ang galit o takot, bumagal ka muna bago mag-share.",
+        "phrase_en": "When a post floods you with anger or fear, slow down before sharing.",
+        "verifier_action": "Mag-pause: ano ang naramdaman ko, at bakit ginusto ng post na maramdaman ko ito?"
+      }
+    ],
+    "EMO/fake/proficient": [
+      {
+        "phrase_tl": "Ginagamit ang \"loaded language\" para mag-frame na walang ebidensya — tradisyunal na taktika ng disinformation.",
+        "phrase_en": "Uses loaded language to frame an evidence-free claim — a classic disinformation tactic.",
+        "verifier_action": "Subukan i-rewrite ang claim sa neutral na salita. May matitira pa bang aktwal na claim?"
+      },
+      {
+        "phrase_tl": "Ang mga salitang tulad ng \"traydor\" o \"tagapagligtas\" ay nagdadala ng emosyonal na bagahe na pumipigil sa kritikal na pagsusuri.",
+        "phrase_en": "Words like 'traitor' or 'savior' carry emotional baggage that blocks critical evaluation.",
+        "verifier_action": "Hanapin: ano ang ebidensya bukod sa mga adjektibong ito?"
+      },
+      {
+        "phrase_tl": "Pinapasok ka sa isang emosyonal na frame bago mo pa nakikita ang aktwal na claim.",
+        "phrase_en": "It pushes you into an emotional frame before you've even seen the actual claim.",
+        "verifier_action": "Hatiin: alisin ang adjektibo, basahin lang ang verb at noun."
+      }
+    ],
+    "EMO/fake/advanced": [
+      {
+        "phrase_tl": "Ang emotional priming ay strategic — para nakikita mo na agad na \"masama\" o \"mabuti\" bago ka pa magtanong.",
+        "phrase_en": "Emotional priming is strategic — it primes you to read 'bad' or 'good' before asking any questions.",
+        "verifier_action": "Suriin ang authorial intent: bakit pinili ang ganitong word choice?"
+      },
+      {
+        "phrase_tl": "Ang mga emosyonal na salitang ito ay tipikal na binubuo ng coordinated networks para mag-amplify ng partikular na narrative.",
+        "phrase_en": "These emotional word patterns are often crafted by coordinated networks to amplify a specific narrative.",
+        "verifier_action": "Tingnan kung pareho ang choice of words sa ibang posts mula sa parehong panahon."
+      },
+      {
+        "phrase_tl": "Sa Pilipinong elektoral na konteksto, ang emotional framing ay madalas tumatama sa identity-based loyalties imbis sa policy.",
+        "phrase_en": "In the Philippine electoral context, emotional framing typically targets identity-based loyalties rather than policy.",
+        "verifier_action": "Itanong: ano ba talaga ang policy claim, at sino ang nakikinabang sa emotional na framing?"
+      }
+    ],
+    "EMO/real/novice": [
+      {
+        "phrase_tl": "Ang post na ito ay gumagamit ng kalmado at konkretong salita imbis na emosyonal na mga adjektibo.",
+        "phrase_en": "This post uses calm, concrete language instead of emotional adjectives.",
+        "verifier_action": "Pansinin: ang tono ay informative, hindi panghihimok."
+      },
+      {
+        "phrase_tl": "Walang masyadong panghikayat dito — focus sa fact, hindi sa feeling.",
+        "phrase_en": "There's not much persuasion language here — the focus is on facts, not feelings.",
+        "verifier_action": "I-check kung ang facts ay maaaring i-verify sa ibang source."
+      },
+      {
+        "phrase_tl": "Ang neutral na pananalita ay isang magandang tanda ng credible reporting.",
+        "phrase_en": "Neutral language is a good sign of credible reporting.",
+        "verifier_action": "I-cross-reference sa ibang reputable outlets."
+      }
+    ],
+    "EMO/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng loaded vocabulary ay nag-iinvite sa reader na mag-evaluate ng evidence sa sariling pace.",
+        "phrase_en": "The absence of loaded vocabulary invites the reader to evaluate evidence at their own pace.",
+        "verifier_action": "Mag-rate: gaano ka-balanced ang pagkakapahayag ng claim?"
+      },
+      {
+        "phrase_tl": "Ang pagiging informative imbis na inflammatory ay isang structural feature ng credible journalism.",
+        "phrase_en": "Being informative rather than inflammatory is a structural feature of credible journalism.",
+        "verifier_action": "Compare ang tone nito sa coverage ng parehong topic sa ibang outlet."
+      },
+      {
+        "phrase_tl": "Walang pagdadagdag ng emotional framing — basta nakapresenta ang facts.",
+        "phrase_en": "No emotional framing added — the facts are simply presented.",
+        "verifier_action": "Hanapin ang specific claims at i-verify isa-isa."
+      }
+    ],
+    "EMO/real/advanced": [
+      {
+        "phrase_tl": "Ang restraint sa salita ay nagbibigay ng mas mataas na epistemic value sa reader, dahil hinahayaan kang magpasya base sa data.",
+        "phrase_en": "Linguistic restraint gives the reader higher epistemic value by letting you decide based on data.",
+        "verifier_action": "Suriin ang pagkakatugma ng tono at kalidad ng evidence."
+      },
+      {
+        "phrase_tl": "Ang neutral na framing ay isang ethical signal — nagsasabi ng \"trust your reasoning, not my emotions.\"",
+        "phrase_en": "Neutral framing is an ethical signal — it says 'trust your reasoning, not my emotions.'",
+        "verifier_action": "Compare sa propaganda outlets para makita ang structural na diperensya."
+      },
+      {
+        "phrase_tl": "Sa highly polarized Filipino media landscape, ang emotional restraint ay isang professional standard na bihirang sinusunod ng disinformation actors.",
+        "phrase_en": "In the highly polarized Filipino media landscape, emotional restraint is a professional standard that disinformation actors rarely meet.",
+        "verifier_action": "Tingnan ang publication's editorial standards — meron bang style guide na nagbabawal ng emotional language?"
+      }
+    ],
+    "URG/fake/novice": [
+      {
+        "phrase_tl": "Sinasabihan kang mag-share \"agad\" o \"ngayon na\" — classic urgency trick.",
+        "phrase_en": "It tells you to share 'now' or 'immediately' — a classic urgency trick.",
+        "verifier_action": "Kapag pinapamadali, huminto. Ang totoong balita ay hindi expiry."
+      },
+      {
+        "phrase_tl": "Walang dahilan para magmadali maliban kung gusto kang pigilan ng poster sa pag-verify.",
+        "phrase_en": "There's no reason for the rush unless the poster wants to stop you from verifying.",
+        "verifier_action": "Mag-tanong: ano ang masama kung mag-aabang ako ng 30 minuto?"
+      },
+      {
+        "phrase_tl": "Ang mga \"kailangan i-share NGAYON\" ay halos lahat manipulasyon.",
+        "phrase_en": "Posts saying 'must share NOW' are almost always manipulation.",
+        "verifier_action": "I-check sa news sites — kung totoo, magkakaroon ng coverage doon."
+      }
+    ],
+    "URG/fake/proficient": [
+      {
+        "phrase_tl": "Ang artificial urgency ay isang documented persuasion technique para i-bypass ang reflective thinking.",
+        "phrase_en": "Artificial urgency is a documented persuasion technique to bypass reflective thinking.",
+        "verifier_action": "Tanggalin ang urgency: still credible ba ang claim kung walang pressure?"
+      },
+      {
+        "phrase_tl": "Ang pagtawag para sa \"immediate action\" ay tumatama sa system 1 thinking, hindi system 2.",
+        "phrase_en": "Calls for 'immediate action' target system 1 thinking, not system 2.",
+        "verifier_action": "Pumili ng deliberate evaluation — magbigay ng oras."
+      },
+      {
+        "phrase_tl": "Ang phrasing tulad ng \"limited time\" o \"before they delete this\" ay scarcity manipulation.",
+        "phrase_en": "Phrasing like 'limited time' or 'before they delete this' is scarcity manipulation.",
+        "verifier_action": "Tanungin: meron ba talagang time limit, o invented?"
+      }
+    ],
+    "URG/fake/advanced": [
+      {
+        "phrase_tl": "Ang urgency framing ay nagiging effective lalo na sa election cycle dahil sa heightened attention at anxiety.",
+        "phrase_en": "Urgency framing becomes especially effective during election cycles due to heightened attention and anxiety.",
+        "verifier_action": "Recognize ang konteksto: mas vulnerable tayo sa urgency cues sa election season."
+      },
+      {
+        "phrase_tl": "Ang \"share before censored\" trope ay strategic — gumagawa ng forbidden-knowledge appeal.",
+        "phrase_en": "The 'share before censored' trope is strategic — it creates a forbidden-knowledge appeal.",
+        "verifier_action": "Suriin: kung totoong banned, paano pa ito nakikita?"
+      },
+      {
+        "phrase_tl": "Sa Pilipinong context, ang urgency narratives ay tumutugma sa \"hindi sinabi sa mainstream media\" frames na strategic na binubuo.",
+        "phrase_en": "In the Philippine context, urgency narratives align with strategically constructed 'mainstream media won't tell you' frames.",
+        "verifier_action": "Compare claim sa actual mainstream coverage. May mismatch ba?"
+      }
+    ],
+    "URG/real/novice": [
+      {
+        "phrase_tl": "Walang pressure dito na mag-share kaagad — calm, confident reporting.",
+        "phrase_en": "There's no pressure here to share immediately — it reads as calm, confident reporting.",
+        "verifier_action": "Pansinin ang absence ng \"share now\" cues."
+      },
+      {
+        "phrase_tl": "Ang post na ito ay walang artificial deadline.",
+        "phrase_en": "This post doesn't push an artificial deadline.",
+        "verifier_action": "Compare sa mga manipulative posts — may diperensya sa pacing."
+      },
+      {
+        "phrase_tl": "Hindi ka pinipilit ng poster — magandang sign.",
+        "phrase_en": "The poster isn't rushing you — a good sign.",
+        "verifier_action": "Magpatuloy sa verification ng underlying facts."
+      }
+    ],
+    "URG/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng urgency cues ay tumutugma sa standard journalistic pacing.",
+        "phrase_en": "Absence of urgency cues matches standard journalistic pacing.",
+        "verifier_action": "Verify ang specific claims sa established outlets."
+      },
+      {
+        "phrase_tl": "Walang scarcity language o time-pressure devices — credible structural marker.",
+        "phrase_en": "No scarcity language or time-pressure devices — a credible structural marker.",
+        "verifier_action": "I-check ang publication's track record sa related stories."
+      },
+      {
+        "phrase_tl": "Ang neutral pacing ay nagbibigay ng oras sa reader para mag-evaluate.",
+        "phrase_en": "Neutral pacing gives the reader time to evaluate.",
+        "verifier_action": "Gumamit ng oras na ibinigay — i-cross-check."
+      }
+    ],
+    "URG/real/advanced": [
+      {
+        "phrase_tl": "Ang journalistic restraint sa pacing ay reflects professional editorial standards na may rigorous fact-check pipeline.",
+        "phrase_en": "Editorial restraint in pacing reflects professional standards backed by rigorous fact-checking pipelines.",
+        "verifier_action": "Tingnan ang publication's stated editorial process."
+      },
+      {
+        "phrase_tl": "Sa election season, ang absence ng manipulative urgency ay rare quality marker.",
+        "phrase_en": "During election season, the absence of manipulative urgency is a rare quality marker.",
+        "verifier_action": "I-benchmark sa volume of urgency-driven content sa parehong feed."
+      },
+      {
+        "phrase_tl": "Ang decision to NOT amplify is itself an editorial position — credible outlets practice this.",
+        "phrase_en": "The decision to NOT amplify is itself an editorial position — credible outlets practice this.",
+        "verifier_action": "Suriin kung paano in-coverage ng outlet ang sensitive stories: balanced ba o hyped?"
+      }
+    ],
+    "ANON/fake/novice": [
+      {
+        "phrase_tl": "Ang post ay nagpapakita ng anonymous / unverified source — direct na cue ng manipulasyon.",
+        "phrase_en": "This post shows anonymous / unverified source — a direct manipulation cue.",
+        "verifier_action": "Tanungin: meron ba talagang ebidensya o anonymous / unverified source lang?"
+      },
+      {
+        "phrase_tl": "Ang ganitong palatandaan ay madalas na nasa fake na content.",
+        "phrase_en": "This kind of cue is commonly found in fake content.",
+        "verifier_action": "Hanapin ang underlying source, hindi ang surface."
+      },
+      {
+        "phrase_tl": "Pansinin ang anonymous / unverified source — pinaiisip ka nito ng walang ebidensya.",
+        "phrase_en": "Notice the anonymous / unverified source — it makes you assume things without evidence.",
+        "verifier_action": "Slow down at suriin ang specific claim."
+      }
+    ],
+    "ANON/fake/proficient": [
+      {
+        "phrase_tl": "Ang anonymous / unverified source ay strategic — ginagamit para mag-bypass ng critical evaluation.",
+        "phrase_en": "Anonymous / unverified source is strategic — used to bypass critical evaluation.",
+        "verifier_action": "I-rewrite ang claim ng walang manipulative element. Anong matitira?"
+      },
+      {
+        "phrase_tl": "Ang taktika na ito ay documented sa misinformation literature.",
+        "phrase_en": "This tactic is documented in misinformation literature.",
+        "verifier_action": "I-compare sa known disinformation patterns."
+      },
+      {
+        "phrase_tl": "Maipapakita mo ba ito sa originating source? Kapag hindi, maaaring fabricated.",
+        "phrase_en": "Can you trace this to an originating source? If not, it may be fabricated.",
+        "verifier_action": "Hanapin ang pinakamaagang public version ng claim."
+      }
+    ],
+    "ANON/fake/advanced": [
+      {
+        "phrase_tl": "Sa Pilipinong electoral context, ang anonymous / unverified source ay madalas na coordinated, hindi organic.",
+        "phrase_en": "In Philippine electoral context, anonymous / unverified source is often coordinated, not organic.",
+        "verifier_action": "Suriin kung pareho ang phrasing sa multiple accounts at panahon."
+      },
+      {
+        "phrase_tl": "Ang structural na paggamit ng anonymous / unverified source ay nagsusumiwalat ng mas malalim na narrative goals.",
+        "phrase_en": "The structural use of anonymous / unverified source reveals deeper narrative goals.",
+        "verifier_action": "Tanungin: sino ang nakikinabang sa pagkalat nito?"
+      },
+      {
+        "phrase_tl": "Ang ganitong pattern ay typical sa disinformation networks na nagta-target ng identity-based loyalty.",
+        "phrase_en": "This pattern is typical of disinformation networks targeting identity-based loyalty.",
+        "verifier_action": "I-check ang amplification network: sino ang gumagaya?"
+      }
+    ],
+    "ANON/real/novice": [
+      {
+        "phrase_tl": "Walang nakitang anonymous / unverified source sa post — magandang signal.",
+        "phrase_en": "No anonymous / unverified source detected in this post — a good signal.",
+        "verifier_action": "I-confirm sa ibang verifiable source."
+      },
+      {
+        "phrase_tl": "Ang absence ng anonymous / unverified source ay tumutugma sa standard credible practice.",
+        "phrase_en": "Absence of anonymous / unverified source aligns with standard credible practice.",
+        "verifier_action": "Tingnan ang sourcing: may primary attribution ba?"
+      },
+      {
+        "phrase_tl": "Ang post na ito ay malinis sa palatandaang ito — sign ng disiplinadong reporting.",
+        "phrase_en": "This post is clean on this indicator — a sign of disciplined reporting.",
+        "verifier_action": "Cross-check ang facts sa established outlets."
+      }
+    ],
+    "ANON/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng anonymous / unverified source ay structural marker ng credible content.",
+        "phrase_en": "Absence of anonymous / unverified source is a structural marker of credible content.",
+        "verifier_action": "Suriin ang publication's editorial standards."
+      },
+      {
+        "phrase_tl": "Hindi nakikita ang taktika na ito — tumutugma sa professional journalism norms.",
+        "phrase_en": "This tactic is not in evidence — consistent with professional journalism norms.",
+        "verifier_action": "Compare ang post sa published news sa parehong topic."
+      },
+      {
+        "phrase_tl": "Walang manipulative element — focus lang sa traceable claims.",
+        "phrase_en": "No manipulative element — just traceable claims.",
+        "verifier_action": "Sundan ang attribution chain hanggang sa source."
+      }
+    ],
+    "ANON/real/advanced": [
+      {
+        "phrase_tl": "Ang systemic absence ng anonymous / unverified source sa post ay reflects rigorous editorial pipeline.",
+        "phrase_en": "Systemic absence of anonymous / unverified source in this post reflects a rigorous editorial pipeline.",
+        "verifier_action": "I-evaluate ang outlet's track record sa similar stories."
+      },
+      {
+        "phrase_tl": "Sa polarized environment, ang restraint mula sa anonymous / unverified source ay editorial choice.",
+        "phrase_en": "In a polarized environment, restraint from anonymous / unverified source is a deliberate editorial choice.",
+        "verifier_action": "Tingnan kung consistent ito sa outlet's overall portfolio."
+      },
+      {
+        "phrase_tl": "Ang decision na huwag gamitin ang anonymous / unverified source ay isang ethical signal — credible journalism.",
+        "phrase_en": "The decision not to use anonymous / unverified source is an ethical signal — credible journalism.",
+        "verifier_action": "Suriin ang publication's stated values vs. actual coverage."
+      }
+    ],
+    "MISS/fake/novice": [
+      {
+        "phrase_tl": "Ang post ay nagpapakita ng missing context / sourcing — direct na cue ng manipulasyon.",
+        "phrase_en": "This post shows missing context / sourcing — a direct manipulation cue.",
+        "verifier_action": "Tanungin: meron ba talagang ebidensya o missing context / sourcing lang?"
+      },
+      {
+        "phrase_tl": "Ang ganitong palatandaan ay madalas na nasa fake na content.",
+        "phrase_en": "This kind of cue is commonly found in fake content.",
+        "verifier_action": "Hanapin ang underlying source, hindi ang surface."
+      },
+      {
+        "phrase_tl": "Pansinin ang missing context / sourcing — pinaiisip ka nito ng walang ebidensya.",
+        "phrase_en": "Notice the missing context / sourcing — it makes you assume things without evidence.",
+        "verifier_action": "Slow down at suriin ang specific claim."
+      }
+    ],
+    "MISS/fake/proficient": [
+      {
+        "phrase_tl": "Ang missing context / sourcing ay strategic — ginagamit para mag-bypass ng critical evaluation.",
+        "phrase_en": "Missing context / sourcing is strategic — used to bypass critical evaluation.",
+        "verifier_action": "I-rewrite ang claim ng walang manipulative element. Anong matitira?"
+      },
+      {
+        "phrase_tl": "Ang taktika na ito ay documented sa misinformation literature.",
+        "phrase_en": "This tactic is documented in misinformation literature.",
+        "verifier_action": "I-compare sa known disinformation patterns."
+      },
+      {
+        "phrase_tl": "Maipapakita mo ba ito sa originating source? Kapag hindi, maaaring fabricated.",
+        "phrase_en": "Can you trace this to an originating source? If not, it may be fabricated.",
+        "verifier_action": "Hanapin ang pinakamaagang public version ng claim."
+      }
+    ],
+    "MISS/fake/advanced": [
+      {
+        "phrase_tl": "Sa Pilipinong electoral context, ang missing context / sourcing ay madalas na coordinated, hindi organic.",
+        "phrase_en": "In Philippine electoral context, missing context / sourcing is often coordinated, not organic.",
+        "verifier_action": "Suriin kung pareho ang phrasing sa multiple accounts at panahon."
+      },
+      {
+        "phrase_tl": "Ang structural na paggamit ng missing context / sourcing ay nagsusumiwalat ng mas malalim na narrative goals.",
+        "phrase_en": "The structural use of missing context / sourcing reveals deeper narrative goals.",
+        "verifier_action": "Tanungin: sino ang nakikinabang sa pagkalat nito?"
+      },
+      {
+        "phrase_tl": "Ang ganitong pattern ay typical sa disinformation networks na nagta-target ng identity-based loyalty.",
+        "phrase_en": "This pattern is typical of disinformation networks targeting identity-based loyalty.",
+        "verifier_action": "I-check ang amplification network: sino ang gumagaya?"
+      }
+    ],
+    "MISS/real/novice": [
+      {
+        "phrase_tl": "Walang nakitang missing context / sourcing sa post — magandang signal.",
+        "phrase_en": "No missing context / sourcing detected in this post — a good signal.",
+        "verifier_action": "I-confirm sa ibang verifiable source."
+      },
+      {
+        "phrase_tl": "Ang absence ng missing context / sourcing ay tumutugma sa standard credible practice.",
+        "phrase_en": "Absence of missing context / sourcing aligns with standard credible practice.",
+        "verifier_action": "Tingnan ang sourcing: may primary attribution ba?"
+      },
+      {
+        "phrase_tl": "Ang post na ito ay malinis sa palatandaang ito — sign ng disiplinadong reporting.",
+        "phrase_en": "This post is clean on this indicator — a sign of disciplined reporting.",
+        "verifier_action": "Cross-check ang facts sa established outlets."
+      }
+    ],
+    "MISS/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng missing context / sourcing ay structural marker ng credible content.",
+        "phrase_en": "Absence of missing context / sourcing is a structural marker of credible content.",
+        "verifier_action": "Suriin ang publication's editorial standards."
+      },
+      {
+        "phrase_tl": "Hindi nakikita ang taktika na ito — tumutugma sa professional journalism norms.",
+        "phrase_en": "This tactic is not in evidence — consistent with professional journalism norms.",
+        "verifier_action": "Compare ang post sa published news sa parehong topic."
+      },
+      {
+        "phrase_tl": "Walang manipulative element — focus lang sa traceable claims.",
+        "phrase_en": "No manipulative element — just traceable claims.",
+        "verifier_action": "Sundan ang attribution chain hanggang sa source."
+      }
+    ],
+    "MISS/real/advanced": [
+      {
+        "phrase_tl": "Ang systemic absence ng missing context / sourcing sa post ay reflects rigorous editorial pipeline.",
+        "phrase_en": "Systemic absence of missing context / sourcing in this post reflects a rigorous editorial pipeline.",
+        "verifier_action": "I-evaluate ang outlet's track record sa similar stories."
+      },
+      {
+        "phrase_tl": "Sa polarized environment, ang restraint mula sa missing context / sourcing ay editorial choice.",
+        "phrase_en": "In a polarized environment, restraint from missing context / sourcing is a deliberate editorial choice.",
+        "verifier_action": "Tingnan kung consistent ito sa outlet's overall portfolio."
+      },
+      {
+        "phrase_tl": "Ang decision na huwag gamitin ang missing context / sourcing ay isang ethical signal — credible journalism.",
+        "phrase_en": "The decision not to use missing context / sourcing is an ethical signal — credible journalism.",
+        "verifier_action": "Suriin ang publication's stated values vs. actual coverage."
+      }
+    ],
+    "FAB/fake/novice": [
+      {
+        "phrase_tl": "Ang post ay nagpapakita ng fabricated specifics — direct na cue ng manipulasyon.",
+        "phrase_en": "This post shows fabricated specifics — a direct manipulation cue.",
+        "verifier_action": "Tanungin: meron ba talagang ebidensya o fabricated specifics lang?"
+      },
+      {
+        "phrase_tl": "Ang ganitong palatandaan ay madalas na nasa fake na content.",
+        "phrase_en": "This kind of cue is commonly found in fake content.",
+        "verifier_action": "Hanapin ang underlying source, hindi ang surface."
+      },
+      {
+        "phrase_tl": "Pansinin ang fabricated specifics — pinaiisip ka nito ng walang ebidensya.",
+        "phrase_en": "Notice the fabricated specifics — it makes you assume things without evidence.",
+        "verifier_action": "Slow down at suriin ang specific claim."
+      }
+    ],
+    "FAB/fake/proficient": [
+      {
+        "phrase_tl": "Ang fabricated specifics ay strategic — ginagamit para mag-bypass ng critical evaluation.",
+        "phrase_en": "Fabricated specifics is strategic — used to bypass critical evaluation.",
+        "verifier_action": "I-rewrite ang claim ng walang manipulative element. Anong matitira?"
+      },
+      {
+        "phrase_tl": "Ang taktika na ito ay documented sa misinformation literature.",
+        "phrase_en": "This tactic is documented in misinformation literature.",
+        "verifier_action": "I-compare sa known disinformation patterns."
+      },
+      {
+        "phrase_tl": "Maipapakita mo ba ito sa originating source? Kapag hindi, maaaring fabricated.",
+        "phrase_en": "Can you trace this to an originating source? If not, it may be fabricated.",
+        "verifier_action": "Hanapin ang pinakamaagang public version ng claim."
+      }
+    ],
+    "FAB/fake/advanced": [
+      {
+        "phrase_tl": "Sa Pilipinong electoral context, ang fabricated specifics ay madalas na coordinated, hindi organic.",
+        "phrase_en": "In Philippine electoral context, fabricated specifics is often coordinated, not organic.",
+        "verifier_action": "Suriin kung pareho ang phrasing sa multiple accounts at panahon."
+      },
+      {
+        "phrase_tl": "Ang structural na paggamit ng fabricated specifics ay nagsusumiwalat ng mas malalim na narrative goals.",
+        "phrase_en": "The structural use of fabricated specifics reveals deeper narrative goals.",
+        "verifier_action": "Tanungin: sino ang nakikinabang sa pagkalat nito?"
+      },
+      {
+        "phrase_tl": "Ang ganitong pattern ay typical sa disinformation networks na nagta-target ng identity-based loyalty.",
+        "phrase_en": "This pattern is typical of disinformation networks targeting identity-based loyalty.",
+        "verifier_action": "I-check ang amplification network: sino ang gumagaya?"
+      }
+    ],
+    "FAB/real/novice": [
+      {
+        "phrase_tl": "Walang nakitang fabricated specifics sa post — magandang signal.",
+        "phrase_en": "No fabricated specifics detected in this post — a good signal.",
+        "verifier_action": "I-confirm sa ibang verifiable source."
+      },
+      {
+        "phrase_tl": "Ang absence ng fabricated specifics ay tumutugma sa standard credible practice.",
+        "phrase_en": "Absence of fabricated specifics aligns with standard credible practice.",
+        "verifier_action": "Tingnan ang sourcing: may primary attribution ba?"
+      },
+      {
+        "phrase_tl": "Ang post na ito ay malinis sa palatandaang ito — sign ng disiplinadong reporting.",
+        "phrase_en": "This post is clean on this indicator — a sign of disciplined reporting.",
+        "verifier_action": "Cross-check ang facts sa established outlets."
+      }
+    ],
+    "FAB/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng fabricated specifics ay structural marker ng credible content.",
+        "phrase_en": "Absence of fabricated specifics is a structural marker of credible content.",
+        "verifier_action": "Suriin ang publication's editorial standards."
+      },
+      {
+        "phrase_tl": "Hindi nakikita ang taktika na ito — tumutugma sa professional journalism norms.",
+        "phrase_en": "This tactic is not in evidence — consistent with professional journalism norms.",
+        "verifier_action": "Compare ang post sa published news sa parehong topic."
+      },
+      {
+        "phrase_tl": "Walang manipulative element — focus lang sa traceable claims.",
+        "phrase_en": "No manipulative element — just traceable claims.",
+        "verifier_action": "Sundan ang attribution chain hanggang sa source."
+      }
+    ],
+    "FAB/real/advanced": [
+      {
+        "phrase_tl": "Ang systemic absence ng fabricated specifics sa post ay reflects rigorous editorial pipeline.",
+        "phrase_en": "Systemic absence of fabricated specifics in this post reflects a rigorous editorial pipeline.",
+        "verifier_action": "I-evaluate ang outlet's track record sa similar stories."
+      },
+      {
+        "phrase_tl": "Sa polarized environment, ang restraint mula sa fabricated specifics ay editorial choice.",
+        "phrase_en": "In a polarized environment, restraint from fabricated specifics is a deliberate editorial choice.",
+        "verifier_action": "Tingnan kung consistent ito sa outlet's overall portfolio."
+      },
+      {
+        "phrase_tl": "Ang decision na huwag gamitin ang fabricated specifics ay isang ethical signal — credible journalism.",
+        "phrase_en": "The decision not to use fabricated specifics is an ethical signal — credible journalism.",
+        "verifier_action": "Suriin ang publication's stated values vs. actual coverage."
+      }
+    ],
+    "POL/fake/novice": [
+      {
+        "phrase_tl": "Ang post ay nagpapakita ng polarization framing — direct na cue ng manipulasyon.",
+        "phrase_en": "This post shows polarization framing — a direct manipulation cue.",
+        "verifier_action": "Tanungin: meron ba talagang ebidensya o polarization framing lang?"
+      },
+      {
+        "phrase_tl": "Ang ganitong palatandaan ay madalas na nasa fake na content.",
+        "phrase_en": "This kind of cue is commonly found in fake content.",
+        "verifier_action": "Hanapin ang underlying source, hindi ang surface."
+      },
+      {
+        "phrase_tl": "Pansinin ang polarization framing — pinaiisip ka nito ng walang ebidensya.",
+        "phrase_en": "Notice the polarization framing — it makes you assume things without evidence.",
+        "verifier_action": "Slow down at suriin ang specific claim."
+      }
+    ],
+    "POL/fake/proficient": [
+      {
+        "phrase_tl": "Ang polarization framing ay strategic — ginagamit para mag-bypass ng critical evaluation.",
+        "phrase_en": "Polarization framing is strategic — used to bypass critical evaluation.",
+        "verifier_action": "I-rewrite ang claim ng walang manipulative element. Anong matitira?"
+      },
+      {
+        "phrase_tl": "Ang taktika na ito ay documented sa misinformation literature.",
+        "phrase_en": "This tactic is documented in misinformation literature.",
+        "verifier_action": "I-compare sa known disinformation patterns."
+      },
+      {
+        "phrase_tl": "Maipapakita mo ba ito sa originating source? Kapag hindi, maaaring fabricated.",
+        "phrase_en": "Can you trace this to an originating source? If not, it may be fabricated.",
+        "verifier_action": "Hanapin ang pinakamaagang public version ng claim."
+      }
+    ],
+    "POL/fake/advanced": [
+      {
+        "phrase_tl": "Sa Pilipinong electoral context, ang polarization framing ay madalas na coordinated, hindi organic.",
+        "phrase_en": "In Philippine electoral context, polarization framing is often coordinated, not organic.",
+        "verifier_action": "Suriin kung pareho ang phrasing sa multiple accounts at panahon."
+      },
+      {
+        "phrase_tl": "Ang structural na paggamit ng polarization framing ay nagsusumiwalat ng mas malalim na narrative goals.",
+        "phrase_en": "The structural use of polarization framing reveals deeper narrative goals.",
+        "verifier_action": "Tanungin: sino ang nakikinabang sa pagkalat nito?"
+      },
+      {
+        "phrase_tl": "Ang ganitong pattern ay typical sa disinformation networks na nagta-target ng identity-based loyalty.",
+        "phrase_en": "This pattern is typical of disinformation networks targeting identity-based loyalty.",
+        "verifier_action": "I-check ang amplification network: sino ang gumagaya?"
+      }
+    ],
+    "POL/real/novice": [
+      {
+        "phrase_tl": "Walang nakitang polarization framing sa post — magandang signal.",
+        "phrase_en": "No polarization framing detected in this post — a good signal.",
+        "verifier_action": "I-confirm sa ibang verifiable source."
+      },
+      {
+        "phrase_tl": "Ang absence ng polarization framing ay tumutugma sa standard credible practice.",
+        "phrase_en": "Absence of polarization framing aligns with standard credible practice.",
+        "verifier_action": "Tingnan ang sourcing: may primary attribution ba?"
+      },
+      {
+        "phrase_tl": "Ang post na ito ay malinis sa palatandaang ito — sign ng disiplinadong reporting.",
+        "phrase_en": "This post is clean on this indicator — a sign of disciplined reporting.",
+        "verifier_action": "Cross-check ang facts sa established outlets."
+      }
+    ],
+    "POL/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng polarization framing ay structural marker ng credible content.",
+        "phrase_en": "Absence of polarization framing is a structural marker of credible content.",
+        "verifier_action": "Suriin ang publication's editorial standards."
+      },
+      {
+        "phrase_tl": "Hindi nakikita ang taktika na ito — tumutugma sa professional journalism norms.",
+        "phrase_en": "This tactic is not in evidence — consistent with professional journalism norms.",
+        "verifier_action": "Compare ang post sa published news sa parehong topic."
+      },
+      {
+        "phrase_tl": "Walang manipulative element — focus lang sa traceable claims.",
+        "phrase_en": "No manipulative element — just traceable claims.",
+        "verifier_action": "Sundan ang attribution chain hanggang sa source."
+      }
+    ],
+    "POL/real/advanced": [
+      {
+        "phrase_tl": "Ang systemic absence ng polarization framing sa post ay reflects rigorous editorial pipeline.",
+        "phrase_en": "Systemic absence of polarization framing in this post reflects a rigorous editorial pipeline.",
+        "verifier_action": "I-evaluate ang outlet's track record sa similar stories."
+      },
+      {
+        "phrase_tl": "Sa polarized environment, ang restraint mula sa polarization framing ay editorial choice.",
+        "phrase_en": "In a polarized environment, restraint from polarization framing is a deliberate editorial choice.",
+        "verifier_action": "Tingnan kung consistent ito sa outlet's overall portfolio."
+      },
+      {
+        "phrase_tl": "Ang decision na huwag gamitin ang polarization framing ay isang ethical signal — credible journalism.",
+        "phrase_en": "The decision not to use polarization framing is an ethical signal — credible journalism.",
+        "verifier_action": "Suriin ang publication's stated values vs. actual coverage."
+      }
+    ],
+    "CONS/fake/novice": [
+      {
+        "phrase_tl": "Ang post ay nagpapakita ng consistency with prior statement — direct na cue ng manipulasyon.",
+        "phrase_en": "This post shows consistency with prior statement — a direct manipulation cue.",
+        "verifier_action": "Tanungin: meron ba talagang ebidensya o consistency with prior statement lang?"
+      },
+      {
+        "phrase_tl": "Ang ganitong palatandaan ay madalas na nasa fake na content.",
+        "phrase_en": "This kind of cue is commonly found in fake content.",
+        "verifier_action": "Hanapin ang underlying source, hindi ang surface."
+      },
+      {
+        "phrase_tl": "Pansinin ang consistency with prior statement — pinaiisip ka nito ng walang ebidensya.",
+        "phrase_en": "Notice the consistency with prior statement — it makes you assume things without evidence.",
+        "verifier_action": "Slow down at suriin ang specific claim."
+      }
+    ],
+    "CONS/fake/proficient": [
+      {
+        "phrase_tl": "Ang consistency with prior statement ay strategic — ginagamit para mag-bypass ng critical evaluation.",
+        "phrase_en": "Consistency with prior statement is strategic — used to bypass critical evaluation.",
+        "verifier_action": "I-rewrite ang claim ng walang manipulative element. Anong matitira?"
+      },
+      {
+        "phrase_tl": "Ang taktika na ito ay documented sa misinformation literature.",
+        "phrase_en": "This tactic is documented in misinformation literature.",
+        "verifier_action": "I-compare sa known disinformation patterns."
+      },
+      {
+        "phrase_tl": "Maipapakita mo ba ito sa originating source? Kapag hindi, maaaring fabricated.",
+        "phrase_en": "Can you trace this to an originating source? If not, it may be fabricated.",
+        "verifier_action": "Hanapin ang pinakamaagang public version ng claim."
+      }
+    ],
+    "CONS/fake/advanced": [
+      {
+        "phrase_tl": "Sa Pilipinong electoral context, ang consistency with prior statement ay madalas na coordinated, hindi organic.",
+        "phrase_en": "In Philippine electoral context, consistency with prior statement is often coordinated, not organic.",
+        "verifier_action": "Suriin kung pareho ang phrasing sa multiple accounts at panahon."
+      },
+      {
+        "phrase_tl": "Ang structural na paggamit ng consistency with prior statement ay nagsusumiwalat ng mas malalim na narrative goals.",
+        "phrase_en": "The structural use of consistency with prior statement reveals deeper narrative goals.",
+        "verifier_action": "Tanungin: sino ang nakikinabang sa pagkalat nito?"
+      },
+      {
+        "phrase_tl": "Ang ganitong pattern ay typical sa disinformation networks na nagta-target ng identity-based loyalty.",
+        "phrase_en": "This pattern is typical of disinformation networks targeting identity-based loyalty.",
+        "verifier_action": "I-check ang amplification network: sino ang gumagaya?"
+      }
+    ],
+    "CONS/real/novice": [
+      {
+        "phrase_tl": "Walang nakitang consistency with prior statement sa post — magandang signal.",
+        "phrase_en": "No consistency with prior statement detected in this post — a good signal.",
+        "verifier_action": "I-confirm sa ibang verifiable source."
+      },
+      {
+        "phrase_tl": "Ang absence ng consistency with prior statement ay tumutugma sa standard credible practice.",
+        "phrase_en": "Absence of consistency with prior statement aligns with standard credible practice.",
+        "verifier_action": "Tingnan ang sourcing: may primary attribution ba?"
+      },
+      {
+        "phrase_tl": "Ang post na ito ay malinis sa palatandaang ito — sign ng disiplinadong reporting.",
+        "phrase_en": "This post is clean on this indicator — a sign of disciplined reporting.",
+        "verifier_action": "Cross-check ang facts sa established outlets."
+      }
+    ],
+    "CONS/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng consistency with prior statement ay structural marker ng credible content.",
+        "phrase_en": "Absence of consistency with prior statement is a structural marker of credible content.",
+        "verifier_action": "Suriin ang publication's editorial standards."
+      },
+      {
+        "phrase_tl": "Hindi nakikita ang taktika na ito — tumutugma sa professional journalism norms.",
+        "phrase_en": "This tactic is not in evidence — consistent with professional journalism norms.",
+        "verifier_action": "Compare ang post sa published news sa parehong topic."
+      },
+      {
+        "phrase_tl": "Walang manipulative element — focus lang sa traceable claims.",
+        "phrase_en": "No manipulative element — just traceable claims.",
+        "verifier_action": "Sundan ang attribution chain hanggang sa source."
+      }
+    ],
+    "CONS/real/advanced": [
+      {
+        "phrase_tl": "Ang systemic absence ng consistency with prior statement sa post ay reflects rigorous editorial pipeline.",
+        "phrase_en": "Systemic absence of consistency with prior statement in this post reflects a rigorous editorial pipeline.",
+        "verifier_action": "I-evaluate ang outlet's track record sa similar stories."
+      },
+      {
+        "phrase_tl": "Sa polarized environment, ang restraint mula sa consistency with prior statement ay editorial choice.",
+        "phrase_en": "In a polarized environment, restraint from consistency with prior statement is a deliberate editorial choice.",
+        "verifier_action": "Tingnan kung consistent ito sa outlet's overall portfolio."
+      },
+      {
+        "phrase_tl": "Ang decision na huwag gamitin ang consistency with prior statement ay isang ethical signal — credible journalism.",
+        "phrase_en": "The decision not to use consistency with prior statement is an ethical signal — credible journalism.",
+        "verifier_action": "Suriin ang publication's stated values vs. actual coverage."
+      }
+    ],
+    "DISC/fake/novice": [
+      {
+        "phrase_tl": "Ang post ay nagpapakita ng discrediting frame — direct na cue ng manipulasyon.",
+        "phrase_en": "This post shows discrediting frame — a direct manipulation cue.",
+        "verifier_action": "Tanungin: meron ba talagang ebidensya o discrediting frame lang?"
+      },
+      {
+        "phrase_tl": "Ang ganitong palatandaan ay madalas na nasa fake na content.",
+        "phrase_en": "This kind of cue is commonly found in fake content.",
+        "verifier_action": "Hanapin ang underlying source, hindi ang surface."
+      },
+      {
+        "phrase_tl": "Pansinin ang discrediting frame — pinaiisip ka nito ng walang ebidensya.",
+        "phrase_en": "Notice the discrediting frame — it makes you assume things without evidence.",
+        "verifier_action": "Slow down at suriin ang specific claim."
+      }
+    ],
+    "DISC/fake/proficient": [
+      {
+        "phrase_tl": "Ang discrediting frame ay strategic — ginagamit para mag-bypass ng critical evaluation.",
+        "phrase_en": "Discrediting frame is strategic — used to bypass critical evaluation.",
+        "verifier_action": "I-rewrite ang claim ng walang manipulative element. Anong matitira?"
+      },
+      {
+        "phrase_tl": "Ang taktika na ito ay documented sa misinformation literature.",
+        "phrase_en": "This tactic is documented in misinformation literature.",
+        "verifier_action": "I-compare sa known disinformation patterns."
+      },
+      {
+        "phrase_tl": "Maipapakita mo ba ito sa originating source? Kapag hindi, maaaring fabricated.",
+        "phrase_en": "Can you trace this to an originating source? If not, it may be fabricated.",
+        "verifier_action": "Hanapin ang pinakamaagang public version ng claim."
+      }
+    ],
+    "DISC/fake/advanced": [
+      {
+        "phrase_tl": "Sa Pilipinong electoral context, ang discrediting frame ay madalas na coordinated, hindi organic.",
+        "phrase_en": "In Philippine electoral context, discrediting frame is often coordinated, not organic.",
+        "verifier_action": "Suriin kung pareho ang phrasing sa multiple accounts at panahon."
+      },
+      {
+        "phrase_tl": "Ang structural na paggamit ng discrediting frame ay nagsusumiwalat ng mas malalim na narrative goals.",
+        "phrase_en": "The structural use of discrediting frame reveals deeper narrative goals.",
+        "verifier_action": "Tanungin: sino ang nakikinabang sa pagkalat nito?"
+      },
+      {
+        "phrase_tl": "Ang ganitong pattern ay typical sa disinformation networks na nagta-target ng identity-based loyalty.",
+        "phrase_en": "This pattern is typical of disinformation networks targeting identity-based loyalty.",
+        "verifier_action": "I-check ang amplification network: sino ang gumagaya?"
+      }
+    ],
+    "DISC/real/novice": [
+      {
+        "phrase_tl": "Walang nakitang discrediting frame sa post — magandang signal.",
+        "phrase_en": "No discrediting frame detected in this post — a good signal.",
+        "verifier_action": "I-confirm sa ibang verifiable source."
+      },
+      {
+        "phrase_tl": "Ang absence ng discrediting frame ay tumutugma sa standard credible practice.",
+        "phrase_en": "Absence of discrediting frame aligns with standard credible practice.",
+        "verifier_action": "Tingnan ang sourcing: may primary attribution ba?"
+      },
+      {
+        "phrase_tl": "Ang post na ito ay malinis sa palatandaang ito — sign ng disiplinadong reporting.",
+        "phrase_en": "This post is clean on this indicator — a sign of disciplined reporting.",
+        "verifier_action": "Cross-check ang facts sa established outlets."
+      }
+    ],
+    "DISC/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng discrediting frame ay structural marker ng credible content.",
+        "phrase_en": "Absence of discrediting frame is a structural marker of credible content.",
+        "verifier_action": "Suriin ang publication's editorial standards."
+      },
+      {
+        "phrase_tl": "Hindi nakikita ang taktika na ito — tumutugma sa professional journalism norms.",
+        "phrase_en": "This tactic is not in evidence — consistent with professional journalism norms.",
+        "verifier_action": "Compare ang post sa published news sa parehong topic."
+      },
+      {
+        "phrase_tl": "Walang manipulative element — focus lang sa traceable claims.",
+        "phrase_en": "No manipulative element — just traceable claims.",
+        "verifier_action": "Sundan ang attribution chain hanggang sa source."
+      }
+    ],
+    "DISC/real/advanced": [
+      {
+        "phrase_tl": "Ang systemic absence ng discrediting frame sa post ay reflects rigorous editorial pipeline.",
+        "phrase_en": "Systemic absence of discrediting frame in this post reflects a rigorous editorial pipeline.",
+        "verifier_action": "I-evaluate ang outlet's track record sa similar stories."
+      },
+      {
+        "phrase_tl": "Sa polarized environment, ang restraint mula sa discrediting frame ay editorial choice.",
+        "phrase_en": "In a polarized environment, restraint from discrediting frame is a deliberate editorial choice.",
+        "verifier_action": "Tingnan kung consistent ito sa outlet's overall portfolio."
+      },
+      {
+        "phrase_tl": "Ang decision na huwag gamitin ang discrediting frame ay isang ethical signal — credible journalism.",
+        "phrase_en": "The decision not to use discrediting frame is an ethical signal — credible journalism.",
+        "verifier_action": "Suriin ang publication's stated values vs. actual coverage."
+      }
+    ],
+    "IMP/fake/novice": [
+      {
+        "phrase_tl": "Ang post ay nagpapakita ng impersonation cue — direct na cue ng manipulasyon.",
+        "phrase_en": "This post shows impersonation cue — a direct manipulation cue.",
+        "verifier_action": "Tanungin: meron ba talagang ebidensya o impersonation cue lang?"
+      },
+      {
+        "phrase_tl": "Ang ganitong palatandaan ay madalas na nasa fake na content.",
+        "phrase_en": "This kind of cue is commonly found in fake content.",
+        "verifier_action": "Hanapin ang underlying source, hindi ang surface."
+      },
+      {
+        "phrase_tl": "Pansinin ang impersonation cue — pinaiisip ka nito ng walang ebidensya.",
+        "phrase_en": "Notice the impersonation cue — it makes you assume things without evidence.",
+        "verifier_action": "Slow down at suriin ang specific claim."
+      }
+    ],
+    "IMP/fake/proficient": [
+      {
+        "phrase_tl": "Ang impersonation cue ay strategic — ginagamit para mag-bypass ng critical evaluation.",
+        "phrase_en": "Impersonation cue is strategic — used to bypass critical evaluation.",
+        "verifier_action": "I-rewrite ang claim ng walang manipulative element. Anong matitira?"
+      },
+      {
+        "phrase_tl": "Ang taktika na ito ay documented sa misinformation literature.",
+        "phrase_en": "This tactic is documented in misinformation literature.",
+        "verifier_action": "I-compare sa known disinformation patterns."
+      },
+      {
+        "phrase_tl": "Maipapakita mo ba ito sa originating source? Kapag hindi, maaaring fabricated.",
+        "phrase_en": "Can you trace this to an originating source? If not, it may be fabricated.",
+        "verifier_action": "Hanapin ang pinakamaagang public version ng claim."
+      }
+    ],
+    "IMP/fake/advanced": [
+      {
+        "phrase_tl": "Sa Pilipinong electoral context, ang impersonation cue ay madalas na coordinated, hindi organic.",
+        "phrase_en": "In Philippine electoral context, impersonation cue is often coordinated, not organic.",
+        "verifier_action": "Suriin kung pareho ang phrasing sa multiple accounts at panahon."
+      },
+      {
+        "phrase_tl": "Ang structural na paggamit ng impersonation cue ay nagsusumiwalat ng mas malalim na narrative goals.",
+        "phrase_en": "The structural use of impersonation cue reveals deeper narrative goals.",
+        "verifier_action": "Tanungin: sino ang nakikinabang sa pagkalat nito?"
+      },
+      {
+        "phrase_tl": "Ang ganitong pattern ay typical sa disinformation networks na nagta-target ng identity-based loyalty.",
+        "phrase_en": "This pattern is typical of disinformation networks targeting identity-based loyalty.",
+        "verifier_action": "I-check ang amplification network: sino ang gumagaya?"
+      }
+    ],
+    "IMP/real/novice": [
+      {
+        "phrase_tl": "Walang nakitang impersonation cue sa post — magandang signal.",
+        "phrase_en": "No impersonation cue detected in this post — a good signal.",
+        "verifier_action": "I-confirm sa ibang verifiable source."
+      },
+      {
+        "phrase_tl": "Ang absence ng impersonation cue ay tumutugma sa standard credible practice.",
+        "phrase_en": "Absence of impersonation cue aligns with standard credible practice.",
+        "verifier_action": "Tingnan ang sourcing: may primary attribution ba?"
+      },
+      {
+        "phrase_tl": "Ang post na ito ay malinis sa palatandaang ito — sign ng disiplinadong reporting.",
+        "phrase_en": "This post is clean on this indicator — a sign of disciplined reporting.",
+        "verifier_action": "Cross-check ang facts sa established outlets."
+      }
+    ],
+    "IMP/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng impersonation cue ay structural marker ng credible content.",
+        "phrase_en": "Absence of impersonation cue is a structural marker of credible content.",
+        "verifier_action": "Suriin ang publication's editorial standards."
+      },
+      {
+        "phrase_tl": "Hindi nakikita ang taktika na ito — tumutugma sa professional journalism norms.",
+        "phrase_en": "This tactic is not in evidence — consistent with professional journalism norms.",
+        "verifier_action": "Compare ang post sa published news sa parehong topic."
+      },
+      {
+        "phrase_tl": "Walang manipulative element — focus lang sa traceable claims.",
+        "phrase_en": "No manipulative element — just traceable claims.",
+        "verifier_action": "Sundan ang attribution chain hanggang sa source."
+      }
+    ],
+    "IMP/real/advanced": [
+      {
+        "phrase_tl": "Ang systemic absence ng impersonation cue sa post ay reflects rigorous editorial pipeline.",
+        "phrase_en": "Systemic absence of impersonation cue in this post reflects a rigorous editorial pipeline.",
+        "verifier_action": "I-evaluate ang outlet's track record sa similar stories."
+      },
+      {
+        "phrase_tl": "Sa polarized environment, ang restraint mula sa impersonation cue ay editorial choice.",
+        "phrase_en": "In a polarized environment, restraint from impersonation cue is a deliberate editorial choice.",
+        "verifier_action": "Tingnan kung consistent ito sa outlet's overall portfolio."
+      },
+      {
+        "phrase_tl": "Ang decision na huwag gamitin ang impersonation cue ay isang ethical signal — credible journalism.",
+        "phrase_en": "The decision not to use impersonation cue is an ethical signal — credible journalism.",
+        "verifier_action": "Suriin ang publication's stated values vs. actual coverage."
+      }
+    ],
+    "REV/fake/novice": [
+      {
+        "phrase_tl": "Ang post ay nagpapakita ng historical revisionism — direct na cue ng manipulasyon.",
+        "phrase_en": "This post shows historical revisionism — a direct manipulation cue.",
+        "verifier_action": "Tanungin: meron ba talagang ebidensya o historical revisionism lang?"
+      },
+      {
+        "phrase_tl": "Ang ganitong palatandaan ay madalas na nasa fake na content.",
+        "phrase_en": "This kind of cue is commonly found in fake content.",
+        "verifier_action": "Hanapin ang underlying source, hindi ang surface."
+      },
+      {
+        "phrase_tl": "Pansinin ang historical revisionism — pinaiisip ka nito ng walang ebidensya.",
+        "phrase_en": "Notice the historical revisionism — it makes you assume things without evidence.",
+        "verifier_action": "Slow down at suriin ang specific claim."
+      }
+    ],
+    "REV/fake/proficient": [
+      {
+        "phrase_tl": "Ang historical revisionism ay strategic — ginagamit para mag-bypass ng critical evaluation.",
+        "phrase_en": "Historical revisionism is strategic — used to bypass critical evaluation.",
+        "verifier_action": "I-rewrite ang claim ng walang manipulative element. Anong matitira?"
+      },
+      {
+        "phrase_tl": "Ang taktika na ito ay documented sa misinformation literature.",
+        "phrase_en": "This tactic is documented in misinformation literature.",
+        "verifier_action": "I-compare sa known disinformation patterns."
+      },
+      {
+        "phrase_tl": "Maipapakita mo ba ito sa originating source? Kapag hindi, maaaring fabricated.",
+        "phrase_en": "Can you trace this to an originating source? If not, it may be fabricated.",
+        "verifier_action": "Hanapin ang pinakamaagang public version ng claim."
+      }
+    ],
+    "REV/fake/advanced": [
+      {
+        "phrase_tl": "Sa Pilipinong electoral context, ang historical revisionism ay madalas na coordinated, hindi organic.",
+        "phrase_en": "In Philippine electoral context, historical revisionism is often coordinated, not organic.",
+        "verifier_action": "Suriin kung pareho ang phrasing sa multiple accounts at panahon."
+      },
+      {
+        "phrase_tl": "Ang structural na paggamit ng historical revisionism ay nagsusumiwalat ng mas malalim na narrative goals.",
+        "phrase_en": "The structural use of historical revisionism reveals deeper narrative goals.",
+        "verifier_action": "Tanungin: sino ang nakikinabang sa pagkalat nito?"
+      },
+      {
+        "phrase_tl": "Ang ganitong pattern ay typical sa disinformation networks na nagta-target ng identity-based loyalty.",
+        "phrase_en": "This pattern is typical of disinformation networks targeting identity-based loyalty.",
+        "verifier_action": "I-check ang amplification network: sino ang gumagaya?"
+      }
+    ],
+    "REV/real/novice": [
+      {
+        "phrase_tl": "Walang nakitang historical revisionism sa post — magandang signal.",
+        "phrase_en": "No historical revisionism detected in this post — a good signal.",
+        "verifier_action": "I-confirm sa ibang verifiable source."
+      },
+      {
+        "phrase_tl": "Ang absence ng historical revisionism ay tumutugma sa standard credible practice.",
+        "phrase_en": "Absence of historical revisionism aligns with standard credible practice.",
+        "verifier_action": "Tingnan ang sourcing: may primary attribution ba?"
+      },
+      {
+        "phrase_tl": "Ang post na ito ay malinis sa palatandaang ito — sign ng disiplinadong reporting.",
+        "phrase_en": "This post is clean on this indicator — a sign of disciplined reporting.",
+        "verifier_action": "Cross-check ang facts sa established outlets."
+      }
+    ],
+    "REV/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng historical revisionism ay structural marker ng credible content.",
+        "phrase_en": "Absence of historical revisionism is a structural marker of credible content.",
+        "verifier_action": "Suriin ang publication's editorial standards."
+      },
+      {
+        "phrase_tl": "Hindi nakikita ang taktika na ito — tumutugma sa professional journalism norms.",
+        "phrase_en": "This tactic is not in evidence — consistent with professional journalism norms.",
+        "verifier_action": "Compare ang post sa published news sa parehong topic."
+      },
+      {
+        "phrase_tl": "Walang manipulative element — focus lang sa traceable claims.",
+        "phrase_en": "No manipulative element — just traceable claims.",
+        "verifier_action": "Sundan ang attribution chain hanggang sa source."
+      }
+    ],
+    "REV/real/advanced": [
+      {
+        "phrase_tl": "Ang systemic absence ng historical revisionism sa post ay reflects rigorous editorial pipeline.",
+        "phrase_en": "Systemic absence of historical revisionism in this post reflects a rigorous editorial pipeline.",
+        "verifier_action": "I-evaluate ang outlet's track record sa similar stories."
+      },
+      {
+        "phrase_tl": "Sa polarized environment, ang restraint mula sa historical revisionism ay editorial choice.",
+        "phrase_en": "In a polarized environment, restraint from historical revisionism is a deliberate editorial choice.",
+        "verifier_action": "Tingnan kung consistent ito sa outlet's overall portfolio."
+      },
+      {
+        "phrase_tl": "Ang decision na huwag gamitin ang historical revisionism ay isang ethical signal — credible journalism.",
+        "phrase_en": "The decision not to use historical revisionism is an ethical signal — credible journalism.",
+        "verifier_action": "Suriin ang publication's stated values vs. actual coverage."
+      }
+    ],
+    "ENDO/fake/novice": [
+      {
+        "phrase_tl": "Ang post ay nagpapakita ng false endorsement — direct na cue ng manipulasyon.",
+        "phrase_en": "This post shows false endorsement — a direct manipulation cue.",
+        "verifier_action": "Tanungin: meron ba talagang ebidensya o false endorsement lang?"
+      },
+      {
+        "phrase_tl": "Ang ganitong palatandaan ay madalas na nasa fake na content.",
+        "phrase_en": "This kind of cue is commonly found in fake content.",
+        "verifier_action": "Hanapin ang underlying source, hindi ang surface."
+      },
+      {
+        "phrase_tl": "Pansinin ang false endorsement — pinaiisip ka nito ng walang ebidensya.",
+        "phrase_en": "Notice the false endorsement — it makes you assume things without evidence.",
+        "verifier_action": "Slow down at suriin ang specific claim."
+      }
+    ],
+    "ENDO/fake/proficient": [
+      {
+        "phrase_tl": "Ang false endorsement ay strategic — ginagamit para mag-bypass ng critical evaluation.",
+        "phrase_en": "False endorsement is strategic — used to bypass critical evaluation.",
+        "verifier_action": "I-rewrite ang claim ng walang manipulative element. Anong matitira?"
+      },
+      {
+        "phrase_tl": "Ang taktika na ito ay documented sa misinformation literature.",
+        "phrase_en": "This tactic is documented in misinformation literature.",
+        "verifier_action": "I-compare sa known disinformation patterns."
+      },
+      {
+        "phrase_tl": "Maipapakita mo ba ito sa originating source? Kapag hindi, maaaring fabricated.",
+        "phrase_en": "Can you trace this to an originating source? If not, it may be fabricated.",
+        "verifier_action": "Hanapin ang pinakamaagang public version ng claim."
+      }
+    ],
+    "ENDO/fake/advanced": [
+      {
+        "phrase_tl": "Sa Pilipinong electoral context, ang false endorsement ay madalas na coordinated, hindi organic.",
+        "phrase_en": "In Philippine electoral context, false endorsement is often coordinated, not organic.",
+        "verifier_action": "Suriin kung pareho ang phrasing sa multiple accounts at panahon."
+      },
+      {
+        "phrase_tl": "Ang structural na paggamit ng false endorsement ay nagsusumiwalat ng mas malalim na narrative goals.",
+        "phrase_en": "The structural use of false endorsement reveals deeper narrative goals.",
+        "verifier_action": "Tanungin: sino ang nakikinabang sa pagkalat nito?"
+      },
+      {
+        "phrase_tl": "Ang ganitong pattern ay typical sa disinformation networks na nagta-target ng identity-based loyalty.",
+        "phrase_en": "This pattern is typical of disinformation networks targeting identity-based loyalty.",
+        "verifier_action": "I-check ang amplification network: sino ang gumagaya?"
+      }
+    ],
+    "ENDO/real/novice": [
+      {
+        "phrase_tl": "Walang nakitang false endorsement sa post — magandang signal.",
+        "phrase_en": "No false endorsement detected in this post — a good signal.",
+        "verifier_action": "I-confirm sa ibang verifiable source."
+      },
+      {
+        "phrase_tl": "Ang absence ng false endorsement ay tumutugma sa standard credible practice.",
+        "phrase_en": "Absence of false endorsement aligns with standard credible practice.",
+        "verifier_action": "Tingnan ang sourcing: may primary attribution ba?"
+      },
+      {
+        "phrase_tl": "Ang post na ito ay malinis sa palatandaang ito — sign ng disiplinadong reporting.",
+        "phrase_en": "This post is clean on this indicator — a sign of disciplined reporting.",
+        "verifier_action": "Cross-check ang facts sa established outlets."
+      }
+    ],
+    "ENDO/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng false endorsement ay structural marker ng credible content.",
+        "phrase_en": "Absence of false endorsement is a structural marker of credible content.",
+        "verifier_action": "Suriin ang publication's editorial standards."
+      },
+      {
+        "phrase_tl": "Hindi nakikita ang taktika na ito — tumutugma sa professional journalism norms.",
+        "phrase_en": "This tactic is not in evidence — consistent with professional journalism norms.",
+        "verifier_action": "Compare ang post sa published news sa parehong topic."
+      },
+      {
+        "phrase_tl": "Walang manipulative element — focus lang sa traceable claims.",
+        "phrase_en": "No manipulative element — just traceable claims.",
+        "verifier_action": "Sundan ang attribution chain hanggang sa source."
+      }
+    ],
+    "ENDO/real/advanced": [
+      {
+        "phrase_tl": "Ang systemic absence ng false endorsement sa post ay reflects rigorous editorial pipeline.",
+        "phrase_en": "Systemic absence of false endorsement in this post reflects a rigorous editorial pipeline.",
+        "verifier_action": "I-evaluate ang outlet's track record sa similar stories."
+      },
+      {
+        "phrase_tl": "Sa polarized environment, ang restraint mula sa false endorsement ay editorial choice.",
+        "phrase_en": "In a polarized environment, restraint from false endorsement is a deliberate editorial choice.",
+        "verifier_action": "Tingnan kung consistent ito sa outlet's overall portfolio."
+      },
+      {
+        "phrase_tl": "Ang decision na huwag gamitin ang false endorsement ay isang ethical signal — credible journalism.",
+        "phrase_en": "The decision not to use false endorsement is an ethical signal — credible journalism.",
+        "verifier_action": "Suriin ang publication's stated values vs. actual coverage."
+      }
+    ],
+    "RECF/fake/novice": [
+      {
+        "phrase_tl": "Ang post ay nagpapakita ng recycled / context-stripped media — direct na cue ng manipulasyon.",
+        "phrase_en": "This post shows recycled / context-stripped media — a direct manipulation cue.",
+        "verifier_action": "Tanungin: meron ba talagang ebidensya o recycled / context-stripped media lang?"
+      },
+      {
+        "phrase_tl": "Ang ganitong palatandaan ay madalas na nasa fake na content.",
+        "phrase_en": "This kind of cue is commonly found in fake content.",
+        "verifier_action": "Hanapin ang underlying source, hindi ang surface."
+      },
+      {
+        "phrase_tl": "Pansinin ang recycled / context-stripped media — pinaiisip ka nito ng walang ebidensya.",
+        "phrase_en": "Notice the recycled / context-stripped media — it makes you assume things without evidence.",
+        "verifier_action": "Slow down at suriin ang specific claim."
+      }
+    ],
+    "RECF/fake/proficient": [
+      {
+        "phrase_tl": "Ang recycled / context-stripped media ay strategic — ginagamit para mag-bypass ng critical evaluation.",
+        "phrase_en": "Recycled / context-stripped media is strategic — used to bypass critical evaluation.",
+        "verifier_action": "I-rewrite ang claim ng walang manipulative element. Anong matitira?"
+      },
+      {
+        "phrase_tl": "Ang taktika na ito ay documented sa misinformation literature.",
+        "phrase_en": "This tactic is documented in misinformation literature.",
+        "verifier_action": "I-compare sa known disinformation patterns."
+      },
+      {
+        "phrase_tl": "Maipapakita mo ba ito sa originating source? Kapag hindi, maaaring fabricated.",
+        "phrase_en": "Can you trace this to an originating source? If not, it may be fabricated.",
+        "verifier_action": "Hanapin ang pinakamaagang public version ng claim."
+      }
+    ],
+    "RECF/fake/advanced": [
+      {
+        "phrase_tl": "Sa Pilipinong electoral context, ang recycled / context-stripped media ay madalas na coordinated, hindi organic.",
+        "phrase_en": "In Philippine electoral context, recycled / context-stripped media is often coordinated, not organic.",
+        "verifier_action": "Suriin kung pareho ang phrasing sa multiple accounts at panahon."
+      },
+      {
+        "phrase_tl": "Ang structural na paggamit ng recycled / context-stripped media ay nagsusumiwalat ng mas malalim na narrative goals.",
+        "phrase_en": "The structural use of recycled / context-stripped media reveals deeper narrative goals.",
+        "verifier_action": "Tanungin: sino ang nakikinabang sa pagkalat nito?"
+      },
+      {
+        "phrase_tl": "Ang ganitong pattern ay typical sa disinformation networks na nagta-target ng identity-based loyalty.",
+        "phrase_en": "This pattern is typical of disinformation networks targeting identity-based loyalty.",
+        "verifier_action": "I-check ang amplification network: sino ang gumagaya?"
+      }
+    ],
+    "RECF/real/novice": [
+      {
+        "phrase_tl": "Walang nakitang recycled / context-stripped media sa post — magandang signal.",
+        "phrase_en": "No recycled / context-stripped media detected in this post — a good signal.",
+        "verifier_action": "I-confirm sa ibang verifiable source."
+      },
+      {
+        "phrase_tl": "Ang absence ng recycled / context-stripped media ay tumutugma sa standard credible practice.",
+        "phrase_en": "Absence of recycled / context-stripped media aligns with standard credible practice.",
+        "verifier_action": "Tingnan ang sourcing: may primary attribution ba?"
+      },
+      {
+        "phrase_tl": "Ang post na ito ay malinis sa palatandaang ito — sign ng disiplinadong reporting.",
+        "phrase_en": "This post is clean on this indicator — a sign of disciplined reporting.",
+        "verifier_action": "Cross-check ang facts sa established outlets."
+      }
+    ],
+    "RECF/real/proficient": [
+      {
+        "phrase_tl": "Ang absence ng recycled / context-stripped media ay structural marker ng credible content.",
+        "phrase_en": "Absence of recycled / context-stripped media is a structural marker of credible content.",
+        "verifier_action": "Suriin ang publication's editorial standards."
+      },
+      {
+        "phrase_tl": "Hindi nakikita ang taktika na ito — tumutugma sa professional journalism norms.",
+        "phrase_en": "This tactic is not in evidence — consistent with professional journalism norms.",
+        "verifier_action": "Compare ang post sa published news sa parehong topic."
+      },
+      {
+        "phrase_tl": "Walang manipulative element — focus lang sa traceable claims.",
+        "phrase_en": "No manipulative element — just traceable claims.",
+        "verifier_action": "Sundan ang attribution chain hanggang sa source."
+      }
+    ],
+    "RECF/real/advanced": [
+      {
+        "phrase_tl": "Ang systemic absence ng recycled / context-stripped media sa post ay reflects rigorous editorial pipeline.",
+        "phrase_en": "Systemic absence of recycled / context-stripped media in this post reflects a rigorous editorial pipeline.",
+        "verifier_action": "I-evaluate ang outlet's track record sa similar stories."
+      },
+      {
+        "phrase_tl": "Sa polarized environment, ang restraint mula sa recycled / context-stripped media ay editorial choice.",
+        "phrase_en": "In a polarized environment, restraint from recycled / context-stripped media is a deliberate editorial choice.",
+        "verifier_action": "Tingnan kung consistent ito sa outlet's overall portfolio."
+      },
+      {
+        "phrase_tl": "Ang decision na huwag gamitin ang recycled / context-stripped media ay isang ethical signal — credible journalism.",
+        "phrase_en": "The decision not to use recycled / context-stripped media is an ethical signal — credible journalism.",
+        "verifier_action": "Suriin ang publication's stated values vs. actual coverage."
+      }
+    ],
+    "CREDIBLE/real/novice": [
+      {
+        "phrase_tl": "May malinaw na link sa opisyal na source — pwede mong i-verify.",
+        "phrase_en": "There's a clear link to an official source — you can verify it.",
+        "verifier_action": "Buksan ang link at i-confirm ang claim doon."
+      },
+      {
+        "phrase_tl": "Pinangalanan ang source — hindi anonymous na claim.",
+        "phrase_en": "The source is named — not an anonymous claim.",
+        "verifier_action": "I-search ang named source para sa background."
+      },
+      {
+        "phrase_tl": "May nakikitang traceable na sourcing — magandang foundation.",
+        "phrase_en": "There's traceable sourcing visible — a good foundation.",
+        "verifier_action": "Sundin ang citation chain papunta sa primary source."
+      }
+    ],
+    "CREDIBLE/real/proficient": [
+      {
+        "phrase_tl": "Ang traceable sourcing ay isang necessary condition para sa credible reporting.",
+        "phrase_en": "Traceable sourcing is a necessary condition for credible reporting.",
+        "verifier_action": "I-evaluate ang quality at independence ng source."
+      },
+      {
+        "phrase_tl": "Ang explicit attribution ay nagbibigay sa reader ng audit trail.",
+        "phrase_en": "Explicit attribution gives the reader an audit trail.",
+        "verifier_action": "Subukang sundan ang bawat claim hanggang sa primary document."
+      },
+      {
+        "phrase_tl": "Magbigay ng oras sa pag-evaluate ng nakikitang source: opisyal ba talaga?",
+        "phrase_en": "Take time to evaluate the visible source: is it really official?",
+        "verifier_action": "I-cross-check sa government registry o opisyal na website."
+      }
+    ],
+    "CREDIBLE/real/advanced": [
+      {
+        "phrase_tl": "Ang multiple-source corroboration ay gold standard — hindi single attribution.",
+        "phrase_en": "Multiple-source corroboration is the gold standard — not single attribution.",
+        "verifier_action": "Hanapin kung gaano karaming independent sources ang nag-confirm."
+      },
+      {
+        "phrase_tl": "Ang sourcing transparency ay nag-i-invite ng peer scrutiny — sign ng professional rigor.",
+        "phrase_en": "Sourcing transparency invites peer scrutiny — a sign of professional rigor.",
+        "verifier_action": "Suriin kung ang source ay may stake sa narrative."
+      },
+      {
+        "phrase_tl": "Sa Filipino electoral coverage, ang naming ng source ay diretsong epekto sa political accountability.",
+        "phrase_en": "In Filipino electoral coverage, naming sources directly affects political accountability.",
+        "verifier_action": "I-trace ang source's institutional position at potential biases."
+      }
+    ]
+  },
+  "_count_summary": {
+    "total_phrase_entries": 225,
+    "total_keys": 75
+  }
+}
