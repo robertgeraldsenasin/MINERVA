@@ -1,6 +1,32 @@
-# M.I.N.E.R.V.A. v2.8 — Python dependencies
+# M.I.N.E.R.V.A. v2.9.4 — Python dependencies
 # All pins are TESTED against the full architecture (BATB §1.4 SO 1-4).
 # This is the canonical install for blank-slate Colab runs.
+
+# ============================================================
+# COLAB COMPATIBILITY NOTE (v2.9.4)
+# ============================================================
+# Colab's runtime ships with numpy 2.x and a stack of packages
+# (datasets, sklearn, scipy, transformers) compiled against it.
+# Previous M.I.N.E.R.V.A. versions pinned numpy<2.0 out of caution
+# inherited from the 2024 numpy 2.0 release. That cap is now
+# actively HARMFUL on Colab because:
+#   1. pip downgrades numpy to 1.x
+#   2. preinstalled packages still hold the 2.x ABI in memory
+#   3. import raises ValueError: dtype size changed
+#   4. half the pipeline fails to import
+#
+# As of 2026, the entire dependency stack (feyn 3.5.0, datasets 2.21+,
+# transformers 4.46+, sklearn 1.5+, torch 2.5+) supports numpy 2.x.
+# So we now ALLOW numpy 2.x and let the rest of the stack ride on
+# whatever Colab provides. This eliminates the kernel-restart dance.
+#
+# Python compatibility:
+#   Production:  Python 3.11 (Colab default) — fully tested
+#   Supported:   Python 3.10, 3.12
+#   3.13:        feyn has no 3.13 wheels; pipeline auto-falls back
+#                to sklearn LogReg in scripts/08 (architecturally
+#                equivalent for downstream scoring).
+# ============================================================
 
 # ============================================================
 # CORE — schema, tabular, classic ML
@@ -10,55 +36,56 @@
 pydantic>=2.0,<3.0
 
 # Numerical + tabular
-numpy>=1.24,<2.0
+# v2.9.4: numpy<3.0 (was numpy<2.0). Lets pip use whatever Colab ships.
+numpy>=1.24,<3.0
 pandas>=2.0,<3.0
-pyarrow>=14.0,<21.0   # parquet read/write (script 01 fallback path)
+pyarrow>=14.0    # parquet read/write (script 01 fallback path)
 
 # Random Forest, KNN, StandardScaler used by detector training
-scikit-learn>=1.3,<2.0
+# v2.9.4: relax upper bound — sklearn 1.5+ is numpy-2-compatible
+scikit-learn>=1.3
 
 # Persistence for trained model artifacts
-joblib>=1.3,<2.0
+joblib>=1.3
 
 # Testing
-pytest>=7.4,<9.0
+pytest>=7.4
 
 
 # ============================================================
 # DATASETS + HUGGINGFACE — required for scripts 01, 04, 05, 11
 #
-# CRITICAL: fsspec is pinned to the range that works with datasets>=2.14
-# Without this pin, Colab's default fsspec (post-2024.6.1) raises
-# NotImplementedError on load_dataset() — this killed v2.7 runs.
+# CRITICAL: fsspec is still pinned because newer fsspec breaks
+# datasets's LocalFileSystem caching. This pin is INDEPENDENT
+# of the numpy story and remains correct.
 # ============================================================
 
-# fsspec must be pinned. 2024.6.1 is the last known-good version that
-# datasets 2.14+ accepts as a backend. >=2024.7 introduces the
-# LocalFileSystem caching incompatibility.
+# fsspec must be pinned. 2024.6.1 is the last known-good version
+# that datasets 2.14+ accepts as a backend. Newer fsspec introduces
+# the LocalFileSystem caching incompatibility that killed v2.7 runs.
 fsspec>=2023.10.0,<=2024.6.1
 
 # datasets — script 01 primary path
 datasets>=2.14,<3.0
 
 # Hub access (used by transformers + datasets)
-# Cap at <1.0 because some transformers versions don't yet support
-# the breaking 1.0 release.
-huggingface_hub>=0.20,<1.0
+huggingface_hub>=0.20
 
 
 # ============================================================
 # DETECTORS — RoBERTa-Tagalog + DistilBERT-multilingual + GPT-2 Tagalog
 # ============================================================
 
-transformers>=4.35,<5.0
-tokenizers>=0.15,<0.22
+transformers>=4.35
+tokenizers>=0.15
 sentencepiece>=0.1.99   # Tokenizer dep for both detectors
 
-# PyTorch — pre-installed on Colab, listed for completeness
+# PyTorch — pre-installed on Colab, listed for completeness.
+# v2.9.4: no upper bound so pip uses whatever Colab provides.
 torch>=2.0
 
 # accelerate — required by HF Trainer for proper device placement
-accelerate>=0.24,<2.0
+accelerate>=0.24
 
 
 # ============================================================
@@ -67,6 +94,13 @@ accelerate>=0.24,<2.0
 
 # feyn (the QLattice engine). Required by scripts/08_train_qlattice.py
 # and consumed by scripts/13_score_generated_with_qlattice.py.
+#
+# v2.9.4: no version pin per user request — pip will resolve to
+# the latest published version (currently 3.5.0 as of audit date).
+# feyn 3.x is API-stable for the QLattice usage in scripts/08.
+# If feyn fails to install (e.g. Python 3.13 has no wheels), scripts/08
+# automatically falls back to sklearn LogisticRegression producing an
+# equivalent logreg(...) equation.
 feyn
 
 
@@ -86,7 +120,10 @@ feyn
 #   pip install --upgrade pip
 #   pip install -r requirements.txt
 #
-# DO NOT install fsspec or datasets after this pip install — Colab's
-# default packages may overwrite the pinned versions and re-introduce
-# the LocalFileSystem error. If you must reinstall, repeat the full
-# requirements.txt install with --force-reinstall on those two pkgs.
+# v2.9.4 change: no kernel restart needed. The relaxed numpy pin
+# means pip leaves Colab's preinstalled numpy 2.x alone (or upgrades
+# it minimally), avoiding the ABI mismatch that plagued v2.8/v2.9.0-3.
+#
+# DO NOT install fsspec manually after this — Colab's defaults may
+# overwrite the pinned 2024.6.1 cap and re-introduce the
+# LocalFileSystem NotImplementedError that broke v2.7 runs.
