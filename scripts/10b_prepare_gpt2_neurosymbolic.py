@@ -390,8 +390,17 @@ def build_corpus(
     degnn_df: pd.DataFrame | None,
     qlattice_eq: str,
     args,
-) -> tuple[list[str], dict]:
-    """Build conditioned corpus lines from raw + features + degnn + qlattice."""
+) -> tuple[list[str], dict, dict]:
+    """Build conditioned corpus lines from raw + features + degnn + qlattice.
+
+    Returns: (lines, bin_counts, thresholds)
+        - lines:      list of corpus lines for train.txt / val.txt
+        - bin_counts: per-axis distribution (for report)
+        - thresholds: dict of derived bin thresholds (v2.9.4 fix — these
+                      were previously computed inside the function but
+                      not returned, causing a NameError at report-write time
+                      when v2.9.0 added them to the report dict.)
+    """
 
     if "id" in raw_df.columns and "id" in features_df.columns:
         merged = raw_df.merge(features_df, on="id", how="left",
@@ -535,7 +544,15 @@ def build_corpus(
             tier_tok=tier_tok,
         ))
 
-    return lines, bin_counts
+    # v2.9.4 fix: surface derived thresholds back to caller so report can use them.
+    thresholds_used = {
+        "t_low_g": t_low_g, "t_high_g": t_high_g,
+        "t_low_q": t_low_q, "t_high_q": t_high_q,
+        "t_low_e": t_low_e, "t_high_e": t_high_e,
+        "t_advanced_max": t_advanced_max,
+        "t_proficient_max": t_proficient_max,
+    }
+    return lines, bin_counts, thresholds_used
 
 
 # ============================================================
@@ -646,13 +663,24 @@ def main() -> None:
 
     # Build corpora
     logger.info("Building train corpus...")
-    train_lines, train_bins = build_corpus(
+    train_lines, train_bins, train_thresholds = build_corpus(
         train_raw, train_feat, degnn_df, qlattice_eq, args
     )
     logger.info("Building val corpus...")
-    val_lines, val_bins = build_corpus(
+    val_lines, val_bins, _val_thresholds = build_corpus(
         val_raw, val_feat, degnn_df, qlattice_eq, args
     )
+    # v2.9.4 fix: unpack train thresholds into module-local names so the
+    # report dict below can reference them. Train (not val) is the canonical
+    # set because GPT-2 will be trained against these bins.
+    t_low_g = train_thresholds["t_low_g"]
+    t_high_g = train_thresholds["t_high_g"]
+    t_low_q = train_thresholds["t_low_q"]
+    t_high_q = train_thresholds["t_high_q"]
+    t_low_e = train_thresholds["t_low_e"]
+    t_high_e = train_thresholds["t_high_e"]
+    t_advanced_max = train_thresholds["t_advanced_max"]
+    t_proficient_max = train_thresholds["t_proficient_max"]
 
     # Write
     out_dir = Path(args.out_dir)
