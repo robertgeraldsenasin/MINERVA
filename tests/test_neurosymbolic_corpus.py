@@ -242,7 +242,7 @@ def test_build_corpus_smoke():
     })
     eq = "logreg(p_roberta_fake + p_distil_fake - 1.0)"
 
-    lines, bins = m.build_corpus(raw, feat, degnn, eq, _ArgsStub())
+    lines, bins, _thresholds = m.build_corpus(raw, feat, degnn, eq, _ArgsStub())
 
     # 3 lines emitted
     assert len(lines) == 3
@@ -280,7 +280,7 @@ def test_build_corpus_handles_missing_degnn():
     })
     eq = "logreg(p_roberta_fake)"
 
-    lines, bins = m.build_corpus(raw, feat, None, eq, _ArgsStub())
+    lines, bins, _thresholds = m.build_corpus(raw, feat, None, eq, _ArgsStub())
 
     assert len(lines) == 1
     assert m.GRAPH_UNK in lines[0]
@@ -302,7 +302,7 @@ def test_build_corpus_handles_missing_qlattice():
         "p_degnn_fake": [0.92],
     })
 
-    lines, bins = m.build_corpus(raw, feat, degnn, "", _ArgsStub())
+    lines, bins, _thresholds = m.build_corpus(raw, feat, degnn, "", _ArgsStub())
 
     assert len(lines) == 1
     assert m.QLAT_UNK in lines[0]
