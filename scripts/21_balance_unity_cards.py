@@ -69,6 +69,12 @@ def main():
     # Schema validation pass
     valid_cards: list[dict] = []
     invalid_count = 0
+    # v2.9.5: categorize schema-invalid reasons. v2.9.0 audit found 31.5%
+    # of post-merge cards (~414/1314) drop here; this diagnostic surfaces
+    # WHY without changing pass/fail behavior. Counts go into balance.json
+    # so investigators can prioritize the most common failure mode.
+    invalid_by_reason: dict[str, int] = {}
+    invalid_examples: list[dict] = []
     if args.validate:
         for c in raw:
             try:
@@ -76,6 +82,30 @@ def main():
                 valid_cards.append(c)
             except Exception as e:
                 invalid_count += 1
+                # Categorize: take the first pydantic error type as the reason
+                err_msg = str(e)
+                # First "X validation error" line is the most useful signal
+                first_line = err_msg.split("\n")[0][:100]
+                # Coarse-grained category from pydantic error messages
+                if "Field required" in err_msg:
+                    reason = "missing_required_field"
+                elif "Input should be" in err_msg or "value is not a valid" in err_msg:
+                    reason = "wrong_field_type"
+                elif "candidate" in err_msg.lower():
+                    reason = "invalid_candidate_code"
+                elif "verdict" in err_msg.lower():
+                    reason = "invalid_verdict"
+                elif "indicator" in err_msg.lower():
+                    reason = "invalid_indicator"
+                else:
+                    reason = "other"
+                invalid_by_reason[reason] = invalid_by_reason.get(reason, 0) + 1
+                if len(invalid_examples) < 10:
+                    invalid_examples.append({
+                        "id": c.get("id", "?"),
+                        "reason": reason,
+                        "detail": first_line,
+                    })
                 logger.debug("Card %s invalid: %s", c.get("id"), str(e)[:120])
     else:
         valid_cards = raw
@@ -143,6 +173,10 @@ def main():
     report = {
         "input_total": len(raw),
         "schema_invalid_dropped": invalid_count,
+        # v2.9.5: surface WHY schema-invalid cards drop, addressing the
+        # v2.9.0/v2.9.4 audit's 31.5% drop-rate question.
+        "schema_invalid_by_reason": invalid_by_reason,
+        "schema_invalid_examples_first10": invalid_examples,
         "valid_pool": len(valid_cards),
         "selected_total": len(chosen),
         "verdict_distribution": _count_by(chosen, lambda c: c.get("verdict")),

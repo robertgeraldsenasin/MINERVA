@@ -226,7 +226,7 @@ def evaluate(holdout_path: Path, report_path: Path,
 
     report = {
         "ts": datetime.now(timezone.utc).isoformat(),
-        "version": "v2.9.0",
+        "version": "v2.9.4",
         "holdout": str(holdout_path),
         "n_total": len(holdout),
         "n_real": n_real,
