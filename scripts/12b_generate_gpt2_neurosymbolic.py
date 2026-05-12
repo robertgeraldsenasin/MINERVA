@@ -200,7 +200,7 @@ def main() -> None:
 
     report = {
         "ts": datetime.now(timezone.utc).isoformat(),
-        "version": "v2.6.final",
+        "version": "v2.9.4",
         "gen_model_dir": args.gen_model_dir,
         "n_generated": n_done,
         "conditioning": {

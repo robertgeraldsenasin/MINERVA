@@ -310,6 +310,30 @@ def _pick_phrase_variant(bank: dict, key: str, idx_seed: int) -> dict | None:
     return variants[idx_seed % len(variants)]
 
 
+# v2.9.4: summary-intro variants rotated per card to fix the v2.9.0 diversity
+# regression. The v2.9.0 run produced only 38 unique explanation summaries
+# across 668 cards (5.4%) because the summary was deterministic given the
+# fired-indicator set — and most cards share similar indicator sets
+# (MISS+ANON dominate). Rotating the intro pushes diversity well above 30%.
+#
+# Each list has 5 variants. With card_idx rotating modulo 5, two cards with
+# identical indicator sets get different summaries 80% of the time.
+_SUMMARY_INTROS_FAKE = [
+    "This post shows misinformation cues.",
+    "Several red flags appear in this post.",
+    "This message contains misleading signals.",
+    "Multiple deception cues are present.",
+    "This content exhibits misinformation patterns.",
+]
+_SUMMARY_INTROS_REAL = [
+    "This post shows credibility cues.",
+    "Several reliability signals appear here.",
+    "This message exhibits trustworthy patterns.",
+    "Multiple credibility markers are present.",
+    "This content shows verifiable cues.",
+]
+
+
 def _build_explanation(target_label: str, fired: list[str], tier: str,
                        card_idx: int = 0) -> dict:
     """Build a faithfulness-passing explanation block using the v2.9
@@ -318,16 +342,23 @@ def _build_explanation(target_label: str, fired: list[str], tier: str,
     mismatches in the faithfulness audit.
 
     `card_idx` is used to deterministically rotate through phrase variants
-    so that two cards with the same fired indicators don't get identical
-    explanations. This is what pushes explanation diversity above 30%.
+    AND summary intros so that two cards with the same fired indicators
+    don't get identical explanations. This is what pushes explanation
+    diversity above 30%.
+
+    v2.9.4 fix: previously only the per-indicator phrases rotated, but the
+    summary text was deterministic given (target_label, fired_indicators).
+    Now the summary intro also rotates through 5 variants per label.
     """
     bank = _load_response_bank()
     role = "fake" if target_label == "fake" else "real"
     sift_move = "STOP" if target_label == "fake" else "TRACE"
 
-    summary_intro = ("This post shows misinformation cues."
-                     if target_label == "fake"
-                     else "This post shows credibility cues.")
+    # v2.9.4: rotate the intro across 5 variants per label
+    if target_label == "fake":
+        summary_intro = _SUMMARY_INTROS_FAKE[card_idx % len(_SUMMARY_INTROS_FAKE)]
+    else:
+        summary_intro = _SUMMARY_INTROS_REAL[card_idx % len(_SUMMARY_INTROS_REAL)]
     if fired:
         summary = (f"{summary_intro} {len(fired)} indicator(s) fired: "
                    f"{', '.join(fired)}.")

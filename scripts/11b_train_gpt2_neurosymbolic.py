@@ -105,6 +105,7 @@ def main() -> None:
             AutoModelForCausalLM,
             AutoTokenizer,
             DataCollatorForLanguageModeling,
+            EarlyStoppingCallback,
             Trainer,
             TrainingArguments,
             set_seed,
@@ -231,6 +232,14 @@ def main() -> None:
         train_dataset=lm_ds["train"],
         eval_dataset=lm_ds["validation"],
         data_collator=collator,
+        # v2.9.3: EarlyStoppingCallback prevents overfitting if eval loss
+        # plateaus before reaching --epochs. Combined with
+        # load_best_model_at_end=True, this guarantees we keep the best
+        # checkpoint even if later epochs degrade. patience=2 means we tolerate
+        # 2 evaluations (= 2 epochs at eval_strategy='epoch') of no improvement
+        # before stopping.
+        # Refs: Mosbach et al. 2021 (ICLR); HuggingFace Trainer docs.
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=2)],
     )
     # transformers 4.46+ renamed `tokenizer` → `processing_class` on Trainer
     _tr_params = inspect.signature(Trainer.__init__).parameters
@@ -251,7 +260,7 @@ def main() -> None:
 
     report = {
         "ts": datetime.now(timezone.utc).isoformat(),
-        "version": "v2.6.final",
+        "version": "v2.9.4",
         "base_model": args.base_model,
         "out_dir": str(out_dir),
         "vocabulary": {
