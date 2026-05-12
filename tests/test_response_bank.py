@@ -210,3 +210,38 @@ class TestScript29Integration:
         assert len(phrases) >= 2, (
             f"Card-idx rotation should produce variant phrases, got {phrases}"
         )
+
+    def test_summary_diversity_across_cards_v294(self):
+        """v2.9.4 regression test: pool.json measures diversity by counting
+        unique explanation.summary strings. Without summary-intro rotation,
+        cards with the same fired-indicator set get byte-identical summaries
+        and pool diversity collapses to ~5% (the v2.9.0 regression bug).
+
+        With 5 intro variants per label, 5 cards with the same fired set
+        should produce 5 distinct summaries.
+        """
+        sys.path.insert(0, str(REPO_ROOT / "scripts"))
+        spec = importlib.util.spec_from_file_location(
+            "merge29_e", str(REPO_ROOT / "scripts" / "29_merge_gpt2_into_pool.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod._RESPONSE_BANK = None
+        mod._load_response_bank(str(BANK_PATH))
+
+        summaries = set()
+        for idx in range(5):
+            exp = mod._build_explanation("fake", ["MISS", "EMO"], "novice", card_idx=idx)
+            summaries.add(exp["summary"])
+        assert len(summaries) == 5, (
+            f"Summary rotation should produce 5 distinct summaries across "
+            f"card_idx 0-4 (the v2.9.4 fix); got {len(summaries)}: {summaries}"
+        )
+
+        # Same test for REAL verdicts
+        summaries_real = set()
+        for idx in range(5):
+            exp = mod._build_explanation("real", ["MISS"], "novice", card_idx=idx)
+            summaries_real.add(exp["summary"])
+        assert len(summaries_real) == 5, (
+            f"REAL summary rotation should produce 5 distinct summaries, got {len(summaries_real)}"
+        )

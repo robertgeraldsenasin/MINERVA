@@ -6,6 +6,64 @@ This project tracks an academic deliverable, not a product release; semantic ver
 
 ---
 
+## [v2.9.4] — 2026-05-11 — Post-run audit fixes
+
+Closes the three findings from the **professional audit of the v2.9.0 actual Colab run output** (audit dated 2026-05-11). The v2.9.0 audit-response code worked correctly for 4 of 5 audit findings, but the run revealed three additional issues: explanation diversity regressed instead of improving, and two scripts still stamped the wrong version string.
+
+### Fixed
+- **`scripts/29_merge_gpt2_into_pool.py`** — explanation summary now rotates through 5 intro variants per label, addressing the P1 #2 regression where v2.9.0 produced only 5.4% explanation diversity (worse than v2.8.7's 8.5%). The bug: `pool.json` measures diversity by counting unique `explanation.summary` strings, but the summary was deterministic given `(target_label, fired_indicators)` — so all cards with the same indicator set got byte-identical summaries. Simulated diversity at 74.4% on 668-card pool (target ≥30%).
+- **`scripts/11b_train_gpt2_neurosymbolic.py`** — report dict's `version` field updated from `"v2.6.final"` to `"v2.9.4"`. Cosmetic but appears in audit trail. P2 #3.
+- **`scripts/12b_generate_gpt2_neurosymbolic.py`** — same version-string fix. P2 #3.
+
+### Added
+- **`tests/test_response_bank.py::test_summary_diversity_across_cards_v294`** — regression test that asserts 5 cards with the same fired-indicator set produce 5 distinct summaries (5 intro variants × 1 indicator-set combo). This locks in the v2.9.4 diversity fix.
+
+### Test progression
+- v2.9.3 baseline: 258 tests
+- v2.9.4: **259 tests** (+1 regression test, all passing)
+
+### Not addressed in v2.9.4 (deferred to v2.9.5 or run-time tasks)
+- Holdout CSV hand-labeling (the 50-card CSV exists; labels are user-side work, not code)
+- GPT-2 fine-tune seed changed from 42 to a prime (requires re-running GPT-2 training)
+- Ablation script 38 still a scaffold (requires Thesis 3 timeline)
+
+---
+
+## [v2.9.3] — 2026-05-10 — Statistical-validity refinement
+
+Closes the audit findings on experimental discipline: seed count, early stopping, batch-size terminology, and reproducibility reporting.
+
+### Changed
+- **`TRAIN_SEEDS` default** bumped from 3 to 5 (`"0,1,2"` → `"13,29,47,89,127"`). Matches RoBERTa paper protocol (Liu et al. 2019: "median over five runs"). Prime numbers chosen to avoid the 42 / cherry-picking risk per Picard 2021. Closes the headline "3 seeds is below standard" finding.
+- **`scripts/11b_train_gpt2_neurosymbolic.py`** — added `EarlyStoppingCallback(early_stopping_patience=2)`. Combined with existing `load_best_model_at_end=True`, guarantees the saved model is the best-eval-loss checkpoint, not whatever happened at epoch 8.
+- **`scripts/16_train_transformer_classifier.py`** — added `EarlyStoppingCallback(early_stopping_patience=1)`. RoBERTa typically converges by epoch 2 on JCBlaise; this prevents wasted GPU on plateaued training.
+- **`scripts/17_run_5seeds_detectors.py`** — emits `reports/detector_seed_stats.json` with mean ± std for both detectors and a paired-sample t-test (RoBERTa vs DistilBERT), n≥3. Also bundles `seed_stats` into the main summary report.
+- **Notebook config** — renamed `GPT2_BATCH_SIZE` → `GPT2_GEN_POOL_SIZE` (with back-compat alias). Original name was misleading: it's the persistent-generation pool size per attempt, not a training batch.
+- **Notebook config** — GPU-aware batch sizing. Detects A100 / V100 / T4 at config time and sets `(GPT2_TRAIN_BATCH, DETECTOR_BATCH, GRAD_ACCUM)` accordingly. All paths reach effective detector batch=32 (Devlin 2019 standard); A100 runs natively without grad accum, T4 uses (8, 4) as before.
+
+### Added
+- **`scripts/minerva_config.py`** (NEW) — centralized hyperparameter module. Single source of truth for SEEDS, EPOCHS, BATCH, LR. Both notebook and scripts import from it. Env-var overrides via `MINERVA_TRAIN_SEEDS`, `MINERVA_GPT2_EPOCHS`, etc. GPU-aware sizing helpers `gpt2_train_batch_for_gpu()` and `detector_batch_for_gpu()`.
+- **`scripts/38_ablation_no_conditioning.py`** (NEW) — scaffold for the GPT-2 with-vs-without control-token conditioning ablation. Provides the protocol; running it is Thesis 3 scope.
+- **`tests/test_config.py`** (NEW) — 27 tests covering the new config module: defaults match published-paper protocols (Devlin 2019, Liu 2019, Mosbach 2021), env-var overrides, GPU-aware sizing, JSON serialization.
+- **Notebook env-capture cell** — dumps GPU name, CUDA version, RAM, derived batch sizes into `reports/_environment.json` for reproducibility.
+- **Notebook seed-stats summary cell** — reads `reports/detector_seed_stats.json` and prints panel-ready mean ± std + paired t-test interpretation.
+- **`docs/MINERVA_v2.9.3_statistical_validity_audit.html`** — comprehensive audit report with academic citations (Liu 2019, Dodge 2020, Mosbach 2021, Picard 2021, Howard & Ruder 2018, Keskar 2017, Devlin 2019).
+
+### Test progression
+- v2.9.2 baseline: 231 tests
+- v2.9.3: **258 tests** (+27 from `test_config.py`, all passing)
+
+### References (cited in code comments)
+- Liu, Y. et al. (2019). *RoBERTa: A Robustly Optimized BERT Pretraining Approach*. arXiv:1907.11692
+- Dodge, J. et al. (2020). *Fine-Tuning Pretrained Language Models*. arXiv:2002.06305
+- Mosbach, M. et al. (2021). *On the Stability of Fine-tuning BERT*. ICLR. arXiv:2006.04884
+- Picard, D. (2021). *torch.manual_seed(3407) is all you need*. arXiv:2109.08203
+- Devlin, J. et al. (2019). *BERT: Pre-training of Deep Bidirectional Transformers*. arXiv:1810.04805
+- Howard, J. & Ruder, S. (2018). *ULMFiT*. ACL. arXiv:1801.06146
+- Keskar, N. S. et al. (2017). *On Large-Batch Training for Deep Learning*. ICLR. arXiv:1609.04836
+
+---
+
 ## [v2.9.1] — 2026-05-08 — Hotfix
 
 ### Fixed
