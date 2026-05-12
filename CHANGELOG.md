@@ -6,6 +6,64 @@ This project tracks an academic deliverable, not a product release; semantic ver
 
 ---
 
+## [v2.9.5] — 2026-05-12 — Audit-driven code improvements
+
+Closes four code-fixable audit findings from the v2.9.4 final-run audit (87/100 composite). Unlike the prior v2.9.4-notebook-polish patch which only fixed markdown headers, v2.9.5 ships actual code changes to surface the audit's diagnostic concerns and remove the lingering Picard 2021 critique.
+
+### Fixed
+- **`scripts/11b_train_gpt2_neurosymbolic.py`** — GPT-2 training default seed changed from 42 to **1729** (Hardy-Ramanujan number, used elsewhere in the codebase for consistency). Closes the v2.9.4 audit MEDIUM #3 finding citing Picard (2021): "torch.manual_seed(3407) is all you need" — the seed 42 is over-represented in published ML and creates a cherry-picking risk. Generation seed (script 12b) was already changed to 27 in v2.9.4; training seed now matches.
+
+- **`scripts/35_pseudonymize_places.py`** — report dict `version` field bumped from `"v2.9.0"` to `"v2.9.4"`. Closes v2.9.4 audit LOW #6. Audit-trail consistency: pseudo_places now matches corpus/training/generation reports.
+
+- **`scripts/37_holdout_detector_eval.py`** — same version-stamp bump (`v2.9.0` → `v2.9.4`). Same LOW #6 closure.
+
+- **`scripts/21_balance_unity_cards.py`** — schema-invalid drop now **categorized**, not just counted. Closes v2.9.4 audit MEDIUM #4, which flagged that 414/1314 cards (31.5%) get dropped at the balance stage without explanation. The new `schema_invalid_by_reason` and `schema_invalid_examples_first10` fields in `reports/balance.json` surface the failure modes (missing_required_field, wrong_field_type, invalid_candidate_code, invalid_verdict, invalid_indicator, other) so investigators can prioritize fixes upstream. No change to pass/fail behavior — same cards drop, but for documented reasons.
+
+- **`scripts/32_validate_detectors_on_templates.py`** — explicit `interpretation` and `metric_kind` fields added to `reports/det.json`. Closes v2.9.4 audit MEDIUM #5: the 100% accuracy reported here is mathematically guaranteed because the pool was curated to detector consensus. The new fields explicitly label this as `"metric_kind": "internal_consensus"` (not generalization) and redirect readers to `reports/holdout_detector_eval.json` for the real off-distribution F1. Defensive transparency for panel review.
+
+### Added
+- **`tests/test_v295_audit_fixes.py`** (NEW, 12 tests) — regression tests for all five fixes above. Asserts: GPT-2 seed default is 1729 (not 42); scripts 35/37 stamp v2.9.4; script 21 emits the categorized invalid_by_reason fields with all six expected buckets; script 32's interpretation field exists and contains the disambiguating language.
+
+### Test progression
+- v2.9.4 baseline: 259 passed
+- v2.9.4-notebook-polish: 259 passed (no code changes)
+- **v2.9.5: 271 passed** (+12 new tests, 0 regressions)
+
+### Defense impact
+Each fix removes a specific panel-question risk:
+- Seed=42 question → answered by changing default + citing Picard 2021
+- "Why drop 31.5%?" → answered by `schema_invalid_by_reason` breakdown
+- "Why 100% on internal eval?" → answered by `metric_kind: internal_consensus` caveat
+- Version-stamp consistency → all GPT-2-stage reports now show v2.9.4
+
+### Not addressed in v2.9.5 (operational, not code)
+- **Holdout CSV hand-labeling** — still requires ~45 min of human work
+- **Pipeline re-run** to capture v2.9.5 numbers in actual output JSONs (~10 min Colab A100)
+
+---
+
+## [v2.9.4-notebook-polish] — 2026-05-12 — Section labeling consistency
+
+Polish-level updates to `notebooks/MINERVA_Run_Colab_v2.9.4.ipynb`. No code or test changes; only markdown section headers corrected for consistency. Test suite still 259 passing.
+
+### Changed (notebook section headers only)
+- **Cell 13:** `## 1b. Environment capture` → `## 6b. Environment capture`. The cell sits after section 6 (Working folders), so it should be `6b`, not the misleading `1b`.
+- **Cell 33:** `### 7b.6 Held-out test-set evaluation (script 15)` → `### 7b.6 JCBlaise test-set evaluation (script 15)`. Script 15 evaluates on the JCBlaise test SPLIT, not the GPT-2 held-out CSV. "Held-out" caused confusion with section 16b (the real holdout).
+- **Cell 58:** `## 16. ... STRICT ALLOWLIST ENFORCER (script 33, NEW v2.6.final)` → drop "NEW v2.6.final" (outdated; script 33 has been in the pipeline since v2.6).
+- **Cell 60:** `## 11b. Held-out detector evaluation (v2.9.0)` → `## 16b. Held-out detector evaluation on GPT-2 cards (v2.9.0, script 37)`. The cell sits between section 16 (strict) and section 17 (dashboard); `11b` was clearly wrong.
+- **Cell 62:** `## 16. ... Pre-pilot pack` → `## 16c. ... Pre-pilot pack`. Two cells were both numbered `16`; this one renumbered to `16c`.
+- **Cell 29:** stale "v2.6.final neuro-symbolic GPT-2 path" reworded to "neuro-symbolic GPT-2 path (introduced in v2.6, refined through v2.9.4)".
+- **Cell 38:** stale "the v2.6.final neuro-symbolic conditioning pipeline" reworded to "the neuro-symbolic conditioning pipeline (Mode B, introduced in v2.6, refined through v2.9.4)".
+
+### Preserved
+- No code cells modified.
+- No tests modified.
+- No scripts modified.
+- All architectural decisions, hyperparameters, and pipeline ordering unchanged.
+- Test suite: 259 passed, 1 skipped (unchanged).
+
+---
+
 ## [v2.9.4] — 2026-05-11 — Post-run audit fixes
 
 Closes the three findings from the **professional audit of the v2.9.0 actual Colab run output** (audit dated 2026-05-11). The v2.9.0 audit-response code worked correctly for 4 of 5 audit findings, but the run revealed three additional issues: explanation diversity regressed instead of improving, and two scripts still stamped the wrong version string.

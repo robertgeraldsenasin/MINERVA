@@ -267,7 +267,7 @@ def pseudonymize_cards(in_path: Path, out_path: Path,
 
     report = {
         "ts": datetime.now(timezone.utc).isoformat(),
-        "version": "v2.9.0",
+        "version": "v2.9.4",
         "input": str(in_path),
         "output": str(out_path),
         "blocklist": str(blocklist_path),

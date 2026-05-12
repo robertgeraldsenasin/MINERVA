@@ -89,7 +89,12 @@ def main() -> None:
     p.add_argument("--per_device_batch", type=int, default=4)
     p.add_argument("--grad_accum", type=int, default=8)
     p.add_argument("--block_size", type=int, default=256)
-    p.add_argument("--seed", type=int, default=42)
+    # v2.9.5: seed default changed from 42 to 1729 per Picard (2021)
+    # "torch.manual_seed(3407) is all you need". The seed 42 is over-represented
+    # in published ML and creates a cherry-picking risk. 1729 is the
+    # Hardy-Ramanujan number (= 7 * 13 * 19), used elsewhere in the project
+    # (scripts/minerva_candidates.py:305) for consistency across the codebase.
+    p.add_argument("--seed", type=int, default=1729)
     p.add_argument("--report_out",
                    default="reports/gpt2_neurosymbolic_training.json")
     args = p.parse_args()

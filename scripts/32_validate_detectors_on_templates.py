@@ -204,6 +204,19 @@ def main():
 
     report = {
         "ts": datetime.now(timezone.utc).isoformat(),
+        # v2.9.5: explicit caveat surfacing the audit-flagged tautology.
+        # The pool was constructed by filtering on these same detectors'
+        # consensus, so 100% accuracy here is mathematically guaranteed.
+        # This is an internal-consistency check, not generalization F1.
+        # For real generalization metrics, see reports/holdout_detector_eval.json
+        # (script 37, requires hand-labeled holdout CSV).
+        "interpretation": (
+            "INTERNAL-CONSISTENCY CHECK ONLY. The pool was curated to "
+            "detector consensus, so 100% accuracy here is the expected, "
+            "trivial outcome — NOT a generalization metric. See "
+            "reports/holdout_detector_eval.json for off-distribution F1."
+        ),
+        "metric_kind": "internal_consensus",  # vs "off_distribution"
         "pool_file": args.pool_file,
         "n_cards": len(cards),
         "threshold": args.threshold,
