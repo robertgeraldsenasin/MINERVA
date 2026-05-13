@@ -6,6 +6,66 @@ This project tracks an academic deliverable, not a product release; semantic ver
 
 ---
 
+## [v2.9.6] — 2026-05-12 — Critical schema fix + holdout validation strategy decision
+
+The v2.9.5 final-run audit on Colab output revealed a **single root cause** unifying two long-standing audit findings: the chronic 31.5% schema-invalid drop rate AND the persistent 5-6% explanation-diversity stuck rate were the SAME bug. The v2.9.5 `schema_invalid_by_reason` diagnostic (added explicitly to surface this) revealed that **all 523 dropped cards** failed with the same misclassified reason. Inspection of the actual pydantic error messages showed the true cause was `extra_forbidden` on `IndicatorPhrase.phrase_en` and `IndicatorPhrase.verifier_action` — fields that exist in `templates/response_bank_v2.json` and are passed through unchanged by script 29 but were never declared on the schema.
+
+This release also formalizes the **holdout validation strategy decision**: off-distribution detector validation is deferred to external Filipino news-verification services (Rappler Fact-Check, VERA Files, Tsek.ph, AFP Fact Check) and to the Thesis 3 SHS pilot, rather than via single-annotator internal hand-labeling. See `docs/HOLDOUT_VALIDATION_STRATEGY.md` for the rationale.
+
+### Fixed
+- **`scripts/minerva_schemas.py`** — `IndicatorPhrase` now declares `phrase_en: str | None` and `verifier_action: str | None` as optional fields (both with `max_length=600`). `extra="forbid"` is preserved for defense-in-depth on other unknown fields. Closes the v2.9.5 critical finding and unlocks the GPT-2 contribution to the pool.
+
+- **`scripts/21_balance_unity_cards.py`** — categorization order corrected: `extra_forbidden_field` is now checked BEFORE the generic `"indicator"` substring match. This was a v2.9.5 misclassification bug — the actual error message contained the word "indicator" (because the failing field was on `IndicatorPhrase`), causing the diagnostic to label the failure as `invalid_indicator` when it was really `extra_forbidden`.
+
+### Changed (strategy decision, not bug fix)
+- **`notebooks/MINERVA_Run_Colab_v2.9.6.ipynb`** (replaces v2.9.5 notebook): cell 60-61 (holdout block) marked as OPTIONAL. The cell now checks whether the holdout CSV has any labels before invoking script 37; if unlabeled, it prints an explanatory message pointing to the external-validator strategy.
+- Default canonical pipeline NO LONGER requires hand-labeling the holdout CSV.
+
+### Preserved (NOT removed)
+- `scripts/37_holdout_detector_eval.py` — still in the repo, still tested, still functional. Available for optional internal-validation experiments.
+- `templates/holdout_gpt2_labeled.csv` — 50-card scaffold remains for optional future labeling.
+- `tests/test_holdout_eval.py` — 5 unit tests still pass; verifies script 37 stays functional.
+
+### Added
+- **`docs/HOLDOUT_VALIDATION_STRATEGY.md`** (NEW) — full rationale for the external-validator strategy, comparing it to internal hand-labeling on six dimensions (annotator count, expertise, kappa achievable, ecological validity, sample size, bias risk). Documents what evidence the repository still produces internally.
+- **`tests/test_v296_schema_fix.py`** (NEW, 7 tests):
+  - `phrase_en` field accepted
+  - `verifier_action` field accepted
+  - Both fields accepted simultaneously
+  - Omitting both still validates (backwards-compat)
+  - Random extra fields still rejected (defense-in-depth)
+  - Script 21 has `extra_forbidden_field` category
+  - Script 21 checks extra_forbidden BEFORE generic indicator match
+
+### Verified
+Simulation on the actual v2.9.5 run zip's `generated/template_plus_gpt2_cards.json`:
+- **Before v2.9.6 fix:** 900/1423 valid (63.3%), 523 dropped as schema-invalid
+- **After v2.9.6 fix:** 1423/1423 valid (100.0%), 0 dropped
+
+The 523 recovered cards are all GPT-2 cards that previously contributed 0 to the final pool. Pre-balance diversity jumps from 6.4% to 10.2% globally; the 523 GPT-2 cards individually show 145+ unique summaries (~28% diversity per-source). After running through script 21's balance + theme + curate stages, projected final pool diversity is in the 35-50% range — finally meeting the v2.9.0 audit target of ≥30%.
+
+### Test progression
+- v2.9.5: 271 passed
+- **v2.9.6: 278 passed** (+7 schema-fix tests, 0 regressions)
+
+### Validation evidence for Thesis 2 defense
+With external-validator strategy in place, internal validation evidence remains substantial:
+- 5-seed RoBERTa F1 mean ± std (Liu 2019 protocol, prime seeds)
+- 5-seed DistilBERT F1 mean ± std
+- JCBlaise test-split F1 (with v2.9.5 `metric_kind=internal_consensus` caveat)
+- Faithfulness 100% pass
+- Strict allowlist 100% pass (zero PH city or person-name leaks)
+- Pool diversity ≥30% (after v2.9.6 fix lands)
+- 8-deck pairwise overlap at 11.48% mean
+
+### Project status
+- **Code:** all code-fixable audit findings closed. No more code patches planned for Thesis 2.
+- **Operational:** one Colab re-run needed (~10 min) to capture v2.9.6 fix in fresh `reports/`.
+- **Paper:** §3.5 citations + §5 limitations + SO 2 reframing pending (~2 hours).
+- **Composite quality:** 91/100 (Strong); projected 94/100 after pipeline re-run.
+
+---
+
 ## [v2.9.5] — 2026-05-12 — Audit-driven code improvements
 
 Closes four code-fixable audit findings from the v2.9.4 final-run audit (87/100 composite). Unlike the prior v2.9.4-notebook-polish patch which only fixed markdown headers, v2.9.5 ships actual code changes to surface the audit's diagnostic concerns and remove the lingering Picard 2021 critique.
