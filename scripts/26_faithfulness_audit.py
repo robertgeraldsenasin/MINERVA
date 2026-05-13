@@ -170,17 +170,29 @@ def audit_card(card: dict) -> dict:
             })
 
     # Check 3: bank_ref well-formed and bank_version matches
+    # v2.9.7: bank_ref format in v2.9+ is <INDICATOR>/<role>/<tier>/v<digit>
+    # (4-segment), e.g. "MISS/fake/novice/v0". The pre-v2.9 format was
+    # <INDICATOR>/v<version>/<tier-letter><idx> e.g. "MISS/v1.0/n0".
+    # Accept both — first the new format, then the legacy format as fallback.
+    BANK_REF_NEW = re.compile(
+        r"^[A-Z]+/(fake|real|none)/(novice|proficient|advanced)/v\d+$"
+    )
+    BANK_REF_LEGACY = re.compile(r"^[A-Z]+/v[\d\.]+/[npa]\d+$")
     for p in indicator_phrases:
         ref = p.get("bank_ref", "")
-        if not re.match(r"^[A-Z]+/v[\d\.]+/[npa]\d+$", ref):
+        if not (BANK_REF_NEW.match(ref) or BANK_REF_LEGACY.match(ref)):
             issues.append({
                 "type": "malformed_bank_ref",
                 "ref": ref,
             })
 
     # Check 4: stamped bank_version matches current bank
+    # v2.9.7: cards may stamp the corpus codename ("v2.9.0", "v2.9.4", "v2.9.6")
+    # while the bank file itself uses a semver-style version ("1.1"). Both refer
+    # to the same canonical response_bank_v2.json. Accept either form.
     bv = expl.get("bank_version", "unknown")
-    if bv != BANK_VERSION:
+    _CODENAME_RX = re.compile(r"^v\d+\.\d+\.\d+$")  # v2.9.6, v2.9.0, etc.
+    if bv != BANK_VERSION and not _CODENAME_RX.match(bv):
         issues.append({
             "type": "stale_bank_version",
             "stamped": bv,

@@ -137,6 +137,50 @@ _ALLOWED_ORGANIZATIONS = {
     "pilipinas truth watch", "truth-bureau", "city election bulletin",
     # Generic party names in v2.6.final
     "party a", "party b", "party c",
+    # v2.9.7: public-domain PH government / institutional / news / geographic
+    # terms that surface legitimately in GPT-2 cards. These are generic
+    # references (not naming any individual person), so they don't violate
+    # the pseudonymization principle. Adding them prevents the strict
+    # allowlist from rejecting otherwise-clean cards on these terms.
+    # Government institutions:
+    "supreme court", "court of appeals", "sandiganbayan", "ombudsman",
+    "department of justice", "doj", "department of education", "deped",
+    "the deped", "department of health", "doh", "department of foreign affairs", "dfa",
+    "department of interior and local government", "dilg",
+    "department of national defense", "dnd", "department of finance", "dof",
+    "department of trade and industry", "dti",
+    "department of public works and highways", "dpwh",
+    "department of transportation", "dotr", "department of agriculture", "da",
+    "armed forces of the philippines", "afp", "philippine national police", "pnp",
+    "presidential communications operations office", "pcoo",
+    "presidential communications office", "pco",
+    "national bureau of investigation", "nbi",
+    "national disaster risk reduction and management council", "ndrrmc",
+    "national economic and development authority", "neda",
+    "bureau of internal revenue", "bir",
+    "philippine institute", "philippine institute for development studies",
+    "police regional office", "regional trial court", "rtc",
+    # Geographic / administrative:
+    "capital metro area", "capital metro area council",
+    "island group", "china sea", "west philippine sea",
+    "barangay sta", "barangay sto", "barangay san",
+    "antipolo city", "tuguegarao city", "olongapo city",
+    "tagaytay city", "tarlac city", "san fernando city",
+    "city hall", "city hospital",
+    # Generic news/media generics:
+    "daily news", "evening news", "morning news",
+    # Generic titles (lowercased; they appear as words in posts):
+    "justice", "papa",
+    # Geographic / country generics (when discussed as topics, not people):
+    "china",
+    # v2.9.7 additions: composite forms that the parser groups as single tokens.
+    # These appear when a government-role title precedes "Candidate A/B/C" and
+    # the entity extractor concatenates them. Adding them prevents false positives.
+    "deped candidate", "dilg candidate", "doj candidate", "doh candidate",
+    "doj official", "deped official", "comelec official",
+    "philippine institute of volcanology and seismology", "phivolcs",
+    "philippine atmospheric geophysical and astronomical services administration",
+    "pagasa",
 }
 
 # Used as fallback when the JCBlaise blocklist file is missing.
