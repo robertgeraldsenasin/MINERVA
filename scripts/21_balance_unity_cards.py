@@ -87,7 +87,12 @@ def main():
                 # First "X validation error" line is the most useful signal
                 first_line = err_msg.split("\n")[0][:100]
                 # Coarse-grained category from pydantic error messages
-                if "Field required" in err_msg:
+                # v2.9.6: added extra_forbidden detection (was the actual
+                # root cause of 523 drops in v2.9.5; misclassified as
+                # invalid_indicator by the v2.9.5 logic)
+                if "extra_forbidden" in err_msg or "Extra inputs are not permitted" in err_msg:
+                    reason = "extra_forbidden_field"
+                elif "Field required" in err_msg:
                     reason = "missing_required_field"
                 elif "Input should be" in err_msg or "value is not a valid" in err_msg:
                     reason = "wrong_field_type"

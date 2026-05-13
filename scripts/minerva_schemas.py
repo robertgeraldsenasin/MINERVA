@@ -102,6 +102,13 @@ class IndicatorPhrase(BaseModel):
     phrase: str = Field(min_length=10, max_length=600)
     bank_ref: str = Field(description="bank slot id, e.g. 'EMO/v1/n3'")
     sift_move: str | None = None
+    # v2.9.6: response_bank_v2.json supplies these alongside the Tagalog phrase.
+    # Adding them as optional fields fixes the v2.9.5 audit's "523 cards drop
+    # as invalid_indicator" finding — actual error was `extra_forbidden` on
+    # phrase_en and verifier_action. These are useful for the Unity layer
+    # (English fallback + SIFT verification step display).
+    phrase_en: str | None = Field(default=None, max_length=600)
+    verifier_action: str | None = Field(default=None, max_length=600)
 
 
 class ExplanationBlock(BaseModel):
