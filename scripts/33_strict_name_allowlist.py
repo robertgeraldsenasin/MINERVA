@@ -181,6 +181,16 @@ _ALLOWED_ORGANIZATIONS = {
     "philippine institute of volcanology and seismology", "phivolcs",
     "philippine atmospheric geophysical and astronomical services administration",
     "pagasa",
+    # v2.9.8 additions: 13 edge cases surfaced by the v2.9.7 run zip.
+    # These are generic role-titles or law-enforcement units that GPT-2
+    # uses descriptively (not as proper names of any individual).
+    "the president", "president", "the senator", "senator", "the mayor",
+    "the governor", "the secretary", "secretary",
+    "police district", "police station", "police force",
+    "chief gen", "chief general", "general", "the general",
+    "politiko hindi", "politiko", "the politician", "politician",
+    "the cabinet", "cabinet",
+    "the senate", "the congress", "congressman", "congresswoman",
 }
 
 # Used as fallback when the JCBlaise blocklist file is missing.

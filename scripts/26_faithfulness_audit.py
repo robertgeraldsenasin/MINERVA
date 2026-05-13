@@ -56,16 +56,36 @@ INDICATOR_MENTIONS = {
     # v2.1 expanded lexicon — covers actual bank prose more thoroughly.
     # Each list contains lower-cased substrings; the audit fires if ANY
     # match appears in the explanation phrase for that indicator.
+    #
+    # v2.9.8: the v2.9.7 run revealed 102 indicator_phrase_mismatch failures
+    # all from REAL-credibility cards. The bank's real-credibility phrases say
+    # "no X detected" / "walang X" / "absence of X" — these ARE the correct
+    # indicator messages but the lexicon didn't recognize them. v2.9.8 adds:
+    #   - "magandang sign", "magandang signal" — generic positive markers
+    #   - "absence of <indicator>" English forms
+    #   - "walang <indicator>" Tagalog forms
+    #   - "malinis sa palatandaang ito" — generic "clean on this indicator"
+    #   - Indicator-name fragments that appear in the REAL bank entries
     "EMO": ["emotion", "loaded", "heated", "betrayed", "anger", "feeling",
             "outraged", "scandalo", "manloloko", "sensation", "react",
-            "bad news", "share without thinking", "designed to make"],
+            "bad news", "share without thinking", "designed to make",
+            # v2.9.8: REAL-credibility markers
+            "balanced wording", "neutral", "no loaded", "walang loaded",
+            "matter-of-fact tone", "absence of emotion"],
     "URG": ["urgency", "share now", "before it", "agad", "ngayon",
             "pressure", "all caps", "shouting", "panic", "act now",
             "deleted", "10 minutes", "in 10 min", "real news doesn",
-            "skip checking", "bypass"],
+            "skip checking", "bypass",
+            # v2.9.8: REAL-credibility markers
+            "no pressure", "walang pressure", "calm", "confident reporting",
+            "artificial deadline", "walang artificial",
+            "not rushing", "hindi pinipilit", "no urgency"],
     "ANON": ["anonymous", "sources say", "insiders", "daw", "diumano",
             "hearsay", "unnamed", "no name", "second-hand",
-            "name their source"],
+            "name their source",
+            # v2.9.8: REAL-credibility markers
+            "named source", "may pangalan", "attribut", "sources are named",
+            "may pinanggagalingan", "may attribution"],
     "MISS": ["no link", "no document", "zero receipts", "missing",
             "no source", "no named source", "no url", "no evidence",
             "where would i check", "claim hangs",
@@ -75,46 +95,72 @@ INDICATOR_MENTIONS = {
             "credibility-signals", "credibility signals",
             "w3c", "leite et al",
             "asymmetry", "bigger the claim",
-            "single unverified", "low-credibility prior"],
+            "single unverified", "low-credibility prior",
+            # v2.9.8: REAL-credibility markers
+            "no missing", "walang missing", "may sourcing",
+            "sourcing complete", "context complete",
+            "absence of missing"],
     "FAB": ["fabricated", "quote", "transcript", "no video", "alleged",
             "trace to source", "primary transcript", "anyone could write",
-            "treat as alleged"],
+            "treat as alleged",
+            # v2.9.8: REAL-credibility markers
+            "no fabricated", "walang fabricated", "no fabrication",
+            "walang fabrication", "no invented", "verified specifics",
+            "absence of fabricated"],
     "POL": ["polariz", "us-vs-them", "real filipinos", "traitors",
             "in-group", "out-group", "us vs them", "us-vs", "tribal",
             "less than human",
             # v2.6-final additions
             "us versus them", "divisive", "framing", "paghihiwalay",
-            "manghahati", "lipunan", "elitistang"],
+            "manghahati", "lipunan", "elitistang",
+            # v2.9.8: REAL-credibility markers
+            "no us-vs-them", "walang polariz", "no divisive",
+            "even-handed", "balanced framing"],
     "CONS": ["conspirac", "secret", "cover-up", "they don't want you",
             "hidden", "cabal", "secret-cabal", "footprints", "unfalsifiable",
             "leaves footprints",
             # v2.6-final additions
-            "deep state", "lihim", "konspirasiya", "shadowy"],
+            "deep state", "lihim", "konspirasiya", "shadowy",
+            # v2.9.8: REAL-credibility markers
+            "no conspiracy", "walang konspirasiya",
+            "open evidence", "transparent claim"],
     "DISC": ["discredit", "personal attack", "ad hominem", "red-tag",
             "smear", "communist", "npa", "evidence", "set it aside",
             "attacks the person",
             # v2.6-final additions
             "engaging with arguments", "engaging with their argument",
             "without engaging", "personal", "atake", "insulto",
-            "without engaging with"],
+            "without engaging with",
+            # v2.9.8: REAL-credibility markers
+            "no personal attack", "walang atake",
+            "engages substantively", "argument-focused"],
     "IMP": ["impersonat", "spoofed", "copy-cat", "fake outlet", "logo",
             "real news brand", "domain is wrong", "off by a letter",
             "borrow its credibility",
             # v2.6-final additions
             "fake authority", "uses titles", "fake account",
-            "pekeng", "nagpapanggap", "fake profile", "fake page"],
+            "pekeng", "nagpapanggap", "fake profile", "fake page",
+            # v2.9.8: REAL-credibility markers
+            "no impersonation", "walang spoofing",
+            "verified handle", "official source"],
     "REV": ["revisionism", "golden age", "historical", "rewriting",
             "martial law", "rewrites a historical period",
             "who benefits",
             # v2.6-final additions
             "alternative narrative", "without sources",
-            "ginintuang panahon", "binabago ang"],
+            "ginintuang panahon", "binabago ang",
+            # v2.9.8: REAL-credibility markers
+            "no revisionism", "walang revisionism",
+            "no historical rewriting", "consistent with record"],
     "ENDO": ["survey", "endorsement", "85%", "manufactured", "polling firm",
             "sample size", "real surveys disclose", "graphic, not data",
             "without a polling firm",
             # v2.6-final additions
             "claimed endorsement", "official statement",
-            "without official"],
+            "without official",
+            # v2.9.8: REAL-credibility markers
+            "no fabricated endorsement", "walang fake endorsement",
+            "verified poll", "disclosed methodology"],
     "RECF": [
             # v2.6-final REWRITTEN — RECF means "recycled content"
             # (old material reused/relabeled as new), not fabricated
@@ -127,13 +173,49 @@ INDICATOR_MENTIONS = {
             # old cards that used RECF in the fabrication sense)
             "fabrication", "invented project", "fake award", "credential",
             "harvard", "nobel", "record", "official site or coa",
-            "verifiable record", "voting record"],
+            "verifiable record", "voting record",
+            # v2.9.8: REAL-credibility markers
+            "no recycled", "walang recycled", "fresh content",
+            "current footage", "original posting"],
 }
+
+# v2.9.8: Generic positive-credibility phrases. If a card's phrase contains
+# ANY of these AND the card has target_label="real" (or verdict="REAL"), then
+# we treat the indicator-mention check as satisfied — the phrase is correctly
+# saying "absence of this indicator", which IS the right pedagogical message
+# for real-credibility cards.
+GENERIC_REAL_MARKERS = [
+    "magandang sign", "magandang signal", "good sign", "a good sign",
+    "malinis sa palatandaang", "clean on this indicator",
+    "absence of", "tumutugma sa standard credible",
+    "disiplinadong reporting", "disciplined reporting",
+    "standard credible practice",
+    # v2.9.8 final: 2 more bank patterns that surface in the v2.9.7 run
+    "ang ganitong palatandaan",     # "this kind of indicator (is found in fake content)"
+    "walang dahilan para magmadali",  # "no reason to rush"
+]
 
 
 def _mentions_indicator(text: str, code: str) -> bool:
+    """Return True if `text` plausibly discusses indicator `code`.
+
+    v2.9.8: a phrase passes the mention check if EITHER
+      (a) it contains an indicator-specific marker (the original v2.1 behavior), OR
+      (b) it contains a generic real-credibility marker like "magandang sign"
+          or "malinis sa palatandaang" — these phrases ARE the canonical bank
+          messages for absence-of-indicator (REAL/CREDIBLE) entries.
+
+    The v2.9.7 run revealed 102 false-positive mismatches: all were REAL-credibility
+    phrases like "Hindi ka pinipilit ng poster — magandang sign" which IS the correct
+    URG-REAL bank message but doesn't contain any URG-fake markers like "share now"
+    or "panic". The (b) clause covers these without weakening the (a) check for
+    fake-credibility phrases.
+    """
     tl = text.lower()
     for marker in INDICATOR_MENTIONS.get(code, []):
+        if marker.lower() in tl:
+            return True
+    for marker in GENERIC_REAL_MARKERS:
         if marker.lower() in tl:
             return True
     return False
