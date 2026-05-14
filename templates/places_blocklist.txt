@@ -244,6 +244,7 @@ binondo
 divisoria
 quiapo
 escolta
+tondo
 makati cbd
 ayala avenue
 roxas boulevard

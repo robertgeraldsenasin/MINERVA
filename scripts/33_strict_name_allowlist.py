@@ -191,6 +191,25 @@ _ALLOWED_ORGANIZATIONS = {
     "politiko hindi", "politiko", "the politician", "politician",
     "the cabinet", "cabinet",
     "the senate", "the congress", "congressman", "congresswoman",
+    # v2.9.9 additions: 8 final edge cases from the v2.9.8 run zip.
+    # Categorized:
+    #   - Generic role titles in Tagalog/English:
+    "presidente", "presidential", "education sec", "education secretary",
+    "the education sec",
+    #   - PNP / agency unit names (generic, not proper):
+    "intelligence group", "pnp intelligence group", "intelligence service",
+    "investigation group", "investigation division",
+    #   - Real GMA/ABS-CBN/Inquirer news program / outlet titles (these
+    #     are press citations, not "candidate names" — same status as
+    #     existing entries like "rappler", "inquirer"):
+    "unang balita", "24 oras", "tv patrol", "saksi",
+    #   - Filipino generic gendered/colloquial terms (NOT real names):
+    "isang pinay", "pinay", "pinoy", "isang pinoy",
+    #   - Foreign nationalities used adjectively in news context (the
+    #     persons referenced are still pseudonymized as Candidate A/B/C;
+    #     the nationality adjective itself is descriptive, not naming):
+    "japanese", "the japan", "japan", "indonesia", "indonesian",
+    "korean", "the korea", "korea", "chinese vlogger", "japanese vlogger",
 }
 
 # Used as fallback when the JCBlaise blocklist file is missing.
