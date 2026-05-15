@@ -69,3 +69,6 @@ dist/
 !data/.gitkeep
 !logs/.gitkeep
 !models/.gitkeep
+
+# Patch/backup zips should not be committed
+*.zip
