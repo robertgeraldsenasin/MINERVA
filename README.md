@@ -10,7 +10,7 @@ A Tagalog-language educational content pipeline that combines hybrid credibility
 
 ## Citation
 
-> Lola, J. K. P., Salva, A. J. B., & Senasin, R. G. A. (2026). *M.I.N.E.R.V.A.: An Educational Electoral Rumor Detection Simulator using Symbolic Rule Engine via DE-GNN and Qlattice Symbolic Regression for SHS Misinformation Literacy.* B.S. Computer Science (Software Engineering) thesis. FEU Institute of Technology.
+> Senasin, R. G. A., Salva, A. J. B., Yapchulay, A. C., & Lola, J. K. (2026). M.I.N.E.R.V.A.: An Educational Electoral Rumor Detection Simulator using Symbolic Rule Engine via DE-GNN and Qlattice Symbolic Regression for SHS Misinformation Literacy. B.S. Computer Science (Software Engineering) thesis. FEU Institute of Technology.
 
 ---
 
