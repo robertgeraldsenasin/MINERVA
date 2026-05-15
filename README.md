@@ -18,7 +18,7 @@ A Tagalog-language educational content pipeline that combines hybrid credibility
 
 This repository delivers the **content-and-scoring pipeline plus the curated card pool** — the upstream feedstock for the Unity Android game. The Unity build itself, the 50-respondent SHS pilot study, and the 5-evaluator ISO 25010 review are scoped to **Thesis 3** per BATB §1.5.
 
-**Defense window:** November 18-22, 2026 (Thesis 1 defense window per FEU schedule).
+
 
 ### What runs end-to-end on Colab A100 in ~30 minutes
 
@@ -37,12 +37,9 @@ This repository delivers the **content-and-scoring pipeline plus the curated car
 
 The thesis title uses **"DE-GNN"**. In context:
 
-- **Paper §2.5** discusses **Differential Evolution (DE)** as an optimization method for hyperparameter and rule search.
 - **Implementation** (`scripts/09_train_degnn.py`, `scripts/minerva_degnn.py`) is a **GraphSAGE** model trained over **dual-embedding features** (concatenated RoBERTa + DistilBERT PCA representations) plus calibrated detector probabilities, fed through a kNN similarity graph.
 
-For Thesis 2 scope, the operational meaning of "DE-GNN" in this codebase is **dual-embedding GraphSAGE on a kNN graph**. The Differential Evolution optimizer is referenced in the paper as future-work / Thesis 3 scope for systematic hyperparameter search; the current implementation uses **Adam + EarlyStopping** with the 5-prime-seed reliability protocol. The paper §5 limitations subsection acknowledges this naming reconciliation.
-
-This is documented transparently to avoid panel ambiguity. The graph component is real, working, and contributes a measurable F1 of ~94% — but "DE" in the codebase's `DE-GNN` refers to the dual-embedding feature fusion, not Differential Evolution.
+For Thesis 2 scope, the operational meaning of "DE-GNN" in this codebase is **dual-embedding GraphSAGE on a kNN graph**.
 
 ---
 
@@ -260,7 +257,7 @@ flowchart LR
 
 ---
 
-## The v2.8.7 → v2.9.9 trajectory
+## The v2.8.7 → v2.9.9 trajectory (recent developnent)
 
 | Version | Composite | Headline change |
 |---|---|---|
@@ -288,4 +285,4 @@ Academic use. See thesis paper for full citation.
 
 - **JCBlaise** for the Filipino fake-news dataset and the RoBERTa-Tagalog + GPT-2-Tagalog base models.
 - **HuggingFace Transformers** for the training infrastructure.
-- **FEU Institute of Technology** thesis program and Adviser Elisa V. Malasaga; Mentor Hazel San Patilano.
+- **FEU Institute of Technology** thesis program and Adviser Elisa V. Malasaga; Mentor Hazel San Patilano; Internal Co-Adviser Alexander Hernandez
