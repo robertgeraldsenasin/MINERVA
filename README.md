@@ -6,13 +6,7 @@ A Tagalog-language educational content pipeline that combines hybrid credibility
 
 [![tests](https://img.shields.io/badge/tests-311%20passed-brightgreen)]() [![python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)]() [![colab](https://img.shields.io/badge/runtime-Colab%20A100-orange)]() [![release](https://img.shields.io/badge/release-v2.9.9-blue)]() [![faithfulness](https://img.shields.io/badge/faithfulness-100%25-brightgreen)]() [![allowlist](https://img.shields.io/badge/allowlist-99.09%25-brightgreen)]()
 
----
 
-## Citation
-
-> Lola, J. K. P., Salva, A. J. B., & Senasin, R. G. A. (2026). *M.I.N.E.R.V.A.: An Educational Electoral Rumor Detection Simulator using Symbolic Rule Engine via DE-GNN and Qlattice Symbolic Regression for SHS Misinformation Literacy.* B.S. Computer Science (Software Engineering) thesis. FEU Institute of Technology.
-
----
 
 ## Thesis 2 scope (this repository)
 
