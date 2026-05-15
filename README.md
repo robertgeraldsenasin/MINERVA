@@ -167,7 +167,7 @@ python -m pytest tests/ -q
 
 The 1 skipped test is `test_degnn_graph.py` skipping cleanly because torch isn't in the dev dependencies. **This is the correct behavior** — install `requirements.txt` if you need torch.
 
-### Full pipeline run (Colab A100 + High-RAM)
+### WHAT WE DID: Full pipeline run (Colab A100 + High-RAM)
 
 1. Open Colab → **File** → **Open notebook** → **GitHub** tab
 2. Repo: `robertgeraldsenasin/MINERVA` · Branch: `final_ver_branch`
