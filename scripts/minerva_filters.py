@@ -117,7 +117,6 @@ def keyword_score(text: str) -> tuple[float, dict]:
     tl = text.lower()
     pos = sum(1 for w in ELECTORAL_POSITIVE if w.lower() in tl)
     neg = sum(1 for w in ELECTORAL_NEGATIVE if w.lower() in tl)
-    # v2.2: stronger negative weighting (was 0.6 per negative, now 1.0)
     # plus an explicit downweight when negatives outnumber positives
     raw = pos - 1.0 * neg
     # Heavy penalty if neg count >= pos count (off-theme dominates)

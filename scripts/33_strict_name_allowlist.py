@@ -137,7 +137,6 @@ _ALLOWED_ORGANIZATIONS = {
     "pilipinas truth watch", "truth-bureau", "city election bulletin",
     # Generic party names in v2.6.final
     "party a", "party b", "party c",
-    # v2.9.7: public-domain PH government / institutional / news / geographic
     # terms that surface legitimately in GPT-2 cards. These are generic
     # references (not naming any individual person), so they don't violate
     # the pseudonymization principle. Adding them prevents the strict
@@ -173,7 +172,6 @@ _ALLOWED_ORGANIZATIONS = {
     "justice", "papa",
     # Geographic / country generics (when discussed as topics, not people):
     "china",
-    # v2.9.7 additions: composite forms that the parser groups as single tokens.
     # These appear when a government-role title precedes "Candidate A/B/C" and
     # the entity extractor concatenates them. Adding them prevents false positives.
     "deped candidate", "dilg candidate", "doj candidate", "doh candidate",
@@ -181,7 +179,6 @@ _ALLOWED_ORGANIZATIONS = {
     "philippine institute of volcanology and seismology", "phivolcs",
     "philippine atmospheric geophysical and astronomical services administration",
     "pagasa",
-    # v2.9.8 additions: 13 edge cases surfaced by the v2.9.7 run zip.
     # These are generic role-titles or law-enforcement units that GPT-2
     # uses descriptively (not as proper names of any individual).
     "the president", "president", "the senator", "senator", "the mayor",
@@ -191,7 +188,6 @@ _ALLOWED_ORGANIZATIONS = {
     "politiko hindi", "politiko", "the politician", "politician",
     "the cabinet", "cabinet",
     "the senate", "the congress", "congressman", "congresswoman",
-    # v2.9.9 additions: 8 final edge cases from the v2.9.8 run zip.
     # Categorized:
     #   - Generic role titles in Tagalog/English:
     "presidente", "presidential", "education sec", "education secretary",
@@ -210,6 +206,14 @@ _ALLOWED_ORGANIZATIONS = {
     #     the nationality adjective itself is descriptive, not naming):
     "japanese", "the japan", "japan", "indonesia", "indonesian",
     "korean", "the korea", "korea", "chinese vlogger", "japanese vlogger",
+    # the v2.9.9 run zip. Same descriptive-not-naming pattern as the
+    # other agencies/units in this list. The strict allowlist properly
+    # blocks 'pacquiao' (real political figure) — that case remains.
+    "election board", "election commission", "the election board",
+    "national bureau", "the national bureau", "national bureau of investigation",
+    "cybercrime division", "cybercrime unit", "the cybercrime division",
+    "valentine's day", "valentines day",  # calendar event, not a person
+    "christmas", "holy week",  # other calendar terms GPT-2 might emit
 }
 
 # Used as fallback when the JCBlaise blocklist file is missing.

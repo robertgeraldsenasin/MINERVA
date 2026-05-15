@@ -36,7 +36,6 @@ Verdict = Literal["FAKE", "REAL", "UNCERTAIN"]
 DifficultyBin = Literal["easy", "medium", "hard"]
 ExplanationTier = Literal["novice", "proficient", "advanced"]
 
-# v2.6-final: CandidateCode used to be Literal["C-RM", "C-IB", "C-JS", "NONE"]
 # but the v2.6-final editable config (scripts/candidate_config.py) lets
 # the team rename codes (e.g. to C-A/C-B/C-C with common Filipino surnames
 # per Roozenbeek 2020 fictional-examples principle). We relax this to a
@@ -102,7 +101,6 @@ class IndicatorPhrase(BaseModel):
     phrase: str = Field(min_length=10, max_length=600)
     bank_ref: str = Field(description="bank slot id, e.g. 'EMO/v1/n3'")
     sift_move: str | None = None
-    # v2.9.6: response_bank_v2.json supplies these alongside the Tagalog phrase.
     # Adding them as optional fields fixes the v2.9.5 audit's "523 cards drop
     # as invalid_indicator" finding — actual error was `extra_forbidden` on
     # phrase_en and verifier_action. These are useful for the Unity layer
@@ -200,7 +198,6 @@ class UnityCard(BaseModel):
     @field_validator("text")
     @classmethod
     def _validate_text_complete(cls, v: str) -> str:
-        # v2.1: Lenient — only reject empty / degenerate text. The
         # truncation gate in script 13 already flags incomplete text;
         # the schema does not need to also reject it because real GPT-2
         # generations frequently lack a final period due to max_tokens

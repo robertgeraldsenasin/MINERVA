@@ -257,6 +257,50 @@ def main() -> None:
         "distilbert": _summarize("distilbert-base-multilingual-cased", distil_runs),
     }
 
+    # Refs: Liu et al. 2019 (RoBERTa: "median over five runs"); Lucic et al. 2022
+    # (ACL Reproducibility tutorial: report mean ± std AND significance).
+    try:
+        roberta_f1 = [float(r["test"]["f1"]) for r in roberta_runs]
+        distil_f1 = [float(r["test"]["f1"]) for r in distil_runs]
+        n = min(len(roberta_f1), len(distil_f1))
+        seed_stats: Dict[str, Any] = {
+            "n_seeds": n,
+            "roberta_test_f1_mean": float(statistics.mean(roberta_f1)) if roberta_f1 else None,
+            "roberta_test_f1_std": float(statistics.pstdev(roberta_f1)) if len(roberta_f1) > 1 else 0.0,
+            "distilbert_test_f1_mean": float(statistics.mean(distil_f1)) if distil_f1 else None,
+            "distilbert_test_f1_std": float(statistics.pstdev(distil_f1)) if len(distil_f1) > 1 else 0.0,
+        }
+        # Paired t-test only if we have ≥3 paired samples
+        if n >= 3:
+            try:
+                from scipy import stats as _stats
+                tstat, pval = _stats.ttest_rel(roberta_f1[:n], distil_f1[:n])
+                seed_stats["paired_ttest"] = {
+                    "t_statistic": float(tstat),
+                    "p_value": float(pval),
+                    "interpretation": (
+                        "RoBERTa significantly different from DistilBERT (p<0.05)"
+                        if pval < 0.05 else
+                        "No significant difference at alpha=0.05"
+                    ),
+                }
+            except ImportError:
+                seed_stats["paired_ttest"] = {
+                    "skipped": "scipy not installed; install scipy for paired t-test"
+                }
+        else:
+            seed_stats["paired_ttest"] = {
+                "skipped": f"Need >=3 seeds for paired t-test; got {n}"
+            }
+        summary["seed_stats"] = seed_stats
+
+        out_seed_stats = Path("reports") / "detector_seed_stats.json"
+        _write_json(out_seed_stats, seed_stats)
+        print("[OK] Wrote seed stats ->", out_seed_stats)
+    except Exception as e:
+        # Don't let stats failure break the run
+        print(f"[WARN] seed-stats computation failed: {e}")
+
     out_summary = Path("reports") / \
         f"detectors_5seed_summary_{args.run_id}.json"
     _write_json(out_summary, summary)

@@ -169,19 +169,19 @@ GRAPH_MID  = "<|graph=mid|>"
 GRAPH_LOW  = "<|graph=low|>"
 GRAPH_UNK  = "<|graph=unk|>"
 
-# QLattice symbolic confidence (NEW v2.6.final)
+# QLattice symbolic confidence
 QLAT_HIGH = "<|qlat=high|>"
 QLAT_MID  = "<|qlat=mid|>"
 QLAT_LOW  = "<|qlat=low|>"
 QLAT_UNK  = "<|qlat=unk|>"
 
-# Detector ensemble confidence (NEW v2.6.final)
+# Detector ensemble confidence
 ENSEM_HIGH = "<|ensem=high|>"
 ENSEM_MID  = "<|ensem=mid|>"
 ENSEM_LOW  = "<|ensem=low|>"
 ENSEM_UNK  = "<|ensem=unk|>"
 
-# Teaching difficulty tier (NEW v2.6.final)
+# Teaching difficulty tier
 # Inferred from QLattice margin: |p - 0.5| close to 0.5 → easy/advanced
 # (high model confidence → clear teachable case);
 # margin near 0 → novice (genuinely ambiguous; harder to teach without scaffolding).
@@ -288,7 +288,7 @@ def tier_from_margin(p_qlattice_fake: float | None, t_novice_max: float = 0.10,
     UPPER bound below which we DROP into 'advanced'; `t_proficient_max`
     is the upper bound below which we DROP into 'proficient'. Read as:
     "the maximum margin still considered novice-difficulty" is misleading —
-    the original code uses these as ordered thresholds. v2.8.6 percentile
+    the original code uses these as ordered thresholds. percentile
     binning supplies them dynamically from the actual margin distribution.
     """
     if p_qlattice_fake is None or pd.isna(p_qlattice_fake):
@@ -443,13 +443,11 @@ def build_corpus(
     t_proficient_max = 0.30
 
     # ----------------------------------------------------------------------
-    # v2.8.6: Percentile pre-pass.
     # The original fixed thresholds (0.6/0.8 for confidences, 0.10/0.30 for
     # margins) produced ~96% of training rows in the "high"/"novice" bins on
     # JCBlaise, because the dataset is well-separated and most predictions
     # land near 0 or 1. With ~96% imbalance, GPT-2 can't learn the control
     # tokens — there's no contrast.
-    #
     # When --bin_strategy=percentile (the v2.8.6 default), we replace those
     # fixed thresholds with the 33rd/67th percentile of the actual conf
     # distribution. That guarantees roughly 33/33/33 splits and gives the
@@ -483,7 +481,7 @@ def build_corpus(
         t_advanced_max, t_proficient_max = compute_percentile_margin_thresholds(
             margins_for_tier)
 
-        print("[v2.8.6 percentile binning] thresholds derived from "
+        print("[percentile binning] thresholds derived from "
               "actual data distribution:")
         print(f"  graph: low<{t_low_g:.4f}  mid<{t_high_g:.4f}  high>={t_high_g:.4f}")
         print(f"  qlat:  low<{t_low_q:.4f}  mid<{t_high_q:.4f}  high>={t_high_q:.4f}")
@@ -527,7 +525,7 @@ def build_corpus(
                          ENSEM_HIGH, ENSEM_MID, ENSEM_LOW, ENSEM_UNK)
         bin_counts["ensem"][ensem_tok.split("=")[1].rstrip("|>")] += 1
 
-        # Teaching tier from QLattice margin (v2.8.6 percentile-derived thresholds)
+        # Teaching tier from QLattice margin (percentile-derived thresholds)
         tier_tok = tier_from_margin(p_q_fake,
                                     t_novice_max=t_advanced_max,
                                     t_proficient_max=t_proficient_max)
@@ -739,7 +737,6 @@ def main() -> None:
         ],
     }
 
-    # v2.9.0: Audit assertion. If percentile binning is supposed to be active
     # but the dominant bin is still >70%, the conditioning will be unlearnable.
     # Print a loud warning so the panel sees it immediately.
     if report["bin_strategy"] == "percentile":

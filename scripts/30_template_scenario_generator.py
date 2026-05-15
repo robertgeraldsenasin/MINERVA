@@ -162,7 +162,6 @@ NEWS_PREFIXES = [
 # ===========================================================================
 # TEMPLATE INVENTORY — by tactic × archetype
 # ===========================================================================
-#
 # Format: {
 #   "tactic": str,                # one of 8 documented tactics
 #   "verdict": "FAKE"|"REAL"|"UNCERTAIN",
@@ -926,7 +925,6 @@ def main():
     rng = random.Random(args.seed)
 
     # Match each template definition to its eligible candidates
-    # v2.6-final: pull archetype→codes mapping from editable config.
     # If candidate_config is missing, fall back to legacy codes.
     try:
         import candidate_config as _cfg

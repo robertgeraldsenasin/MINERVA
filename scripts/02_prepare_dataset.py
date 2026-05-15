@@ -12,7 +12,6 @@ PROC_DIR.mkdir(parents=True, exist_ok=True)
 # Unified label convention for the whole project:
 # 1 = FAKE
 # 0 = REAL
-#
 # For Fake News Filipino on Hugging Face, the ClassLabel is commonly: 0=real, 1=fake.
 # Keep it configurable in case your exported CSV has labels flipped for any reason.
 JCBLAISE_ONE_MEANS_FAKE = True

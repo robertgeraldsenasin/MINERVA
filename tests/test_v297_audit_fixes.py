@@ -1,19 +1,4 @@
-"""Regression tests for v2.9.7 — closes the allowlist + faithfulness regressions
-that v2.9.6 exposed when GPT-2 cards first reached the final pool.
-
-The v2.9.6 run zip showed:
-  - strict_allowlist.json::pass_rate_pct = 96.54% (was 100% in v2.9.5; 23 cards rejected)
-  - faith.json::pass_rate = 85.24% (was 100% in v2.9.5; 98 cards flagged)
-
-v2.9.7 closes both:
-  - script 33: expanded _ALLOWED_ORGANIZATIONS with PH government / institutional
-    / geographic terms surfacing legitimately in GPT-2 output
-  - script 26: fixed the bank_ref regex loop bug + accept both new (v2.9-style)
-    and legacy bank_ref formats, plus accept codename-style bank_version stamps
-
-Run:
-    python -m pytest tests/test_v297_audit_fixes.py -v
-"""
+"""Regression tests for v2.9.7: bank_ref regex (legacy + v2.9 4-segment) and 25+ allowlist entries."""
 from __future__ import annotations
 
 import re

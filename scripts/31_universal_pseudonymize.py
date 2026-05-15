@@ -67,7 +67,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from minerva_candidates import REGISTRY
 
-# v2.6-final: pull canonical tokens from the editable config so that
 # editing scripts/candidate_config.py automatically updates the
 # pseudonymizer's allowlist. Falls back to legacy hard-coded tokens
 # if the config file isn't present (backward compat).
@@ -182,7 +181,6 @@ TAGALOG_SENTENCE_STARTS = {
     "Pinagtibay", "Niyyahura", "Bumagsa", "Kumakalat", "Lumalabas",
     "Ipinagmalaki", "Inilabas", "Idinaos", "Pinagtibay", "Nag",
     "Naglabas", "Sumusuporta", "Nagsasalita", "Naganap",
-    # v2.6-final additions (observed as Pattern-E false positives)
     "Lumitaw", "Naaresto", "Tila", "Tingnan", "Nilinaw",
     "Bumaba", "Tumaas", "Nakatanggap", "Sinasakyan",
     "Nasaktan", "Nahuli", "Nakuha", "Pinagtibay", "Nakaranas",
@@ -191,7 +189,6 @@ TAGALOG_SENTENCE_STARTS = {
     "Magbibigay", "Magpapatupad", "Inanunsyo", "Inilathala",
     "Tumutugon", "Sasalubungin", "Idinikit", "Pinasalamatan",
     "Pumiyok", "Pumiyaok", "Aniya",
-    # v2.6-final final sweep (residual false positives in 472-card pool)
     "Walang", "Lumalakas", "Umabot", "Sangkot", "Sila", "Saklaw",
     "Maaaring", "Nasa", "Tumukoy", "Kakailanganin", "Ipinost",
     "Ipinakita", "Tanging", "Iboto", "Kumalat", "Sambahan",
@@ -206,7 +203,6 @@ ENGLISH_FUNCTION = {
     "Was", "Were", "Will", "Be", "Have", "Has", "Had", "You", "They",
     "He", "She", "I", "My", "Your", "Our", "Their", "This", "That",
     "These", "Those", "When", "Where", "Why", "How", "Who", "What",
-    # v2.6-final additions
     "Some", "Any", "Many", "Most", "Few", "Each", "Every", "All",
     "After", "Before", "During", "Since", "Until", "While", "Though",
     "Although", "Because",
@@ -221,7 +217,6 @@ COMMON_WORDS = {
     "Oktubre", "Nobyembre", "Disyembre", "Enero", "Pebrero", "Abril",
     "Bgy", "Brgy", "Sec", "Inc", "Corp", "Department", "University",
     "Foundation", "Christmas", "Pasko",
-    # v2.6-final additions (observed common-noun false positives)
     "Vice", "Diyos", "Muslim", "Year", "Bill", "Live", "Branch",
     "Daily", "Valentine", "Bulletin", "Senado", "Palasyo", "Asya",
     "Asia", "Amerika", "Amerikano", "China", "Indonesia", "Thailand",
@@ -263,7 +258,6 @@ PLACE_NAMES = {
     "Zamboanga", "Cagayan", "General Santos", "San Juan", "City",
     "NCR", "CALABARZON", "Region", "Province", "Pope", "Papa",
     "Holy", "Father",
-    # v2.6-final additions
     "Marikina", "Paranaque", "Tuguegarao", "Taytay", "Olongapo",
     "Lucena", "Malabon", "Porac", "Malate", "Boracay", "Riyadh",
     "Jeddah", "Canada", "Pasadena", "Angeles", "Bangkal", "Calinan",
@@ -272,7 +266,6 @@ PLACE_NAMES = {
     "Leyte", "Catanduanes", "Sorsogon", "Albay", "Cotabato",
     "Sulu", "Basilan", "Tawi-Tawi", "Palawan", "Masbate",
     "Romblon", "Mindoro", "Marinduque",
-    # v2.6-final final sweep
     "Tagum", "Santos", "General",  # General Santos is a city
 }
 
@@ -522,7 +515,6 @@ def main():
     name_counts = {}
 
     for card in cards:
-        # v2.6-final: skip cards generated from templates — they are
         # clean by construction (only canonical names + generic
         # placeholders). The pseudonymizer's heuristics produce
         # FALSE POSITIVES on template cards because it doesn't know

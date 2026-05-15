@@ -166,19 +166,16 @@ REGISTRY: dict[str, Candidate] = {
 
 
 # ---------------------------------------------------------------------------
-# v2.6-final: rebuild REGISTRY from editable candidate_config.py
 # ---------------------------------------------------------------------------
 # The metadata above (party_name, policy_planks, indicator_weights,
 # counter_anchors, references) is bound to ARCHETYPES, not to specific
 # names. So if the team edits scripts/candidate_config.py and changes
 # C-RM/Marquez to C-A/Cruz (or anything else), we keep the rich
 # archetype-bound metadata intact and just update name fields.
-#
 # This implements the user's v2.6-final request:
 #   "the names generated will be either common names with the studies
 #    backing it and Focused to the three candidates (candidates a,b,c
 #    that's editable through code)"
-#
 # Backed by Roozenbeek & van der Linden (2019, 2020) on fictional
 # examples in inoculation games, and the Hainmueller et al. (2015)
 # vignette-experiment standard in political psychology.

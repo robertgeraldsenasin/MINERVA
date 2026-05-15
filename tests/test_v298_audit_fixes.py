@@ -1,26 +1,4 @@
-"""Regression tests for v2.9.8 — closes the final v2.9.7 regressions.
-
-After v2.9.7 the May-14 run zip showed:
-  - strict_allowlist.json::pass_rate_pct = 98.05% (13 new edge cases)
-  - faith.json::pass_rate = 87.52% (102 indicator_phrase_mismatch failures,
-    all from REAL-credibility cards whose phrases say "absence of X" but
-    the audit lexicon only recognized fake-credibility "presence of X" markers)
-
-v2.9.8 closes both:
-  - script 33: 13 more allowlist entries ("the president", "police district",
-    "chief gen", "politiko", etc.)
-  - script 26: GENERIC_REAL_MARKERS constant + extended INDICATOR_MENTIONS
-    with TL+EN real-credibility forms. _mentions_indicator() now accepts
-    a phrase if it matches EITHER indicator-specific markers OR generic
-    real-credibility markers.
-
-Simulated on the v2.9.7 run zip's data:
-  - Strict allowlist: all 13 edge cases now in _ALLOWED_ORGANIZATIONS
-  - Faithfulness: 102/102 indicator_phrase_mismatch failures now pass (100% recovery)
-
-Run:
-    python -m pytest tests/test_v298_audit_fixes.py -v
-"""
+"""Regression tests for v2.9.8: GENERIC_REAL_MARKERS for REAL-credibility cards in faithfulness audit."""
 from __future__ import annotations
 
 import sys

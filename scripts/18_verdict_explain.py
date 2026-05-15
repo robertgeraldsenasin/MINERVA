@@ -101,7 +101,6 @@ def _build_card_dict(
     if target_label not in ("fake", "real"):
         target_label = "fake"
 
-    # v2.1: read p_fake from any of the documented schemas
     p_fake_candidates = [
         raw_record.get("p_fake"),
         raw_record.get("fake_probability"),

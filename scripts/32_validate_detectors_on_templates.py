@@ -204,7 +204,6 @@ def main():
 
     report = {
         "ts": datetime.now(timezone.utc).isoformat(),
-        # v2.9.5: explicit caveat surfacing the audit-flagged tautology.
         # The pool was constructed by filtering on these same detectors'
         # consensus, so 100% accuracy here is mathematically guaranteed.
         # This is an internal-consistency check, not generalization F1.

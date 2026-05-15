@@ -69,7 +69,6 @@ def main():
     # Schema validation pass
     valid_cards: list[dict] = []
     invalid_count = 0
-    # v2.9.5: categorize schema-invalid reasons. v2.9.0 audit found 31.5%
     # of post-merge cards (~414/1314) drop here; this diagnostic surfaces
     # WHY without changing pass/fail behavior. Counts go into balance.json
     # so investigators can prioritize the most common failure mode.
@@ -87,7 +86,6 @@ def main():
                 # First "X validation error" line is the most useful signal
                 first_line = err_msg.split("\n")[0][:100]
                 # Coarse-grained category from pydantic error messages
-                # v2.9.6: added extra_forbidden detection (was the actual
                 # root cause of 523 drops in v2.9.5; misclassified as
                 # invalid_indicator by the v2.9.5 logic)
                 if "extra_forbidden" in err_msg or "Extra inputs are not permitted" in err_msg:
@@ -127,7 +125,6 @@ def main():
     n_fake = int(args.target_total * args.fake_real_ratio)
     n_real = int(args.target_total * (1 - args.fake_real_ratio) * 0.85)
     n_uncertain = args.target_total - n_fake - n_real
-    # v2.6-final: pull candidate codes from editable config so the
     # balance script picks up name swaps automatically. Falls back
     # to legacy hard-coded list if candidate_config is missing.
     try:
@@ -178,7 +175,6 @@ def main():
     report = {
         "input_total": len(raw),
         "schema_invalid_dropped": invalid_count,
-        # v2.9.5: surface WHY schema-invalid cards drop, addressing the
         # v2.9.0/v2.9.4 audit's 31.5% drop-rate question.
         "schema_invalid_by_reason": invalid_by_reason,
         "schema_invalid_examples_first10": invalid_examples,

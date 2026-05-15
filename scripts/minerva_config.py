@@ -42,7 +42,6 @@ from typing import List
 # Standard: 5 seeds (Liu et al. 2019 RoBERTa: "median over five runs").
 # Prime numbers chosen to avoid the 42 / small-integer cherry-picking risk
 # (Picard 2021, "torch.manual_seed(3407) is all you need").
-#
 # References:
 #   Liu, Y. et al. (2019). RoBERTa. arXiv:1907.11692
 #   Dodge, J. et al. (2020). Fine-Tuning Pretrained Language Models. arXiv:2002.06305
@@ -77,7 +76,6 @@ DEFAULT_DETECTOR_PATIENCE = 1  # detector usually converges by epoch 2
 # v2.8.7 ran 8 epochs and reached eval_loss=3.29 — better but still
 # decreasing. v2.9.3 keeps 8 as upper bound but adds early stopping
 # so we automatically stop if loss plateaus before epoch 8.
-#
 # Howard & Ruder 2018 ULMFiT: "fine-tune for 4-10 epochs depending on
 # task and dataset size" — JCBlaise post-pseudonymize is small enough
 # that 8 is the right ballpark.

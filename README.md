@@ -6,7 +6,13 @@ A Tagalog-language educational content pipeline that combines hybrid credibility
 
 [![tests](https://img.shields.io/badge/tests-311%20passed-brightgreen)]() [![python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)]() [![colab](https://img.shields.io/badge/runtime-Colab%20A100-orange)]() [![release](https://img.shields.io/badge/release-v2.9.9-blue)]() [![faithfulness](https://img.shields.io/badge/faithfulness-100%25-brightgreen)]() [![allowlist](https://img.shields.io/badge/allowlist-99.09%25-brightgreen)]()
 
+---
 
+## Citation
+
+> Lola, J. K. P., Salva, A. J. B., & Senasin, R. G. A. (2026). *M.I.N.E.R.V.A.: An Educational Electoral Rumor Detection Simulator using Symbolic Rule Engine via DE-GNN and Qlattice Symbolic Regression for SHS Misinformation Literacy.* B.S. Computer Science (Software Engineering) thesis. FEU Institute of Technology.
+
+---
 
 ## Thesis 2 scope (this repository)
 
@@ -112,7 +118,7 @@ This is documented transparently to avoid panel ambiguity. The graph component i
 │   ├── holdout_gpt2_labeled.csv            # 50-card scaffold (DEFERRED to external validators)
 │   └── holdout_gpt2_labeled.README.md
 ├── notebooks/
-│   ├── MINERVA_Run_Colab_v2.9.6.ipynb      # ← canonical (current)
+│   ├── MINERVA_Run_Colab.ipynb      # ← canonical (current)
 │   └── legacy/                             # historical reference; do not run
 │       ├── MINERVA_Run_Colab_v2.8.7.ipynb
 │       ├── MINERVA_Run_Colab_v2.9.0.ipynb
@@ -178,7 +184,7 @@ The 1 skipped test is `test_degnn_graph.py` skipping cleanly because torch isn't
 
 1. Open Colab → **File** → **Open notebook** → **GitHub** tab
 2. Repo: `robertgeraldsenasin/MINERVA` · Branch: `final_ver_branch`
-3. Pick `notebooks/MINERVA_Run_Colab_v2.9.6.ipynb` (the current canonical notebook)
+3. Pick `notebooks/MINERVA_Run_Colab.ipynb` (the current canonical notebook)
 4. **Runtime** → **Change runtime type** → **A100 GPU** + **High-RAM**
 5. **Runtime** → **Run all**
 6. ~30 minutes later, retrieve the artifacts via the final cells

@@ -25,6 +25,7 @@ from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
     DataCollatorWithPadding,
+    EarlyStoppingCallback,
     Trainer,
     TrainingArguments,
     set_seed,
@@ -283,6 +284,11 @@ def main() -> None:
         eval_dataset=ds_val,
         data_collator=collator,
         compute_metrics=compute_metrics,
+        # DistilBERT by epoch 3 on JCBlaise. patience=1 lets us stop within one
+        # epoch of the optimum without wasting GPU on plateaued training.
+        # Refs: Liu et al. 2019 (RoBERTa, "early stopping based on dev metric");
+        # Mosbach et al. 2021 (ICLR).
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=1)],
     )
     _tr_params = inspect.signature(Trainer.__init__).parameters
     if "processing_class" in _tr_params:

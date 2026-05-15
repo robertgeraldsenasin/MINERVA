@@ -53,116 +53,90 @@ def _load_cards_or_pool(path: str) -> list:
 # Indicator-mention dictionary: words that, if present in an explanation,
 # indicate the explanation is talking about that indicator.
 INDICATOR_MENTIONS = {
-    # v2.1 expanded lexicon — covers actual bank prose more thoroughly.
     # Each list contains lower-cased substrings; the audit fires if ANY
     # match appears in the explanation phrase for that indicator.
-    #
-    # v2.9.8: the v2.9.7 run revealed 102 indicator_phrase_mismatch failures
-    # all from REAL-credibility cards. The bank's real-credibility phrases say
-    # "no X detected" / "walang X" / "absence of X" — these ARE the correct
-    # indicator messages but the lexicon didn't recognize them. v2.9.8 adds:
-    #   - "magandang sign", "magandang signal" — generic positive markers
-    #   - "absence of <indicator>" English forms
-    #   - "walang <indicator>" Tagalog forms
-    #   - "malinis sa palatandaang ito" — generic "clean on this indicator"
-    #   - Indicator-name fragments that appear in the REAL bank entries
+    # Both FAKE-indicator markers ("share now", "no source") and
+    # REAL-credibility markers ("walang pressure", "absence of X") are
+    # included so REAL cards whose phrases describe absence of an
+    # indicator are correctly recognized.
     "EMO": ["emotion", "loaded", "heated", "betrayed", "anger", "feeling",
             "outraged", "scandalo", "manloloko", "sensation", "react",
             "bad news", "share without thinking", "designed to make",
-            # v2.9.8: REAL-credibility markers
             "balanced wording", "neutral", "no loaded", "walang loaded",
             "matter-of-fact tone", "absence of emotion"],
     "URG": ["urgency", "share now", "before it", "agad", "ngayon",
             "pressure", "all caps", "shouting", "panic", "act now",
             "deleted", "10 minutes", "in 10 min", "real news doesn",
             "skip checking", "bypass",
-            # v2.9.8: REAL-credibility markers
             "no pressure", "walang pressure", "calm", "confident reporting",
             "artificial deadline", "walang artificial",
             "not rushing", "hindi pinipilit", "no urgency"],
     "ANON": ["anonymous", "sources say", "insiders", "daw", "diumano",
             "hearsay", "unnamed", "no name", "second-hand",
             "name their source",
-            # v2.9.8: REAL-credibility markers
             "named source", "may pangalan", "attribut", "sources are named",
             "may pinanggagalingan", "may attribution"],
     "MISS": ["no link", "no document", "zero receipts", "missing",
             "no source", "no named source", "no url", "no evidence",
             "where would i check", "claim hangs",
             "big claim", "receipts",
-            # v2.2: catch the advanced-tier phrase
             "scores zero", "named-source", "external-link",
             "credibility-signals", "credibility signals",
             "w3c", "leite et al",
             "asymmetry", "bigger the claim",
             "single unverified", "low-credibility prior",
-            # v2.9.8: REAL-credibility markers
             "no missing", "walang missing", "may sourcing",
             "sourcing complete", "context complete",
             "absence of missing"],
     "FAB": ["fabricated", "quote", "transcript", "no video", "alleged",
             "trace to source", "primary transcript", "anyone could write",
             "treat as alleged",
-            # v2.9.8: REAL-credibility markers
             "no fabricated", "walang fabricated", "no fabrication",
             "walang fabrication", "no invented", "verified specifics",
             "absence of fabricated"],
     "POL": ["polariz", "us-vs-them", "real filipinos", "traitors",
             "in-group", "out-group", "us vs them", "us-vs", "tribal",
             "less than human",
-            # v2.6-final additions
             "us versus them", "divisive", "framing", "paghihiwalay",
             "manghahati", "lipunan", "elitistang",
-            # v2.9.8: REAL-credibility markers
             "no us-vs-them", "walang polariz", "no divisive",
             "even-handed", "balanced framing"],
     "CONS": ["conspirac", "secret", "cover-up", "they don't want you",
             "hidden", "cabal", "secret-cabal", "footprints", "unfalsifiable",
             "leaves footprints",
-            # v2.6-final additions
             "deep state", "lihim", "konspirasiya", "shadowy",
-            # v2.9.8: REAL-credibility markers
             "no conspiracy", "walang konspirasiya",
             "open evidence", "transparent claim"],
     "DISC": ["discredit", "personal attack", "ad hominem", "red-tag",
             "smear", "communist", "npa", "evidence", "set it aside",
             "attacks the person",
-            # v2.6-final additions
             "engaging with arguments", "engaging with their argument",
             "without engaging", "personal", "atake", "insulto",
             "without engaging with",
-            # v2.9.8: REAL-credibility markers
             "no personal attack", "walang atake",
             "engages substantively", "argument-focused"],
     "IMP": ["impersonat", "spoofed", "copy-cat", "fake outlet", "logo",
             "real news brand", "domain is wrong", "off by a letter",
             "borrow its credibility",
-            # v2.6-final additions
             "fake authority", "uses titles", "fake account",
             "pekeng", "nagpapanggap", "fake profile", "fake page",
-            # v2.9.8: REAL-credibility markers
             "no impersonation", "walang spoofing",
             "verified handle", "official source"],
     "REV": ["revisionism", "golden age", "historical", "rewriting",
             "martial law", "rewrites a historical period",
             "who benefits",
-            # v2.6-final additions
             "alternative narrative", "without sources",
             "ginintuang panahon", "binabago ang",
-            # v2.9.8: REAL-credibility markers
             "no revisionism", "walang revisionism",
             "no historical rewriting", "consistent with record"],
     "ENDO": ["survey", "endorsement", "85%", "manufactured", "polling firm",
             "sample size", "real surveys disclose", "graphic, not data",
             "without a polling firm",
-            # v2.6-final additions
             "claimed endorsement", "official statement",
             "without official",
-            # v2.9.8: REAL-credibility markers
             "no fabricated endorsement", "walang fake endorsement",
             "verified poll", "disclosed methodology"],
     "RECF": [
-            # v2.6-final REWRITTEN — RECF means "recycled content"
             # (old material reused/relabeled as new), not fabricated
             # credentials. The original lexicon was wrong.
             "recycled", "reshared", "reused", "old photo", "old video",
@@ -174,12 +148,10 @@ INDICATOR_MENTIONS = {
             "fabrication", "invented project", "fake award", "credential",
             "harvard", "nobel", "record", "official site or coa",
             "verifiable record", "voting record",
-            # v2.9.8: REAL-credibility markers
             "no recycled", "walang recycled", "fresh content",
             "current footage", "original posting"],
 }
 
-# v2.9.8: Generic positive-credibility phrases. If a card's phrase contains
 # ANY of these AND the card has target_label="real" (or verdict="REAL"), then
 # we treat the indicator-mention check as satisfied — the phrase is correctly
 # saying "absence of this indicator", which IS the right pedagogical message
@@ -252,7 +224,6 @@ def audit_card(card: dict) -> dict:
             })
 
     # Check 3: bank_ref well-formed and bank_version matches
-    # v2.9.7: bank_ref format in v2.9+ is <INDICATOR>/<role>/<tier>/v<digit>
     # (4-segment), e.g. "MISS/fake/novice/v0". The pre-v2.9 format was
     # <INDICATOR>/v<version>/<tier-letter><idx> e.g. "MISS/v1.0/n0".
     # Accept both — first the new format, then the legacy format as fallback.
@@ -269,7 +240,6 @@ def audit_card(card: dict) -> dict:
             })
 
     # Check 4: stamped bank_version matches current bank
-    # v2.9.7: cards may stamp the corpus codename ("v2.9.0", "v2.9.4", "v2.9.6")
     # while the bank file itself uses a semver-style version ("1.1"). Both refer
     # to the same canonical response_bank_v2.json. Accept either form.
     bv = expl.get("bank_version", "unknown")

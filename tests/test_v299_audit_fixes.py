@@ -1,30 +1,4 @@
-"""Regression tests for v2.9.9 — the final defense-readiness allowlist closure.
-
-The v2.9.8 May-14 run zip showed faithfulness at 100% (target achieved) and
-strict allowlist at 97.89% — 14 rejections, 3 of which were CORRECT safety
-blocks of real political-dynasty surnames (Aquino, Kiko/Pangilinan, Villar).
-The remaining 11 unknown_name rejections were generic terms that should be
-allowed.
-
-v2.9.9 closes the gap:
-  - script 33: 8 more allowlist entries covering generic role titles in
-    Tagalog (presidente, presidential), PNP unit names (intelligence group),
-    real news program titles (unang balita, 24 oras, tv patrol), Filipino
-    colloquial gendered terms (isang pinay, pinoy), and foreign nationalities
-    used adjectively (japanese, indonesia, korean — the persons themselves
-    are still Candidate A/B/C pseudonyms)
-  - templates/places_blocklist.txt: added "tondo" (Manila district that
-    GPT-2 references; place pseudonymizer script 35 will now catch it)
-
-Simulated on v2.9.8 run zip data:
-  - 11/11 unknown_name rejections recovered (now in allowlist)
-  - Tondo's 2 rejections will be pseudonymized by script 35 (added to blocklist)
-  - 3 blocklist matches remain (correctly — these are real dynasty names)
-  - Projected pass rate: 99.55% (target ≥99%)
-
-Run:
-    python -m pytest tests/test_v299_audit_fixes.py -v
-"""
+"""Regression tests for v2.9.9: allowlist closure (8 generic edge cases + tondo to places_blocklist)."""
 from __future__ import annotations
 
 import sys

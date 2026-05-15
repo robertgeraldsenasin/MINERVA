@@ -89,7 +89,6 @@ def main() -> None:
     p.add_argument("--per_device_batch", type=int, default=4)
     p.add_argument("--grad_accum", type=int, default=8)
     p.add_argument("--block_size", type=int, default=256)
-    # v2.9.5: seed default changed from 42 to 1729 per Picard (2021)
     # "torch.manual_seed(3407) is all you need". The seed 42 is over-represented
     # in published ML and creates a cherry-picking risk. 1729 is the
     # Hardy-Ramanujan number (= 7 * 13 * 19), used elsewhere in the project
@@ -164,7 +163,6 @@ def main() -> None:
                 "embedding rows are randomly initialized.", n_added)
 
     # 4. Build training datasets from text files.
-    # v2.8.5: Bypass `datasets.load_dataset("text", ...)` because it triggers
     # `NotImplementedError: Loading a dataset cached in a LocalFileSystem is
     # not supported` on `datasets >= 2.14` due to an inverted FS-type check
     # in `as_dataset()`. We just want to wrap two text files as Datasets;
@@ -237,7 +235,6 @@ def main() -> None:
         train_dataset=lm_ds["train"],
         eval_dataset=lm_ds["validation"],
         data_collator=collator,
-        # v2.9.3: EarlyStoppingCallback prevents overfitting if eval loss
         # plateaus before reaching --epochs. Combined with
         # load_best_model_at_end=True, this guarantees we keep the best
         # checkpoint even if later epochs degrade. patience=2 means we tolerate

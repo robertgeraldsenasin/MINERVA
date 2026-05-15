@@ -48,6 +48,20 @@ from typing import Any
 logger = logging.getLogger("minerva.merge_gpt2")
 
 
+# (single source of truth). Previously script 29 read it from response_bank_v2.json's
+# "version" key which was "v2.9.0", but the audit at scripts/26 checks against
+# the Python module's BANK_VERSION = "1.1" — causing 98 cards/run to fail
+# stale_bank_version on the v2.9.6 run.
+try:
+    import sys as _sys
+    _scripts_dir = str(Path(__file__).resolve().parent)
+    if _scripts_dir not in _sys.path:
+        _sys.path.insert(0, _scripts_dir)
+    from minerva_response_bank import BANK_VERSION as _BANK_VERSION_CONSTANT
+except Exception:  # pragma: no cover
+    _BANK_VERSION_CONSTANT = "1.1"  # fallback to known-good
+
+
 # ---------------------------------------------------------------------------
 # Pre-filter helpers
 # ---------------------------------------------------------------------------
@@ -246,7 +260,6 @@ def _build_indicator_details(named_features: dict, fired: list[str]) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# v2.9.0: Response bank loader + indicator-coverage filter
 # ---------------------------------------------------------------------------
 
 _RESPONSE_BANK: dict | None = None
@@ -310,12 +323,10 @@ def _pick_phrase_variant(bank: dict, key: str, idx_seed: int) -> dict | None:
     return variants[idx_seed % len(variants)]
 
 
-# v2.9.4: summary-intro variants rotated per card to fix the v2.9.0 diversity
 # regression. The v2.9.0 run produced only 38 unique explanation summaries
 # across 668 cards (5.4%) because the summary was deterministic given the
 # fired-indicator set — and most cards share similar indicator sets
 # (MISS+ANON dominate). Rotating the intro pushes diversity well above 30%.
-#
 # Each list has 5 variants. With card_idx rotating modulo 5, two cards with
 # identical indicator sets get different summaries 80% of the time.
 _SUMMARY_INTROS_FAKE = [
@@ -354,7 +365,6 @@ def _build_explanation(target_label: str, fired: list[str], tier: str,
     role = "fake" if target_label == "fake" else "real"
     sift_move = "STOP" if target_label == "fake" else "TRACE"
 
-    # v2.9.4: rotate the intro across 5 variants per label
     if target_label == "fake":
         summary_intro = _SUMMARY_INTROS_FAKE[card_idx % len(_SUMMARY_INTROS_FAKE)]
     else:
@@ -412,7 +422,7 @@ def _build_explanation(target_label: str, fired: list[str], tier: str,
         "indicator_phrases": indicator_phrases,
         "sift_move": sift_move,
         "credible_counter_card_id": None,
-        "bank_version": bank.get("version", "v2.9.0"),
+        "bank_version": _BANK_VERSION_CONSTANT,
     }
 
 
@@ -585,7 +595,6 @@ def merge(templates_path: Path,
                 })
                 continue
 
-            # v2.9.0: Indicator-coverage filter.
             # Determine which indicators would fire for this GPT-2 card,
             # then check the response bank can produce a phrase for each
             # (indicator × role × tier) combination. If not, drop the card —

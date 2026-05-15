@@ -1,14 +1,4 @@
-"""Regression tests for v2.9.5 audit-driven code fixes.
-
-These lock in:
-  - GPT-2 training default seed is non-42 (Picard 2021 fix)
-  - Scripts 35/37 stamp v2.9.4 (was v2.9.0)
-  - Script 21 emits schema-invalid categorization (was just a count)
-  - Script 32 emits the tautology caveat (was silent about it)
-
-Run:
-    python -m pytest tests/test_v295_audit_fixes.py -v
-"""
+"""Regression tests for v2.9.5: version stamps, Picard seed, schema diagnostics."""
 from __future__ import annotations
 
 import re

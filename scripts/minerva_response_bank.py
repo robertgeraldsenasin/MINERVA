@@ -379,7 +379,6 @@ BANK: dict[str, list[BankEntry]] = {
 
 # ---------------------------------------------------------------------------
 # Credible-card affirmations (Modirrousta-Galian & Higham 2023 mandate)
-# v2.2: phrasing rewritten to NOT make claims that the indicator extractor
 # may not actually verify (e.g. "verifiable date", "named outlet"). Instead
 # focus on the absence of misinformation cues — which is what we can
 # actually attest to from rule-based detection.

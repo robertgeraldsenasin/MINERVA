@@ -1,4 +1,4 @@
-"""Unit tests for v2.8.6 percentile binning in scripts/10b_prepare_gpt2_neurosymbolic.py.
+"""Unit tests for percentile binning in scripts/10b_prepare_gpt2_neurosymbolic.py.
 
 The original v2.6.final fixed thresholds (0.6/0.8) produced ~96% of training
 rows in the "high" bin on JCBlaise, because the detectors are well-separated

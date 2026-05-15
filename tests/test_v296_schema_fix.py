@@ -1,24 +1,4 @@
-"""Regression test for v2.9.6 audit-driven schema fix.
-
-The v2.9.5 final-run audit revealed that 523/1423 (37%) of post-merge cards
-drop at script 21's schema validation with reason "invalid_indicator". The
-v2.9.5 schema-invalid-by-reason diagnostic surfaced the categorization, but
-the underlying cause was actually `extra_forbidden` errors on
-`IndicatorPhrase.phrase_en` and `IndicatorPhrase.verifier_action` fields.
-
-The response_bank_v2.json supplies these fields alongside `phrase_tl`, and
-script 29 passes them through unchanged. The v2.9.6 fix adds them to the
-schema as optional fields.
-
-Confirmed simulation result on the v2.9.5 run zip's
-generated/template_plus_gpt2_cards.json:
-  Before fix: 900/1423 valid (63.3%) — 523 dropped
-  After fix:  1423/1423 valid (100.0%) — 0 dropped
-  Recovered ~37% of the pool, ALL of which were GPT-2 cards.
-
-Run:
-    python -m pytest tests/test_v296_schema_fix.py -v
-"""
+"""Regression tests for v2.9.6: IndicatorPhrase extra fields (phrase_en, verifier_action)."""
 from __future__ import annotations
 
 import sys
