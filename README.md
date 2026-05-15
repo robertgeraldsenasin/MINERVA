@@ -31,17 +31,7 @@ This repository delivers the **content-and-scoring pipeline plus the curated car
 7. Audits faithfulness (**100%** pass), strict allowlist (**99.09%** pass), and indicator coverage end-to-end.
 8. Draws **8 user-specific 56-card decks** for the downstream Unity game build.
 
----
 
-## A note on the "DE-GNN" naming (paper-to-code reconciliation)
-
-The thesis title uses **"DE-GNN"**. In context:
-
-- **Implementation** (`scripts/09_train_degnn.py`, `scripts/minerva_degnn.py`) is a **GraphSAGE** model trained over **dual-embedding features** (concatenated RoBERTa + DistilBERT PCA representations) plus calibrated detector probabilities, fed through a kNN similarity graph.
-
-For Thesis 2 scope, the operational meaning of "DE-GNN" in this codebase is **dual-embedding GraphSAGE on a kNN graph**.
-
----
 
 ## Repository layout
 
