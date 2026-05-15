@@ -1,41 +1,5 @@
 #!/usr/bin/env python3
-"""
-M.I.N.E.R.V.A. v2.9.0 — Script 35: Pseudonymize Philippine geographic entities
-
-Why this exists:
-  The v2.8.7 audit found 4 Philippine city names leaking into the final strict
-  allowlist report (Lapu-Lapu City ×5, Baguio City ×4, Pasay City ×1,
-  Metropolitan Manila ×2). These bypassed the existing pseudonymizer (script 31)
-  because that script only targets person-named entities. Place names are
-  politically meaningful in Philippine context (mentioning "Davao" carries
-  loaded political signal that defeats the candidate-A/B/C anonymization),
-  so they must be pseudonymized too.
-
-What it does:
-  1. Reads card text from a JSON array of cards.
-  2. Loads the place-name blocklist from templates/places_blocklist.txt.
-  3. For each match, replaces with a deterministic pseudonym from a parallel
-     scheme: cities → "City W/X/Y/Z", provinces → "Province L/M/N/O", regions
-     → "Region I/II/III/IV", landmarks → "[Landmark]".
-  4. Builds a per-card replacement map for audit and writes to a report.
-  5. The mapping is stable across cards in the same run so the same real city
-     always gets the same pseudonym (deterministic by --seed).
-
-Why a separate script (not a script 31 extension):
-  Script 31 calls minerva_privacy.pseudonymize_texts which uses NER for person
-  detection. Place names need a different mechanism (curated blocklist, not NER)
-  because Filipino place-name NER is unreliable for the smaller barangay/city
-  variants. Keeping it as a separate stage also makes the audit trail clearer:
-  the run report will show how many place-name replacements happened, which
-  the panel can audit directly.
-
-Run:
-  python scripts/35_pseudonymize_places.py \
-      --in_file generated/cards_pseudo.json \
-      --out_file generated/cards_pseudo_places.json \
-      --blocklist templates/places_blocklist.txt \
-      --report_out reports/pseudo_places.json
-"""
+"""Pseudonymize place names (260+ entry blocklist) across 6 geographic categories."""
 
 from __future__ import annotations
 
@@ -50,9 +14,7 @@ from pathlib import Path
 logger = logging.getLogger("minerva.pseudo_places")
 
 
-# ---------------------------------------------------------------------------
 # Pseudonym schemes — deterministic and parallel to "Candidate A/B/C"
-# ---------------------------------------------------------------------------
 
 CITY_POOL = ["City W", "City X", "City Y", "City Z", "City V", "City U",
              "City T", "City S", "City R", "City Q"]
@@ -93,9 +55,7 @@ _ISLAND_GROUPS = {"luzon", "visayas", "mindanao",
                   "visayan", "mindanaoan", "luzonian"}
 
 
-# ---------------------------------------------------------------------------
 # Loading the blocklist
-# ---------------------------------------------------------------------------
 
 def load_blocklist(path: Path) -> list[str]:
     """Load and return the entity list. Order matters: longer phrases first
@@ -151,9 +111,7 @@ def build_categories(blocklist: list[str]):
         ENTITY_CATEGORIES[e] = categorize(e)
 
 
-# ---------------------------------------------------------------------------
 # Replacement engine
-# ---------------------------------------------------------------------------
 
 def _make_pseudonym_resolver(seed: int = 1729):
     """Returns a closure that maps real entity → pseudonym, deterministic
@@ -218,9 +176,7 @@ def replace_in_text(text: str, pattern: re.Pattern, resolver) -> tuple[str, list
     return new_text, replacements
 
 
-# ---------------------------------------------------------------------------
 # Driver
-# ---------------------------------------------------------------------------
 
 def pseudonymize_cards(in_path: Path, out_path: Path,
                        blocklist_path: Path, report_path: Path,

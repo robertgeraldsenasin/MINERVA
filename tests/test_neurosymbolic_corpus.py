@@ -33,9 +33,7 @@ def _load_module():
 m = _load_module()
 
 
-# ============================================================
 # Bin function — bin3
-# ============================================================
 
 def test_bin3_high_value_returns_high():
     out = m.bin3(0.9, 0.6, 0.8, "HIGH", "MID", "LOW", "UNK")
@@ -74,9 +72,7 @@ def test_bin3_at_low_threshold_inclusive():
     assert out == "MID"
 
 
-# ============================================================
 # Tier mapping — tier_from_margin
-# ============================================================
 
 def test_tier_clear_case_is_novice():
     """A very confident model output (p_qlattice ~ 0.95) → easy
@@ -109,9 +105,7 @@ def test_tier_symmetric():
     assert fake_clear == real_clear == m.TIER_NOVICE
 
 
-# ============================================================
 # QLattice equation evaluator
-# ============================================================
 
 def test_evaluate_qlattice_simple_equation():
     """Evaluate a simple equation matching the existing pipeline shape."""
@@ -154,9 +148,7 @@ def test_evaluate_qlattice_empty_equation_returns_nan():
     assert np.all(np.isnan(out))
 
 
-# ============================================================
 # row_to_line — line format
-# ============================================================
 
 def test_row_to_line_label_fake():
     line = m.row_to_line(
@@ -191,9 +183,7 @@ def test_row_to_line_strips_newlines():
     assert "\n" not in line.split(m.TIER_UNK)[1]
 
 
-# ============================================================
 # Special token registry
-# ============================================================
 
 def test_all_special_tokens_count():
     """v2.6.final should declare exactly 18 special tokens:
@@ -213,9 +203,7 @@ def test_special_tokens_format():
         assert pat.match(tok), f"bad format: {tok!r}"
 
 
-# ============================================================
 # build_corpus — small end-to-end with synthetic inputs
-# ============================================================
 
 class _ArgsStub:
     """Minimal args stand-in for build_corpus."""

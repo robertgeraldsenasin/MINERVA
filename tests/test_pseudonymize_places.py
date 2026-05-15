@@ -38,9 +38,7 @@ def _load():
 m = _load()
 
 
-# ----------------------------------------------------------------------
 # Blocklist loading
-# ----------------------------------------------------------------------
 
 class TestBlocklistLoad:
     def test_loads_and_sorts_by_length_desc(self):
@@ -56,9 +54,7 @@ class TestBlocklistLoad:
             assert entry.strip() != ""
 
 
-# ----------------------------------------------------------------------
 # The 4 audit-reported leaks
-# ----------------------------------------------------------------------
 
 class TestAuditLeakedNames:
     """The v2.8.7 audit found these 4 names leaking. They MUST be caught."""
@@ -97,9 +93,7 @@ class TestAuditLeakedNames:
         assert reps[0][1] == "Capital Metro Area"
 
 
-# ----------------------------------------------------------------------
 # Determinism
-# ----------------------------------------------------------------------
 
 class TestDeterminism:
     def test_same_entity_same_pseudonym_within_run(self):
@@ -133,9 +127,7 @@ class TestDeterminism:
         assert cebu_pseudo != davao_pseudo
 
 
-# ----------------------------------------------------------------------
 # Categorization
-# ----------------------------------------------------------------------
 
 class TestCategorization:
     def test_known_cities_categorized_as_city(self):
@@ -160,9 +152,7 @@ class TestCategorization:
         assert m.categorize("metropolitan manila") == "metropolitan_area"
 
 
-# ----------------------------------------------------------------------
 # Word-boundary correctness
-# ----------------------------------------------------------------------
 
 class TestWordBoundaries:
     def test_does_not_match_substring_inside_word(self):
@@ -192,9 +182,7 @@ class TestWordBoundaries:
         assert reps[0][0] == "Metropolitan Manila"
 
 
-# ----------------------------------------------------------------------
 # End-to-end: pseudonymize_cards driver
-# ----------------------------------------------------------------------
 
 class TestEndToEnd:
     def test_processes_full_card_array_and_writes_report(self, tmp_path):
@@ -228,9 +216,7 @@ class TestEndToEnd:
         assert len(out_cards[0]["metadata"]["place_pseudonyms"]) == 1
 
 
-# ----------------------------------------------------------------------
 # Coverage: blocklist is comprehensive enough
-# ----------------------------------------------------------------------
 
 class TestCoverage:
     def test_all_17_regions_in_blocklist(self):

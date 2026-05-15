@@ -1,35 +1,5 @@
 #!/usr/bin/env python3
-"""
-33_strict_name_allowlist.py  -  v2.6.final
-
-POST-PIPELINE STRICT NAME-ALLOWLIST ENFORCER
-
-Per the user's v2.6.final decisions:
-  - Generic candidate naming only ("Candidate A/B/C")
-  - Add an explicit allowlist enforcer that blocks ANY non-allowed name
-
-This is the LAST LINE OF DEFENSE before cards reach the Unity game.
-After templates (script 25/30), after pseudonymization (scripts 22/31),
-after theme enforcement (script 23), after curation (script 24) - this
-script audits every card text and either:
-
-  1. REJECTS the card (if it contains person-like names not on the
-     candidate allowlist), or
-  2. REDACTS the foreign names with a placeholder, or
-  3. PASSES the card through (no foreign names found).
-
-CITATIONS
----------
-- Pilan, I., et al. (2022). The Text Anonymization Benchmark (TAB).
-  Computational Linguistics, 48(4), 1053-1101.
-- Yermilov, O., Raheja, V., & Chernodub, A. (2023). Privacy- and
-  Utility-Preserving NLP with Anonymized Data. EACL 2023.
-- Roozenbeek, J., & van der Linden, S. (2019). The fake news game.
-  Palgrave Communications, 5(1).
-- Cruz, J. C. B., Tan, J. A., & Cheng, C. K. (2020). Localization of
-  Fake News Detection via Multitask Transfer Learning. LREC 2020.
-- BATB_CompiledThesisPaper section 1.5 Limitation #2.
-"""
+"""Last-line safety gate: reject/redact cards containing entities not on the allowlist."""
 
 from __future__ import annotations
 

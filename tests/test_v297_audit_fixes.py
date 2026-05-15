@@ -1,4 +1,4 @@
-"""Regression tests for v2.9.7: bank_ref regex (legacy + v2.9 4-segment) and 25+ allowlist entries."""
+"""Regression tests for bank_ref regex (legacy + v2.9 4-segment) and 25+ allowlist entries."""
 from __future__ import annotations
 
 import re
@@ -12,12 +12,10 @@ def _read(path: str) -> str:
     return (REPO_ROOT / "scripts" / path).read_text(encoding="utf-8")
 
 
-# ----------------------------------------------------------------------
 # Fix #1 — script 33 allowlist expansion (closes 96.54% regression)
-# ----------------------------------------------------------------------
 
 class TestAllowlistExpansionV297:
-    """v2.9.6 audit final-run finding: 23 cards rejected for unknown entities.
+    """audit final-run finding: 23 cards rejected for unknown entities.
     v2.9.7 expands the allowlist to recognize the legitimate generic terms
     that GPT-2 produces."""
 
@@ -74,12 +72,10 @@ class TestAllowlistExpansionV297:
         assert "deped candidate" in allowed
 
 
-# ----------------------------------------------------------------------
 # Fix #2 — script 26 bank_ref regex (closes 85.24% faithfulness regression)
-# ----------------------------------------------------------------------
 
 class TestFaithfulnessAuditRegexV297:
-    """v2.9.6 audit found 320 malformed_bank_ref + 98 stale_bank_version
+    """audit found 320 malformed_bank_ref + 98 stale_bank_version
     issues, all due to script 26's regex being stuck on the pre-v2.9 format
     AND a loop-indentation bug that only validated the LAST ref per card."""
 
@@ -133,7 +129,7 @@ class TestFaithfulnessAuditRegexV297:
             assert pattern.match(ref), f"legacy format {ref!r} should still match"
 
     def test_codename_bank_version_accepted(self):
-        """v2.9.7: codename-style version stamps (v2.9.0, v2.9.6) should not
+        """codename-style version stamps (v2.9.0, v2.9.6) should not
         be flagged as stale when the bank uses semver internally."""
         src = _read("26_faithfulness_audit.py")
         assert "_CODENAME_RX" in src, "Codename-version reconciler must be present"

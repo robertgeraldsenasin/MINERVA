@@ -28,9 +28,7 @@ if str(SCRIPTS_DIR) not in sys.path:
 import minerva_config
 
 
-# ----------------------------------------------------------------------
 # Default values match published-paper protocols
-# ----------------------------------------------------------------------
 
 class TestDefaultsMatchPublishedProtocols:
     """The defaults are the v2.9.3 audit recommendations.
@@ -71,9 +69,7 @@ class TestDefaultsMatchPublishedProtocols:
         assert 4 <= minerva_config.DEFAULT_GPT2_EPOCHS <= 10
 
 
-# ----------------------------------------------------------------------
 # Environment-variable loading
-# ----------------------------------------------------------------------
 
 class TestEnvVarLoading:
     def test_seeds_override(self, monkeypatch):
@@ -107,9 +103,7 @@ class TestEnvVarLoading:
         assert cfg.train_seeds == minerva_config.DEFAULT_TRAIN_SEEDS
 
 
-# ----------------------------------------------------------------------
 # effective_batch property
-# ----------------------------------------------------------------------
 
 class TestEffectiveBatch:
     def test_8x4_equals_32(self):
@@ -125,9 +119,7 @@ class TestEffectiveBatch:
         assert cfg.effective_batch == 32
 
 
-# ----------------------------------------------------------------------
 # Hardware-aware sizing
-# ----------------------------------------------------------------------
 
 class TestGPUSizing:
     def test_a100_40gb_gpt2_batch(self):
@@ -158,9 +150,7 @@ class TestGPUSizing:
         assert ga > 1  # accumulation needed
 
 
-# ----------------------------------------------------------------------
 # Serialization for reports
-# ----------------------------------------------------------------------
 
 class TestSerialization:
     def test_to_dict_has_expected_keys(self):
@@ -186,9 +176,7 @@ class TestSerialization:
         assert "train_seeds" in s
 
 
-# ----------------------------------------------------------------------
 # CONFIG singleton present
-# ----------------------------------------------------------------------
 
 class TestConfigSingleton:
     def test_config_is_minerva_config_instance(self):

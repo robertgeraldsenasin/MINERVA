@@ -1,4 +1,4 @@
-"""Regression tests for v2.9.5: version stamps, Picard seed, schema diagnostics."""
+"""Regression tests for version stamps, Picard seed, schema diagnostics."""
 from __future__ import annotations
 
 import re
@@ -13,9 +13,7 @@ def _read(path: str) -> str:
     return (SCRIPTS_DIR / path).read_text(encoding="utf-8")
 
 
-# ----------------------------------------------------------------------
 # Fix #1 — GPT-2 training seed is non-42 (Picard 2021)
-# ----------------------------------------------------------------------
 
 class TestGPT2TrainingSeed:
     """GPT-2 fine-tune default seed must not be 42.
@@ -41,12 +39,10 @@ class TestGPT2TrainingSeed:
         assert m and int(m.group(1)) == 1729
 
 
-# ----------------------------------------------------------------------
 # Fix #2 + 3 — Version stamps in scripts 35 + 37
-# ----------------------------------------------------------------------
 
 class TestVersionStamps:
-    """v2.9.4 audit final-run report's LOW #6: scripts 35, 37 still stamp
+    """audit final-run report's LOW #6: scripts 35, 37 still stamp
     v2.9.0 while corpus + training + generation all stamp v2.9.4."""
 
     def test_script_35_stamps_v294(self):
@@ -64,12 +60,10 @@ class TestVersionStamps:
         assert '"version": "v2.9.4"' in src
 
 
-# ----------------------------------------------------------------------
 # Fix #4 — Schema-invalid categorization in script 21
-# ----------------------------------------------------------------------
 
 class TestSchemaInvalidDiagnostic:
-    """v2.9.4 audit MEDIUM #4: script 21 drops ~31.5% of cards as
+    """audit MEDIUM #4: script 21 drops ~31.5% of cards as
     schema-invalid but doesn't surface WHY. v2.9.5 categorizes the
     failure modes."""
 
@@ -108,12 +102,10 @@ class TestSchemaInvalidDiagnostic:
             )
 
 
-# ----------------------------------------------------------------------
 # Fix #5 — det.json tautology caveat in script 32
-# ----------------------------------------------------------------------
 
 class TestDetectorValidationCaveat:
-    """v2.9.4 audit MEDIUM #5: det.json shows 100% across all four detectors
+    """audit MEDIUM #5: det.json shows 100% across all four detectors
     because the pool was curated to detector consensus. v2.9.5 surfaces
     this caveat explicitly in the report dict."""
 

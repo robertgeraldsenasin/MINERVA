@@ -54,9 +54,7 @@ def _load_module():
 m = _load_module()
 
 
-# --------------------------------------------------------------------------
 # Fixture: a JCBlaise-shaped ZIP in memory
-# --------------------------------------------------------------------------
 
 def _build_fake_jcblaise_zip(rows: list[tuple[str, str]] | None = None,
                              inner_path: str = "fakenews/full.csv") -> bytes:
@@ -85,9 +83,7 @@ def _build_fake_jcblaise_zip(rows: list[tuple[str, str]] | None = None,
     return zip_buf.getvalue()
 
 
-# --------------------------------------------------------------------------
 # parse_zip_bytes_to_df
-# --------------------------------------------------------------------------
 
 class TestParseZipBytes:
     def test_parses_canonical_jcblaise_layout(self):
@@ -130,9 +126,7 @@ class TestParseZipBytes:
             m.parse_zip_bytes_to_df(zip_buf.getvalue())
 
 
-# --------------------------------------------------------------------------
 # _save_canonical
-# --------------------------------------------------------------------------
 
 class TestSaveCanonical:
     def test_renames_article_to_text(self, tmp_path, monkeypatch):
@@ -190,9 +184,7 @@ class TestSaveCanonical:
             m._save_canonical(df, source="test")
 
 
-# --------------------------------------------------------------------------
 # _try_tier_1_direct_zip — mocked urlopen
-# --------------------------------------------------------------------------
 
 class _FakeResponse:
     def __init__(self, content: bytes):
@@ -248,9 +240,7 @@ class TestTier1DirectZip:
         assert df is None
 
 
-# --------------------------------------------------------------------------
 # End-to-end via Tier 1 (mocked) and canonical save
-# --------------------------------------------------------------------------
 
 class TestEndToEndMocked:
     def test_full_flow_produces_valid_csv(self, tmp_path, monkeypatch):

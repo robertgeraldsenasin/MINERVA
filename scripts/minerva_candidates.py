@@ -1,38 +1,5 @@
-"""
-minerva_candidates.py
-=====================
-
-Three fictional candidate registry + archetype router that powers
-deterministic pseudonymisation across the M.I.N.E.R.V.A. pipeline.
-
-Design rationale
-----------------
-The legacy pipeline emitted random pseudonyms (e.g. "Candidate GQW",
-"Candidate DTQ", "Entity B") that were:
-  * Inconsistent across cards in the same story arc.
-  * Not connected to the three VERIdex profiles the game requires.
-  * Pedagogically pointless — students cannot study a candidate they
-    encounter under a different code each time.
-
-This module replaces that with:
-  * A FIXED REGISTRY of three study-backed archetypes drawn from
-    Arugay & Baquisal (2022), Schipper (2025), and Mendoza et al.
-    (2022, 2023) — the canonical Filipino electoral-disinformation
-    narrative families. The archetypes are CLEARLY FICTIONAL with
-    invented names, regions, parties, and platforms.
-  * A DETERMINISTIC ROUTER that maps any detected real-person
-    reference, or any ambient narrative cue in a post, to one of the
-    three codes (C-RM / C-IB / C-JS) by stable hash + archetype-cue
-    classifier. The same input always maps to the same code; the
-    same story-arc always uses the same code for the same character.
-  * SESSION-SCOPED CONSISTENCY so a card mentioning a politician
-    multiple times within one story uses the same code throughout.
-
-This satisfies:
-  * Thesis §3.2.2 (VERIdex module's three-candidate interface)
-  * Yermilov et al. (2023) consistency-preservation pseudonymisation
-  * Schipper (2025) ethical content-safety guidance
-"""
+#!/usr/bin/env python3
+"""Fictional candidate profile definitions and scenario builders."""
 
 from __future__ import annotations
 
@@ -45,9 +12,7 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
 # Registry
-# ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Candidate:
     code: str            # "C-RM", "C-IB", "C-JS"
@@ -165,8 +130,6 @@ REGISTRY: dict[str, Candidate] = {
 }
 
 
-# ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
 # The metadata above (party_name, policy_planks, indicator_weights,
 # counter_anchors, references) is bound to ARCHETYPES, not to specific
 # names. So if the team edits scripts/candidate_config.py and changes
@@ -230,9 +193,7 @@ except Exception as _e:
                    "falling back to legacy REGISTRY", _e)
 
 
-# ---------------------------------------------------------------------------
 # Archetype routing cues
-# ---------------------------------------------------------------------------
 # Cues drawn from the indicator-susceptibility profiles AND from
 # Filipino electoral discourse vocabulary. The router uses cue
 # co-occurrence, not single-keyword matching, to avoid mis-routing.
@@ -288,9 +249,7 @@ def archetype_for_text(text: str) -> Optional[str]:
     return best
 
 
-# ---------------------------------------------------------------------------
 # Deterministic candidate selection
-# ---------------------------------------------------------------------------
 def _stable_hash(s: str, salt: str = "minerva") -> int:
     h = hashlib.sha256((salt + "|" + s).encode("utf-8")).hexdigest()
     return int(h[:8], 16)
@@ -342,9 +301,7 @@ def candidate_for_text(
     return REGISTRY[chosen]
 
 
-# ---------------------------------------------------------------------------
 # Real-name detection (heuristic, NER-replaceable)
-# ---------------------------------------------------------------------------
 # These are well-known Filipino political surnames + titles that the
 # pipeline must pseudonymise. We deliberately do NOT include first
 # names alone (too many collisions). The list is intentionally small;
@@ -388,9 +345,7 @@ def detect_real_names(text: str) -> list[str]:
     return deduped
 
 
-# ---------------------------------------------------------------------------
 # Pseudonymisation
-# ---------------------------------------------------------------------------
 def pseudonymize(
     text: str,
     *,
@@ -434,9 +389,7 @@ def pseudonymize(
     return rewritten, chosen_code, names
 
 
-# ---------------------------------------------------------------------------
 # Self-test
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     samples = [

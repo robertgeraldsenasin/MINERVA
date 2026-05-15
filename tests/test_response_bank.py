@@ -33,9 +33,7 @@ def bank():
     return json.loads(BANK_PATH.read_text(encoding="utf-8"))
 
 
-# ----------------------------------------------------------------------
 # Schema
-# ----------------------------------------------------------------------
 
 class TestSchema:
     def test_top_level_keys(self, bank):
@@ -59,9 +57,7 @@ class TestSchema:
                 assert v["phrase_tl"], f"key {key}: empty phrase_tl"
 
 
-# ----------------------------------------------------------------------
 # Quantity
-# ----------------------------------------------------------------------
 
 class TestQuantity:
     def test_at_least_200_entries(self, bank):
@@ -78,9 +74,7 @@ class TestQuantity:
         assert len(bank["phrases"]) >= 72
 
 
-# ----------------------------------------------------------------------
 # Diversity (audit recommendation: ≥30% unique)
-# ----------------------------------------------------------------------
 
 class TestDiversity:
     def test_unique_tl_phrase_ratio(self, bank):
@@ -105,9 +99,7 @@ class TestDiversity:
             )
 
 
-# ----------------------------------------------------------------------
 # Coverage: every indicator × role × tier we expect to use
-# ----------------------------------------------------------------------
 
 class TestCoverage:
     def test_covers_all_paper_indicators(self, bank):
@@ -134,9 +126,7 @@ class TestCoverage:
             assert f"CREDIBLE/fake/{tier}" not in keys
 
 
-# ----------------------------------------------------------------------
 # Integration with script 29
-# ----------------------------------------------------------------------
 
 class TestScript29Integration:
     def test_merge_module_loads_bank(self, monkeypatch):
@@ -212,7 +202,7 @@ class TestScript29Integration:
         )
 
     def test_summary_diversity_across_cards_v294(self):
-        """v2.9.4 regression test: pool.json measures diversity by counting
+        """regression test: pool.json measures diversity by counting
         unique explanation.summary strings. Without summary-intro rotation,
         cards with the same fired-indicator set get byte-identical summaries
         and pool diversity collapses to ~5% (the v2.9.0 regression bug).

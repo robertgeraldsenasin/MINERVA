@@ -39,9 +39,7 @@ def _load():
 m = _load()
 
 
-# ----------------------------------------------------------------------
 # compute_binary_metrics — match sklearn semantics
-# ----------------------------------------------------------------------
 
 class TestBinaryMetrics:
     def test_perfect_predictions(self):
@@ -108,9 +106,7 @@ class TestBinaryMetrics:
         assert r["accuracy"] == 1/3
 
 
-# ----------------------------------------------------------------------
 # Holdout CSV loader
-# ----------------------------------------------------------------------
 
 class TestHoldoutLoader:
     def test_loads_basic_csv(self, tmp_path):

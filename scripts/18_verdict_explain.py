@@ -1,40 +1,5 @@
 #!/usr/bin/env python3
-"""
-18_verdict_explain.py  (REFACTORED v2.0)
-========================================
-
-Convert scored generations into Unity cards with content-aware,
-varied, faithful explanations.
-
-WHAT CHANGED FROM v1
---------------------
-Legacy v1 (current repo):
-  Every card got the same template: "Verdict: REAL/FAKE … The decision
-  comes from the stored Qlattice equation applied to detector/embedding
-  features." Per-card variation was zero. Signals were PCA-component
-  jargon ("RoBERTa semantic component 0 deviates from baseline") that
-  no SHS student can learn from. The 992-card unity_cards.json had 992
-  identical explanation summaries — modulo the verdict word.
-
-v2.0 changes:
-  * Indicator extraction (12-cue taxonomy) replaces PCA-component prose.
-  * Response bank (56 entries, 3 tiers) replaces single template.
-  * Explanation is content-aware: only fired indicators get phrased.
-  * Each card carries fired_indicators + bank_refs for audit.
-  * Output validates against UnityCard pydantic schema.
-
-PIPELINE POSITION
------------------
-Reads:  generated/gpt2_synthetic_final_{fake,real,both}.jsonl
-Writes: generated/unity_cards.json
-Next:   21_balance_unity_cards.py
-
-CITATIONS (defended in MASTER_CODEBOOK.md):
-  Barzilai & Stadtler (2025); Khosravi et al. (2022); Athira et al.
-  (2023); Longo et al. (2024); Liu, Ye & Li (2024); Roozenbeek &
-  van der Linden (2019); Caulfield (2019); Modirrousta-Galian &
-  Higham (2023); Christensen et al. (2022).
-"""
+"""Build per-card explanation strings from indicator codes and the response bank."""
 
 from __future__ import annotations
 

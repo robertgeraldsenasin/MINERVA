@@ -1,4 +1,4 @@
-"""Regression tests for v2.9.10: optional polish — 5 generic agency/calendar terms."""
+"""Regression tests for optional polish — 5 generic agency/calendar terms."""
 from __future__ import annotations
 
 import sys

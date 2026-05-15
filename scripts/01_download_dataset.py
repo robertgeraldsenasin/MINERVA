@@ -1,41 +1,5 @@
 #!/usr/bin/env python3
-"""
-M.I.N.E.R.V.A. v2.8.2 — Script 01: Download JCBlaise Fake News Filipino dataset.
-
-Strategy (revised after three failed `datasets`-library attempts):
-
-  Tier 1: Direct ZIP download from HuggingFace (NEW — primary path)
-          The dataset's HF loader script (fake_news_filipino.py) does
-          exactly one thing: download `fakenews.zip` and read
-          `fakenews/full.csv` from inside it. We do that ourselves,
-          stdlib-only (urllib + zipfile).
-
-  Tier 2: `datasets.load_dataset(..., trust_remote_code=True)` (FALLBACK)
-          Kept in case Tier 1's URL ever moves. Failed in v2.8/v2.8.1
-          on Colab with a gzip UnicodeDecodeError caused by version
-          drift between the loader script and modern `datasets ≥2.14`.
-
-  Tier 3: Generic compressed-blob handler
-          If Tier 1's URL one day starts serving .gz instead of .zip,
-          this tier sniffs the magic bytes and decompresses accordingly.
-
-The dataset is small (~1.3 MB, 3,206 rows). No reason to fight version
-mismatches in `datasets` for a file this size.
-
-Citation:
-  Cruz, J. C. B., Tan, J. A., & Cheng, C. K. (2020).
-  Localization of Fake News Detection via Multitask Transfer Learning.
-  LREC 2020. https://aclanthology.org/2020.lrec-1.316/
-
-Loader script reference (verified 2026-05-05):
-  https://huggingface.co/datasets/jcblaise/fake_news_filipino/raw/main/fake_news_filipino.py
-
-  _URL = "https://huggingface.co/datasets/jcblaise/fake_news_filipino/resolve/main/fakenews.zip"
-  Inside the zip: fakenews/full.csv with columns ["label", "article"], csv.QUOTE_ALL.
-
-Output:
-  data/raw/jcblaise.csv  (canonical CSV the rest of the pipeline reads)
-"""
+"""Download the JCBlaise Filipino fake-news dataset from HuggingFace into data/raw/."""
 
 from __future__ import annotations
 
@@ -68,9 +32,7 @@ RAW_DIR = Path("data/raw")
 RAW_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# ----------------------------------------------------------------------
 # Banner / canonical-save helpers
-# ----------------------------------------------------------------------
 
 def _print_banner() -> None:
     print("=" * 60)
@@ -118,9 +80,7 @@ def _save_canonical(df: pd.DataFrame, source: str) -> Path:
     return out_path
 
 
-# ----------------------------------------------------------------------
 # Tier 1 — direct ZIP download, stdlib only (PRIMARY)
-# ----------------------------------------------------------------------
 
 def parse_zip_bytes_to_df(zip_bytes: bytes,
                           inner_csv: str = JCBLAISE_INNER_CSV) -> pd.DataFrame:
@@ -216,9 +176,7 @@ def _try_tier_1_direct_zip() -> Optional[pd.DataFrame]:
         return None
 
 
-# ----------------------------------------------------------------------
 # Tier 2 — datasets library (kept as fallback)
-# ----------------------------------------------------------------------
 
 def _datasetdict_to_df(ds, source: str) -> pd.DataFrame:
     """Convert a DatasetDict (or single Dataset) to a pandas DataFrame."""
@@ -257,9 +215,7 @@ def _try_tier_2_datasets_lib() -> Optional[pd.DataFrame]:
         return None
 
 
-# ----------------------------------------------------------------------
 # Tier 3 — generic compressed-blob handler (last resort)
-# ----------------------------------------------------------------------
 
 def _try_tier_3_gzip_or_unknown() -> Optional[pd.DataFrame]:
     """Tier 3: re-fetch the URL and try to decompress as gzip / tar.gz.
@@ -300,9 +256,7 @@ def _try_tier_3_gzip_or_unknown() -> Optional[pd.DataFrame]:
         return None
 
 
-# ----------------------------------------------------------------------
 # Main
-# ----------------------------------------------------------------------
 
 def main() -> None:
     _print_banner()

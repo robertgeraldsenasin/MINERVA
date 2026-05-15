@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Generic transformer-classifier training driver used by scripts 04 and 05."""
+
 from __future__ import annotations
 
 import argparse
@@ -239,12 +242,10 @@ def main() -> None:
 
     use_fp16 = bool(args.fp16 and torch.cuda.is_available())
 
-    # ------------------------------------------------------------------
     # TrainingArguments — version-compatible build.
     # transformers 4.46+ renamed `evaluation_strategy` → `eval_strategy`.
     # We inspect the actual signature and use whichever name is accepted.
     # This works on transformers 4.33 through current.
-    # ------------------------------------------------------------------
     ta_kwargs = dict(
         output_dir=out_dir,
         logging_dir=log_dir,
@@ -272,11 +273,9 @@ def main() -> None:
         ta_kwargs["evaluation_strategy"] = "epoch"     # transformers <4.46
     train_args = TrainingArguments(**ta_kwargs)
 
-    # ------------------------------------------------------------------
     # Trainer — version-compatible build.
     # transformers 4.46+ renamed `tokenizer` → `processing_class` on
     # Trainer.__init__. We detect which name is accepted.
-    # ------------------------------------------------------------------
     trainer_kwargs = dict(
         model=model,
         args=train_args,

@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Test-set evaluation across all seeds; emit detectors_5seed_summary report."""
+
 from __future__ import annotations
 
 import argparse

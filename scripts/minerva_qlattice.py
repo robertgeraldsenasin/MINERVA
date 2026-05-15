@@ -1,8 +1,5 @@
-"""Qlattice equation helpers for MINERVA.
-
-Safe evaluation of Feyn/Qlattice expressions with feature-name aliasing
-(e.g., r_pca_0 <-> rpca0) and a restricted math whitelist.
-"""
+#!/usr/bin/env python3
+"""QLattice equation parsing, evaluation, and serialization utilities."""
 
 from __future__ import annotations
 
@@ -14,7 +11,6 @@ import numpy as np
 import pandas as pd
 
 
-# -----------------------------------------------------------------------------
 # Safe math
 
 
@@ -48,7 +44,6 @@ SAFE_FUNCS: Dict[str, Any] = {
 }
 
 
-# -----------------------------------------------------------------------------
 # Name handling
 
 
@@ -106,7 +101,6 @@ def build_feature_locals(df: pd.DataFrame) -> LocalsBundle:
     return LocalsBundle(locals=local_vars, alias_to_source=alias_to_source)
 
 
-# -----------------------------------------------------------------------------
 # Evaluation
 
 

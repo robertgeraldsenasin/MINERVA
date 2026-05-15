@@ -1,39 +1,5 @@
 #!/usr/bin/env python3
-"""
-M.I.N.E.R.V.A. v2.8.7 — Script 29: Merge GPT-2 neuro-symbolic cards into the
-                                    template card stream
-
-The pipeline before v2.8.7 had a structural gap: scripts 12b/13 produced
-GPT-2 cards in `generated/gpt2_neuro_final_*.jsonl`, but no script ever
-merged them into the template stream. Cell 37 of the notebook reads
-`generated/template_cards.json` directly into pseudonymize, so any GPT-2
-contributions were stranded. v2.8.7 closes the gap with this script.
-
-What it does:
-
-  1. Read template_cards.json (the templates).
-  2. Read gpt2_neuro_final_fake.jsonl + gpt2_neuro_final_real.jsonl
-     (the post-scoring survivors from script 13).
-  3. Pre-filter GPT-2 cards:
-       - Drop cards with truncation_flag = True (mid-sentence cutoffs)
-       - Drop cards mentioning any "Candidate X" code outside {A,B,C}
-         (these would just fail script 33's strict allowlist anyway)
-       - Drop cards that contain NO candidate reference at all (no place
-         in the candidate-themed pool)
-       - Drop empty/very-short text
-  4. Transform each surviving GPT-2 card to the template-card schema, using
-     the GPT-2 model's own real-valued p_fake, detector scores, and named
-     features instead of the templates' synthetic stub values. The card
-     ends up indistinguishable in shape from a template card to scripts
-     31/23/24/33 downstream, but its provenance.source field reads
-     "gpt2_neurosymbolic" so it can be audited as GPT-2-derived.
-  5. Append survivors to the template list and write the merged file.
-  6. Write a merge report with per-stage counts so the panel can audit
-     "templates: N, GPT-2 attempted: M, GPT-2 surviving merge: K".
-
-This is the script that finally lets us answer "show me a card GPT-2
-contributed to the pool."
-"""
+"""Merge GPT-2 candidates with template-generated cards into the combined pool."""
 
 from __future__ import annotations
 
@@ -62,9 +28,7 @@ except Exception:  # pragma: no cover
     _BANK_VERSION_CONSTANT = "1.1"  # fallback to known-good
 
 
-# ---------------------------------------------------------------------------
 # Pre-filter helpers
-# ---------------------------------------------------------------------------
 
 # Match "Candidate X" or "Candidate XY..." (1+ uppercase letters/digits after
 # Candidate). The captured group is the code following "Candidate ".
@@ -210,9 +174,7 @@ def passes_quality_filter(card: dict, min_chars: int = 80,
     return True, "" if status == "ok" else f"recovered:{status}", recovered
 
 
-# ---------------------------------------------------------------------------
 # Schema mapping: GPT-2 jsonl card → template-card shape
-# ---------------------------------------------------------------------------
 
 def _verdict_from_pfake(p_fake: float) -> str:
     """Mirror the verdict logic the rest of the pipeline uses (threshold 0.5
@@ -258,9 +220,6 @@ def _build_indicator_details(named_features: dict, fired: list[str]) -> dict:
         }
     return out
 
-
-# ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
 
 _RESPONSE_BANK: dict | None = None
 _RESPONSE_BANK_PATH = "templates/response_bank_v2.json"
@@ -514,9 +473,7 @@ def gpt2_card_to_template_shape(g: dict, idx: int) -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
 # Driver
-# ---------------------------------------------------------------------------
 
 def _read_jsonl(path: Path) -> list[dict]:
     """Stream-read a JSONL file. Returns [] for missing paths."""

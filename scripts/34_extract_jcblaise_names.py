@@ -1,31 +1,5 @@
 #!/usr/bin/env python3
-"""
-34_extract_jcblaise_names.py  -  v2.6.final
-
-Downloads the JCBlaise Fake News Filipino dataset (Cruz, Tan, Cheng 2020)
-from HuggingFace and extracts every person-like name appearing in it.
-Writes a blocklist file that script 33 reads at runtime.
-
-USAGE
------
-  # Online
-  python scripts/34_extract_jcblaise_names.py \\
-      --out_file templates/jcblaise_real_names_blocklist.txt \\
-      --report_out reports/jcblaise_extraction.json \\
-      --min_count 3
-
-  # Offline (from cached CSV)
-  python scripts/34_extract_jcblaise_names.py \\
-      --cached data/raw/jcblaise_fake_news_filipino_train.csv \\
-      --out_file templates/jcblaise_real_names_blocklist.txt
-
-CITATIONS
----------
-- Cruz, J. C. B., Tan, J. A., & Cheng, C. K. (2020). Localization of
-  Fake News Detection via Multitask Transfer Learning. LREC 2020.
-- Pilan et al. (2022). The Text Anonymization Benchmark.
-  Computational Linguistics, 48(4).
-"""
+"""Extract real-name surface forms from the JCBlaise training corpus into a blocklist."""
 
 from __future__ import annotations
 

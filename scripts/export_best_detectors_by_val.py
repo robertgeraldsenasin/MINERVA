@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Select the best-by-validation seed for each detector; export to inference-ready model dirs."""
+
 from __future__ import annotations
 
 import argparse

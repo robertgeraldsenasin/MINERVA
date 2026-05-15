@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""TF-IDF + LogReg baseline for reference comparison."""
+
 from __future__ import annotations
 
 import argparse

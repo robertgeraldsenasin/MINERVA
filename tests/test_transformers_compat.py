@@ -16,9 +16,7 @@ from __future__ import annotations
 import inspect
 
 
-# ----------------------------------------------------------------------
 # Fake "old API" (transformers <4.46) — uses evaluation_strategy + tokenizer
-# ----------------------------------------------------------------------
 
 class _OldTrainingArguments:
     def __init__(self, output_dir=None, evaluation_strategy=None,
@@ -42,9 +40,7 @@ class _OldTrainer:
         self.compute_metrics = compute_metrics
 
 
-# ----------------------------------------------------------------------
 # Fake "new API" (transformers 4.46+) — uses eval_strategy + processing_class
-# ----------------------------------------------------------------------
 
 class _NewTrainingArguments:
     def __init__(self, output_dir=None, eval_strategy=None,
@@ -68,9 +64,7 @@ class _NewTrainer:
         self.compute_metrics = compute_metrics
 
 
-# ----------------------------------------------------------------------
 # The shim being tested — same logic as in scripts/16 and scripts/11b
-# ----------------------------------------------------------------------
 
 def build_training_args(TrainingArgumentsCls, **kwargs):
     """Replicate the shim used in scripts 16 and 11b."""
@@ -92,9 +86,7 @@ def build_trainer(TrainerCls, tokenizer_obj, **kwargs):
     return TrainerCls(**kwargs)
 
 
-# ----------------------------------------------------------------------
 # Tests against the OLD API
-# ----------------------------------------------------------------------
 
 class TestOldTransformersAPI:
     def test_uses_evaluation_strategy_on_old(self):
@@ -127,9 +119,7 @@ class TestOldTransformersAPI:
         assert ta.evaluation_strategy == "epoch"
 
 
-# ----------------------------------------------------------------------
 # Tests against the NEW API
-# ----------------------------------------------------------------------
 
 class TestNewTransformersAPI:
     def test_uses_eval_strategy_on_new(self):
@@ -160,9 +150,7 @@ class TestNewTransformersAPI:
         assert not hasattr(ta, "evaluation_strategy") or ta.evaluation_strategy is None
 
 
-# ----------------------------------------------------------------------
 # Sanity: real script files contain the shim
-# ----------------------------------------------------------------------
 
 class TestShimPresentInScripts:
     """Verify the actual scripts have the shim, in case a future edit removes it."""

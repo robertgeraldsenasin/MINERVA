@@ -1,44 +1,5 @@
 #!/usr/bin/env python3
-"""
-13_score_generated_with_qlattice.py  (REFACTORED v2.1)
-======================================================
-
-Score GPT-2-generated candidate posts and route them onward to
-script 18 with a sane probabilistic verdict.
-
-WHAT CHANGED FROM v2.0
-----------------------
-v2.0 had two real bugs that made it drop ~94% of valid GPT-2
-generations on real data:
-  1. It looked for ``rec["detectors"]["p_ensemble_fake"]`` but
-     script 12 emits ``p_roberta_fake``, ``p_distil_fake``,
-     ``p_degnn_fake`` at the TOP LEVEL of each record. Result:
-     every record ended up with p_fake=0.5 → UNCERTAIN.
-  2. The truncation gate rejected any text that did not end on
-     terminal punctuation. Real GPT-2 generations from script 12
-     frequently end mid-sentence because of the
-     ``--max_new_tokens 120`` cap. Result: ~94% rejection.
-
-v2.1 fixes both:
-  * Reads ``p_*_fake`` from the top level (script 12's actual
-    schema) and falls back to nested ``detectors.*`` for
-    forward-compat.
-  * Computes ``p_ensemble_fake`` as the mean of available detector
-    probabilities so script 18 has a sane verdict signal.
-  * Truncation gate is now LENIENT: it logs a warning + flag in
-    the record, but does not drop unless the text is empty or
-    obviously degenerate (<30 chars, dangling Tagalog/English
-    function word at the very end).
-  * Schema-friendly: passes through r_pca_*, d_pca_* embeddings.
-  * Accepts BOTH the new (--in_file/--out_file) and legacy
-    (--in_jsonl/--out_final) CLIs so old notebooks keep working.
-
-PIPELINE POSITION
------------------
-Reads:  generated/gpt2_synthetic_samples_{fake,real}.jsonl
-Writes: generated/gpt2_synthetic_final_{fake,real}.jsonl
-Next:   script 18.
-"""
+"""Score generated candidates with the QLattice equation; drop low-confidence and out-of-policy."""
 
 from __future__ import annotations
 

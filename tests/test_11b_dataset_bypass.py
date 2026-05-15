@@ -21,11 +21,9 @@ datasets = pytest.importorskip("datasets")
 from datasets import Dataset, DatasetDict
 
 
-# ----------------------------------------------------------------------
 # The function under test — copied from script 11b's v2.8.5 code path
 # (the script uses it inline; we duplicate here so the test doesn't need
 # to import a numbered script as a module).
-# ----------------------------------------------------------------------
 
 def _read_lines(path: Path) -> list:
     with open(path, "r", encoding="utf-8") as f:
@@ -39,9 +37,7 @@ def build_in_memory_datasetdict(train_file: Path, val_file: Path) -> DatasetDict
     })
 
 
-# ----------------------------------------------------------------------
 # Fixtures — corpus files shaped exactly like script 10b emits
-# ----------------------------------------------------------------------
 
 NEURO_LINES_TRAIN = textwrap.dedent("""\
     <|label=fake|> <|graph=high|> <|qlat=high|> <|ensem=high|> <|tier=novice|> Halimbawa ng pekeng balita tungkol sa eleksyon.
@@ -65,9 +61,7 @@ def neuro_corpus(tmp_path):
     return train, val
 
 
-# ----------------------------------------------------------------------
 # Tests
-# ----------------------------------------------------------------------
 
 class TestInMemoryDatasetBypass:
     def test_returns_datasetdict_with_train_and_validation(self, neuro_corpus):

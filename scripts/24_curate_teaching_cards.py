@@ -1,51 +1,5 @@
 #!/usr/bin/env python3
-"""
-24_curate_teaching_cards.py  (REFACTORED v2.3)
-==============================================
-
-Produce a curated POOL of teaching cards. The Unity client (or the
-companion script 28) draws a per-user deck from this pool at runtime.
-
-WHAT CHANGED FROM v2.0/v2.1/v2.2
---------------------------------
-v2.0-v2.2 produced a single fixed deck (DAYS x CARDS_PER_DAY = 56
-cards) that every player would see in the same order. Two problems:
-
-  1. NO DYNAMIC CONTENT. Every Filipino SHS student would see the
-     same 56 cards in the same order. Educational integrity collapses
-     - students could share screenshots/answers.
-
-  2. NO RESEARCH POWER. The thesis evaluation depends on per-user
-     decision data. If two students see identical decks, their
-     decisions are not independent observations.
-
-v2.3 separates two concerns:
-
-  * SCRIPT 24 (this file): builds the POOL. Validates each card
-    against schema, balances across all dimensions, but DOES NOT
-    assign cards to days. Output is `unity_cards_pool.json`.
-
-  * SCRIPT 28 (NEW): the per-user draw. Given a user_id (or seed),
-    deterministically samples a 56-card deck from the pool with
-    quotas (>=3 REAL/day, >=1 of each candidate/day, indicator
-    diversity). Output is `decks/deck_<user_id>.json`.
-
-The Unity team can either:
-  - Ship `unity_cards_pool.json` with the APK and port the script 28
-    logic to C# (recommended for offline use), OR
-  - Pre-build N decks server-side and ship them.
-
-PIPELINE POSITION
------------------
-Reads:  generated/unity_cards_themed.json
-Writes: generated/unity_cards_pool.json   (the POOL, not a deck)
-        reports/curation_report.json
-
-CITATIONS
----------
-  Modirrousta-Galian & Higham (2023): credible-card quota.
-  Christensen et al. (2022): per-card auditability.
-"""
+"""Final teaching-card curation: indicator coverage, difficulty balance, pedagogical structure."""
 
 from __future__ import annotations
 

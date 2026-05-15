@@ -1,42 +1,5 @@
-"""
-minerva_indicators.py
-=====================
-
-Twelve student-facing misinformation indicators for the M.I.N.E.R.V.A.
-electoral-rumor literacy simulator.
-
-Each indicator is:
-  * Pedagogically meaningful — it names a misinformation TACTIC that a
-    Senior High School learner can practice spotting, not a latent
-    embedding component (cf. Khosravi et al. 2022; Barzilai & Stadtler
-    2025).
-  * Deterministically extractable from raw text (Tagalog + English
-    code-switched), so the same post always yields the same indicator
-    set under the faithfulness contract of Longo et al. (2024).
-  * Mapped to the DEPICT taxonomy of Roozenbeek & van der Linden
-    (Bad News game; Basol et al. 2020) and to documented Filipino
-    electoral-rumor archetypes (Arugay & Baquisal 2022; Schipper 2025;
-    Bautista 2021).
-
-The 12 indicators are intentionally small enough for SHS coverage and
-large enough to give the response bank meaningful variety.
-
-This module exposes a single public function::
-
-    extract_indicators(text: str, metadata: dict | None = None)
-        -> dict[str, IndicatorHit]
-
-It also exposes a flat numeric feature dictionary suitable for QLattice
-re-fitting (named features replacing PCA components).
-
-References (full citations in /docs/MASTER_CODEBOOK.md, §RRL):
-  Roozenbeek & van der Linden (2019); Basol, Roozenbeek & van der
-  Linden (2020); Khosravi et al. (2022); Longo et al. (2024); Liu, Ye &
-  Li (2024); Athira et al. (2023); Arugay & Baquisal (2022);
-  Schipper (2025); Bautista (2021); Christensen et al. (2022);
-  Brolós et al. (2021); Cruz, Tan & Cheng (JCBlaise, 2020).
-
-"""
+#!/usr/bin/env python3
+"""12-indicator definitions (EMO, URG, ANON, MISS, FAB, POL, CONS, DISC, IMP, REV, ENDO, RECF) and SIFT moves."""
 
 from __future__ import annotations
 
@@ -48,9 +11,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
 # Lexicons
-# ---------------------------------------------------------------------------
 # Lexicons are deliberately conservative — high precision, lower recall.
 # A missed indicator is far less harmful than a falsely-fired one because
 # the latter would mislead a learner about WHY a post is suspect.
@@ -170,9 +131,7 @@ RECORD_FABRICATION_PATTERNS = [
 ]
 
 
-# ---------------------------------------------------------------------------
 # DEPICT mapping
-# ---------------------------------------------------------------------------
 # Roozenbeek & van der Linden's six-technique taxonomy plus three
 # Filipino-specific extensions (REV, ENDO, RECF) and one composite
 # (MISS).
@@ -192,9 +151,7 @@ DEPICT = {
 }
 
 
-# ---------------------------------------------------------------------------
 # Data classes
-# ---------------------------------------------------------------------------
 @dataclass
 class IndicatorHit:
     """A single indicator detection result."""
@@ -209,9 +166,7 @@ class IndicatorHit:
         return asdict(self)
 
 
-# ---------------------------------------------------------------------------
 # Internal helpers
-# ---------------------------------------------------------------------------
 _WORD_RE = re.compile(r"\b\w+\b", re.UNICODE)
 _URL_RE = re.compile(r"https?://[^\s)\]]+", re.IGNORECASE)
 _QUOTE_RE = re.compile(r"[\"\u201c\u201d]([^\"\u201c\u201d]{8,400})[\"\u201c\u201d]")
@@ -244,9 +199,7 @@ def _regex_hits(text: str, patterns: list[str]) -> list[str]:
     return out
 
 
-# ---------------------------------------------------------------------------
 # Indicator detectors
-# ---------------------------------------------------------------------------
 def detect_emo(text: str) -> IndicatorHit:
     """EMO — Emotional / loaded language."""
     tl = text.lower()
@@ -445,9 +398,7 @@ _DETECTORS = [
 ]
 
 
-# ---------------------------------------------------------------------------
 # Public API
-# ---------------------------------------------------------------------------
 def extract_indicators(
     text: str, metadata: dict | None = None
 ) -> dict[str, IndicatorHit]:
@@ -509,9 +460,7 @@ def indicator_summary_for_card(text: str) -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
 # Self-test
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     samples = [

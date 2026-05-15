@@ -1,31 +1,5 @@
 #!/usr/bin/env python3
-"""
-M.I.N.E.R.V.A. v2.8 — Script 07: Random Forest classifier.
-
-ARCHITECTURE (per BATB §3.5.2):
-  > "DE-GNN aggregates ... features to produce a latent representation
-  >  that reflects not only what the post states but also how it is
-  >  positioned within a propagation network. THIS REPRESENTATION IS
-  >  PASSED TO A RANDOM FOREST CLASSIFIER, which outputs a credibility
-  >  label and probability score."
-
-The paper specifies a SEQUENTIAL DE-GNN → RF pipeline. Earlier MINERVA
-versions trained RF on PCA features in parallel with DE-GNN, treating
-RF as an independent baseline. This was a deviation from the paper.
-
-v2.8 corrects this:
-  - RF is trained on PCA features PLUS the DE-GNN per-row confidence
-    `p_degnn_fake` from data/features/degnn_preds.csv.
-  - DE-GNN output is the dominant feature; PCA features remain to
-    preserve the linguistic signal.
-  - If DE-GNN preds are absent, RF falls back to PCA-only with a
-    warning (so this script remains runnable in isolation for tests).
-
-Output:
-  models/random_forest.joblib                  the trained RF
-  models/random_forest_feature_importance.csv  per-feature importance
-  logs/random_forest_report.txt                test-set classification report
-"""
+"""Random Forest classifier on tabular features. Baseline + feature-importance sanity check."""
 
 from __future__ import annotations
 

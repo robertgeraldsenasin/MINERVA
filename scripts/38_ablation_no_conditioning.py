@@ -1,57 +1,5 @@
 #!/usr/bin/env python3
-"""scripts/38_ablation_no_conditioning.py — v2.9.3 ablation scaffold.
-
-Purpose
--------
-The neuro-symbolic claim in BATB SO 2 hinges on the assertion that conditioning
-GPT-2 on control tokens (graph confidence × QLattice confidence × ensemble × tier × label)
-makes a difference vs unconditioned generation. This script runs the SAME
-GPT-2 generation pipeline TWICE — once with control tokens, once with the
-tokens stripped — and compares the merge promotion rates.
-
-If conditioning matters, the no-conditioning run should show a measurably
-LOWER promotion rate (because cards won't fire indicators that match the
-QLattice equation as well).
-
-Status
-------
-PROVIDED AS A SCAFFOLD for Thesis 3 — running a full ablation requires
-re-fine-tuning GPT-2 on a corpus with the special tokens stripped, which is
-~15 min of additional T4 time. This script lays out the protocol; the actual
-ablation can wait until Thesis 3 if Thesis 2 timeline doesn't permit.
-
-Usage (when ready to run)
--------------------------
-    python scripts/38_ablation_no_conditioning.py \\
-        --gpt2_model_dir models/gpt2_tagalog_neurosymbolic \\
-        --baseline_corpus data/gpt2_neurosymbolic \\
-        --baseline_promotion reports/merge_gpt2_into_pool.json \\
-        --report_out reports/ablation_no_conditioning.json
-
-Outputs
--------
-    reports/ablation_no_conditioning.json
-        {
-          "with_conditioning": {
-            "promotion_rate_pct": ...,
-            "n_promoted": ...,
-            "indicators_per_card_mean": ...
-          },
-          "without_conditioning": {
-            "promotion_rate_pct": ...,
-            "n_promoted": ...,
-            "indicators_per_card_mean": ...
-          },
-          "delta_promotion_rate_pct": ...,
-          "claim_supported": <True if delta > 5pp in expected direction>
-        }
-
-References
-----------
-- BATB §3.5.2 (sequential pipeline + control-token conditioning rationale).
-- Keskar et al. (2019). CTRL: A Conditional Transformer Language Model. arXiv:1909.05858.
-- v2.9.0 audit response P2 #1 (paper-text hardening for neuro-symbolic claim).
-"""
+"""Ablation scaffold: GPT-2 generation without control-token conditioning. Run deferred to publication."""
 
 from __future__ import annotations
 

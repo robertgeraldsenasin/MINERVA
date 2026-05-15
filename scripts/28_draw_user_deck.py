@@ -1,50 +1,5 @@
 #!/usr/bin/env python3
-"""
-28_draw_user_deck.py  (NEW in v2.3)
-===================================
-
-Deterministically draw a per-user teaching deck from the curated pool
-produced by script 24. Same user_id + same pool always produces the
-same deck (so the user can resume; researchers can reproduce).
-
-DESIGN NOTES
-------------
-The thesis evaluation framework requires that each Filipino SHS
-student see a *different* deck so individual decisions are
-independent observations and answer-sharing between students cannot
-short-circuit the learning measurement.
-
-This script implements a stratified deterministic draw with quotas:
-
-  * day_assignment: each player gets DAYS days of CARDS_PER_DAY cards.
-  * REAL quota: at least MIN_CREDIBLE_PER_DAY real cards per day
-                (Modirrousta-Galian & Higham 2023).
-  * candidate quota: at least 1 card per day mentions each of the
-                three fictional candidates (when pool supports it).
-  * indicator coverage: across the deck, at least 6 of the 12
-                indicators must appear at least once (so students
-                practice spotting different cue types).
-
-DETERMINISM
------------
-The draw is fully deterministic in (user_id, pool_hash). The same
-user replaying the game gets the same cards in the same order. Two
-different user_ids on the same pool get different decks.
-
-The pool_hash is included in the deck file so a researcher comparing
-two players' deck files can verify they were drawn from the same pool.
-
-PIPELINE POSITION
------------------
-Reads:  generated/unity_cards_pool.json
-Writes: generated/decks/deck_<user_id>.json
-
-UNITY INTEGRATION
------------------
-For offline play, port this draw logic to C# and ship the pool file
-with the APK. The hash function used here is Python's stable hash
-of (user_id + pool_hash) — easy to replicate in C#.
-"""
+"""Draw 8 user-specific 56-card decks with bounded pairwise overlap."""
 
 from __future__ import annotations
 

@@ -52,9 +52,7 @@ s08 = _load_script_08()
 qlmod = _load_qlattice_evaluator()
 
 
-# ----------------------------------------------------------------------
 # Fixtures
-# ----------------------------------------------------------------------
 
 @pytest.fixture
 def linearly_separable_df():
@@ -77,9 +75,7 @@ def linearly_separable_df():
     return df
 
 
-# ----------------------------------------------------------------------
 # build_logreg_equation
-# ----------------------------------------------------------------------
 
 class TestBuildLogregEquation:
     def test_returns_string_with_logreg_wrapper(self, linearly_separable_df):
@@ -108,9 +104,7 @@ class TestBuildLogregEquation:
             assert san in eq, f"Sanitized name {san!r} for {col!r} missing from equation"
 
 
-# ----------------------------------------------------------------------
 # Equation parses + evaluates via minerva_qlattice
-# ----------------------------------------------------------------------
 
 class TestEquationCompilesAndEvaluates:
     def test_equation_compiles(self, linearly_separable_df):
@@ -153,9 +147,7 @@ class TestEquationCompilesAndEvaluates:
         )
 
 
-# ----------------------------------------------------------------------
 # Coefficient correctness — equation works in ORIGINAL feature space
-# ----------------------------------------------------------------------
 
 class TestCoefficientTransform:
     """The fallback fits LR on standardized features but emits an equation
@@ -189,9 +181,7 @@ class TestCoefficientTransform:
         np.testing.assert_allclose(eq_probs, sklearn_probs, atol=1e-3)
 
 
-# ----------------------------------------------------------------------
 # Edge cases
-# ----------------------------------------------------------------------
 
 class TestEdgeCases:
     def test_handles_negative_coefficients(self):
@@ -227,9 +217,7 @@ class TestEdgeCases:
         assert out.shape == (len(df),)
 
 
-# ----------------------------------------------------------------------
 # Sanity: the script file imports the right names + has the loud-fail
-# ----------------------------------------------------------------------
 
 class TestScriptStructure:
     def test_script_does_not_silently_return_on_feyn_failure(self):

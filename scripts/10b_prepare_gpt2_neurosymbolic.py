@@ -1,138 +1,5 @@
 #!/usr/bin/env python3
-"""
-10b_prepare_gpt2_neurosymbolic.py  —  v2.6.final
-
-NEURO-SYMBOLIC GPT-2 CORPUS BUILDER
-
-Replaces the v2.5 GPT-2 corpus builder (scripts/10_prepare_gpt2MINERVA.py)
-with a neuro-symbolic conditioned corpus that uses ALL the upstream
-signals from the M.I.N.E.R.V.A. pipeline as control tokens.
-
-WHY THIS EXISTS (paper alignment)
----------------------------------
-The thesis paper (BATB §1.4 Specific Objectives + §2.6.3 Neuro-Symbolic
-and Explainable Approaches) frames M.I.N.E.R.V.A. as a neuro-symbolic
-pipeline where:
-
-  - Sub-symbolic detectors (RoBERTa, DistilBERT) extract dense signals
-  - DE-GNN aggregates relational structure into graph confidence
-  - QLattice symbolic regression produces a compact equation
-  - These signals INFORM the generation process
-
-The v2.5 corpus builder (script 10) only used <|label=...|> and
-<|graph=...|> tokens. The QLattice equation was used post-hoc to score
-generations but never conditioned them. The detector ensemble was an
-accept/reject gate, not a generation steering signal.
-
-This script closes that gap. Every training line now carries five
-control tokens carrying ALL the upstream signals:
-
-  <|label=...|>      class:    real | fake          (binary)
-  <|graph=...|>      DE-GNN:   high | mid | low | unk     (4 bins)
-  <|qlat=...|>       QLattice: high | mid | low | unk     (4 bins)
-  <|ensem=...|>      Detector ensemble: high | mid | low  (3 bins)
-  <|tier=...|>       Difficulty for teaching: novice | proficient | advanced
-
-At generation time, prepending matching tokens steers GPT-2 toward the
-distribution of training examples that had similar upstream signals.
-This is well-documented control-token conditioning (Keskar et al. 2019
-CTRL; Dathathri et al. 2020 PPLM), used here with M.I.N.E.R.V.A.'s own
-neuro-symbolic signals.
-
-WHY NOT LoRA / ADAPTERS
------------------------
-LoRA (Hu et al. 2022) and adapter layers (Houlsby et al. 2019) are
-generic parameter-efficient fine-tuning techniques. They don't use any
-M.I.N.E.R.V.A.-specific signal. They preserve the base model's weights,
-which is good, but they don't realize the paper's neuro-symbolic
-contribution.
-
-Control-token conditioning achieves the SAME "preserve pretrained,
-specialize for task" goal because:
-  1. The base GPT-2-Tagalog tokenizer is extended with new SPECIAL
-     tokens (tok.add_special_tokens) — existing BPE vocabulary is
-     unchanged.
-  2. Only the embedding layer rows for the new tokens are randomly
-     initialized; all other base weights start identical to the
-     pretrained checkpoint.
-  3. Three epochs of fine-tuning at low LR adapts the model to USE
-     the control tokens without overwriting its general linguistic
-     competence.
-  4. The control tokens themselves are the M.I.N.E.R.V.A. signals —
-     the model learns to produce text that matches the joint
-     distribution P(text | label, graph, qlat, ensem, tier).
-
-This is the architecture the paper actually claims, executed faithfully.
-
-ALGORITHM
----------
-For each row in train.csv / val.csv:
-  1. Load the row's text + label.
-  2. Look up DE-GNN confidence from data/features/degnn_preds.csv (by id).
-  3. Look up detector probabilities from data/features/{name}_tabular.csv.
-  4. Compute QLattice probability by evaluating models/qlattice_equation.txt
-     against the row's feature columns.
-  5. Compute detector ensemble = mean(p_roberta, p_distil, p_degnn).
-  6. Bin each signal into 3 or 4 bands (high/mid/low/unk) per --bins.
-  7. Compute teaching tier from QLattice margin (close to 0.5 → novice;
-     far from 0.5 → advanced — opposite of generator difficulty).
-  8. Emit a corpus line:
-       <|label=fake|> <|graph=high|> <|qlat=high|> <|ensem=high|> <|tier=advanced|> {text}
-
-USAGE
------
-  # Training-side (default - reads train/val splits from disk)
-  python scripts/10b_prepare_gpt2_neurosymbolic.py \
-      --train_csv data/processed/train.csv \
-      --val_csv data/processed/val.csv \
-      --train_features data/features/train_tabular.csv \
-      --val_features data/features/val_tabular.csv \
-      --degnn_preds data/features/degnn_preds.csv \
-      --qlattice_equation models/qlattice_equation.txt \
-      --out_dir data/gpt2_neurosymbolic
-
-  # The output drop-in replaces data/gpt2/{train.txt, val.txt}.
-  # scripts/11_train_gpt2MINERVA.py picks up the new tokens automatically
-  # via the SPECIAL_TOKENS export; just point CORPUS_DIR at this output.
-
-CITATIONS
----------
-- Keskar, N. S., McCann, B., Varshney, L. R., Xiong, C., & Socher, R.
-  (2019). CTRL: A Conditional Transformer Language Model for
-  Controllable Generation. arXiv:1909.05858. — control-token
-  conditioning is the canonical mechanism used here.
-- Dathathri, S., Madotto, A., Lan, J., Hung, J., Frank, E., Molino, P.,
-  Yosinski, J., & Liu, R. (2020). Plug and Play Language Models: A
-  Simple Approach to Controlled Text Generation. ICLR 2020. — supports
-  using upstream classifier signals to steer generation.
-- Christensen, N. J., et al. (2022). The QLattice. — the symbolic
-  regression engine whose output equation we use as a conditioning
-  signal.
-- Brolos, K. R., et al. (2021). An Approach to Symbolic Regression
-  Using Feyn. arXiv:2104.05417. — the Feyn framework.
-- Bhuyan, B. P., et al. (2024). Neuro-symbolic AI in 2024: A systematic
-  review. — supports the neuro-symbolic framing of M.I.N.E.R.V.A.
-- Hamilton, W. L., Ying, R., & Leskovec, J. (2017). Inductive
-  Representation Learning on Large Graphs (GraphSAGE). NeurIPS 2017.
-  — DE-GNN's underlying graph aggregation.
-- Cruz, J. C. B., Tan, J. A., & Cheng, C. K. (2020). Localization of
-  Fake News Detection via Multitask Transfer Learning. LREC 2020.
-  — source dataset.
-- BATB §2.6.3 (Neuro-Symbolic and Explainable Approaches) — frames
-  M.I.N.E.R.V.A. as exactly the kind of pipeline this script realizes.
-
-NOTES
------
-- This script is read-only on the upstream signal artifacts. It only
-  WRITES the corpus files in --out_dir.
-- If any signal is missing for a row (e.g. DE-GNN preds not joinable),
-  the corresponding token defaults to <|...=unk|> rather than dropping
-  the row. This keeps the corpus full while letting the model learn
-  graceful degradation.
-- The same pseudonymization step from scripts/10 is preserved (delegated
-  to minerva_privacy.pseudonymize_texts) so personal-name leakage is
-  blocked at corpus-build time, before fine-tuning ever sees the names.
-"""
+"""Build the GPT-2 training corpus with 18 Keskar-style control tokens (label, graph, qlat, ensem, tier)."""
 
 from __future__ import annotations
 
@@ -155,9 +22,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 
-# ============================================================
 # Control tokens
-# ============================================================
 
 # Class tokens — match scripts/10 and scripts/11
 LABEL_REAL = "<|label=real|>"
@@ -200,9 +65,7 @@ ALL_SPECIAL_TOKENS = [
 ]
 
 
-# ============================================================
 # Bin helpers
-# ============================================================
 
 def bin3(p: float | None, t_low: float, t_high: float, hi, mid, lo, unk):
     """3-way binning: low | mid | high (with unk for None/NaN)."""
@@ -301,9 +164,7 @@ def tier_from_margin(p_qlattice_fake: float | None, t_novice_max: float = 0.10,
     return TIER_ADVANCED
 
 
-# ============================================================
 # QLattice equation evaluator
-# ============================================================
 
 def _build_feature_locals(df: pd.DataFrame) -> dict:
     """Build the locals namespace that the QLattice equation expects.
@@ -373,9 +234,7 @@ def evaluate_qlattice(equation: str, df: pd.DataFrame) -> np.ndarray:
         return np.full(len(df), np.nan)
 
 
-# ============================================================
 # Corpus assembly
-# ============================================================
 
 def row_to_line(text: str, label: int, *,
                 graph_tok: str, qlat_tok: str, ensem_tok: str, tier_tok: str) -> str:
@@ -442,7 +301,6 @@ def build_corpus(
     t_advanced_max = 0.10  # default thresholds for tier_from_margin
     t_proficient_max = 0.30
 
-    # ----------------------------------------------------------------------
     # The original fixed thresholds (0.6/0.8 for confidences, 0.10/0.30 for
     # margins) produced ~96% of training rows in the "high"/"novice" bins on
     # JCBlaise, because the dataset is well-separated and most predictions
@@ -453,7 +311,6 @@ def build_corpus(
     # distribution. That guarantees roughly 33/33/33 splits and gives the
     # model real contrast between low/mid/high tokens during training.
     # --bin_strategy=fixed restores the legacy v2.6.final behavior.
-    # ----------------------------------------------------------------------
     if getattr(args, "bin_strategy", "percentile") == "percentile":
         graph_confs = []
         qlat_confs = []
@@ -553,9 +410,7 @@ def build_corpus(
     return lines, bin_counts, thresholds_used
 
 
-# ============================================================
 # CLI
-# ============================================================
 
 def _parse_two_thresholds(s: str) -> tuple[float, float]:
     parts = [float(x) for x in s.split(",")]

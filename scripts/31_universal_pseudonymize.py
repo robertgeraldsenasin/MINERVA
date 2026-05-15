@@ -1,56 +1,5 @@
 #!/usr/bin/env python3
-"""
-31_universal_pseudonymize.py  (NEW in v2.6)
-===========================================
-
-UNIVERSAL pseudonymization: every person-name that is NOT one of the
-three canonical fictional candidates (C-RM, C-IB, C-JS) gets replaced
-with a generic role placeholder.
-
-WHY THIS EXISTS
----------------
-Audits of v2.4 and v2.5 deliverables found 309 of 442 cards (69.9%)
-contained at least one "confusing name" — real Filipinos like
-'Bikoy Advincula', 'Hilbay', 'Batongbacal', 'Paredes', 'Brettes',
-'Nieto', 'Lopez', 'Panelo', 'Radaza', 'Paolo'. Every one of these
-distracts the SHS learner from the core decision (real vs. fake) and
-some are real political actors whose mention is ethically problematic.
-
-The thesis Section 1.5 Limitation #2 states:
-  "All candidates, events, organizations, and narratives presented in
-   the game are fictional and are not intended to represent real
-   individuals, political parties, or institutions."
-
-This script enforces that delimitation deterministically.
-
-APPROACH
---------
-Three-pass system (per Yermilov et al. 2023 on consistency-preserving
-pseudonymization):
-
-  1. WHITELIST: keep our 3 canonical candidates' names + their aliases
-     verbatim.
-
-  2. NAMED-ENTITY EXTRACTION: detect candidate names using:
-     - Title prefix patterns (Sen./Rep./Mayor + Capitalized name)
-     - Tagalog particle patterns (si/ni/kay + Capitalized name)
-     - Multi-word capitalized phrases (First Last)
-     - Single capitalized words flagged as person via context
-
-  3. ROLE-BASED REPLACEMENT: replace each detected non-canonical name
-     with a generic Filipino role placeholder, deterministic per
-     name (so "Lopez" always becomes "isang opisyal" within a session,
-     for narrative continuity within a single card).
-
-CITATIONS
----------
-- Yermilov, P., et al. (2023). Privacy- and Utility-Preserving NLP
-  with Anonymized Data: A Case Study of Pseudonymization.
-- Pilán, I., et al. (2022). The Text Anonymization Benchmark (TAB).
-  Computational Linguistics, 48(4).
-- Caulfield, M., & Wineburg, S. (2023). Verified. (SIFT — generic
-  placeholders preserve teaching value while removing distraction).
-"""
+"""Pseudonymize person names via NER and blocklist. Real Filipino political figures -> Candidate A/B/C."""
 
 from __future__ import annotations
 
@@ -83,14 +32,10 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# ===========================================================================
 # CANONICAL ALLOWLIST — names that must never be pseudonymized
-# ===========================================================================
 # (Defined above via candidate_config or legacy fallback.)
 
-# ===========================================================================
 # GENERIC ROLE INVENTORY — what replaces detected non-canonical names
-# ===========================================================================
 GENERIC_ROLES = [
     "isang opisyal ng gobyerno",
     "isang dating opisyal",
@@ -116,9 +61,7 @@ GENERIC_ROLES = [
     "isang nakakakilala sa kandidato",
 ]
 
-# ===========================================================================
 # DETECTION REGEXES
-# ===========================================================================
 _TITLE = (r"(?:Pres(?:ident)?\.?|Sen(?:ator)?\.?|Rep(?:resentative)?\.?|"
           r"Mayor|Gov(?:ernor)?\.?|Sec(?:retary)?\.?|VP|"
           r"Vice\s*Pres(?:ident)?|Vice[-\s]+Mayor|Cong(?:ressman)?\.?|"

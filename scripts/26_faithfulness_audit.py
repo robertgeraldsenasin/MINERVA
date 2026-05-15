@@ -1,27 +1,5 @@
 #!/usr/bin/env python3
-"""
-26_faithfulness_audit.py  (NEW)
-===============================
-
-Post-hoc audit that re-extracts indicators from every card's
-explanation prose and asserts SET EQUALITY with the originally
-fired_indicators.
-
-Why: Longo et al. (2024) Open Problem 7 mandates that paraphrased
-explanations remain FAITHFUL — i.e. they continue to reflect the
-underlying decision. Without an automated check, a future bank
-edit could silently break this property. Liu, Ye & Li (2024)
-distinguish faithfulness from plausibility; this script audits
-faithfulness.
-
-This is the panel-defence-grade check: at thesis defence we can
-say "every card emitted by the pipeline passes 26_faithfulness_audit"
-as a verifiable claim.
-
-Output:
-  reports/faithfulness_audit_report.json   (counts + sample failures)
-  reports/faithfulness_failures.jsonl      (full failure log)
-"""
+"""Re-extract indicators from card prose; assert SET EQUALITY with the originally fired indicators."""
 
 from __future__ import annotations
 
@@ -40,7 +18,7 @@ from minerva_response_bank import BANK, CREDIBLE_AFFIRMATIONS, BANK_VERSION
 logger = logging.getLogger(__name__)
 
 def _load_cards_or_pool(path: str) -> list:
-    """v2.3: accept either a flat list of cards or a pool doc
+    """accept either a flat list of cards or a pool doc
     {"_metadata": ..., "cards": [...]}.
     """
     import json
@@ -171,7 +149,7 @@ GENERIC_REAL_MARKERS = [
 def _mentions_indicator(text: str, code: str) -> bool:
     """Return True if `text` plausibly discusses indicator `code`.
 
-    v2.9.8: a phrase passes the mention check if EITHER
+    a phrase passes the mention check if EITHER
       (a) it contains an indicator-specific marker (the original v2.1 behavior), OR
       (b) it contains a generic real-credibility marker like "magandang sign"
           or "malinis sa palatandaang" — these phrases ARE the canonical bank

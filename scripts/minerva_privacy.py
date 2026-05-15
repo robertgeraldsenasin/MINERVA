@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Person-name pseudonymization: NER detection + blocklist lookup + replacement."""
+
 from __future__ import annotations
 
 """

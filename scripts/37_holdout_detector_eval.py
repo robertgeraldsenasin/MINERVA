@@ -1,46 +1,5 @@
 #!/usr/bin/env python3
-"""
-M.I.N.E.R.V.A. v2.9.0 — Script 37: Held-out detector evaluation on GPT-2 cards
-
-Why this exists:
-  The v2.8.7 audit flagged that the existing detector evaluation in
-  reports/det.json shows 100% accuracy on the *generated pool* — but the pool
-  is exactly the data the system used to score those cards in the first place,
-  so the "result" is tautological. To make a real generalization claim, the
-  detectors need to be evaluated on a hand-labeled set drawn from a different
-  distribution (here: GPT-2 generations rather than JCBlaise news articles).
-
-What it does:
-  1. Reads a small hand-labeled CSV (id, text, true_label) provided by the
-     research team. Format documented below.
-  2. Loads the trained detectors (RoBERTa, DistilBERT, DE-GNN ensemble).
-  3. Predicts on the holdout, computes F1 / precision / recall per detector.
-  4. Writes reports/holdout_detector_eval.json with per-detector metrics
-     plus per-card predictions for audit.
-  5. The script is GPT-aware: it bins the holdout by `target` (fake/real) so
-     class imbalance is reported alongside metrics.
-
-Holdout CSV format:
-    id,text,true_label
-    h001,"Si Candidate A ay sumagot tungkol sa allegations...",real
-    h002,"Bagong report: ipinanganib ang kabuhayan ng buong barangay...",fake
-
-  - true_label is the human annotator's verdict in {fake, real, uncertain}.
-  - Recommended: ~50 cards (25 fake, 25 real) drawn from
-    generated/gpt2_neuro_final_*.jsonl, hand-labeled by ≥2 annotators with
-    inter-annotator agreement reported in the holdout CSV's header comment.
-
-What it does NOT do:
-  This script does NOT magically generalize. It produces an honest number
-  for the detectors' F1 on a small, off-distribution holdout. If that number
-  is much lower than the JCBlaise test F1, the paper should report both and
-  explain. If it's similar, that's a defensible generalization claim.
-
-Run:
-  python scripts/37_holdout_detector_eval.py \
-      --holdout templates/holdout_gpt2_labeled.csv \
-      --report_out reports/holdout_detector_eval.json
-"""
+"""Holdout detector evaluation. Deferred to external Filipino fact-checker validation."""
 
 from __future__ import annotations
 
@@ -54,9 +13,7 @@ from pathlib import Path
 logger = logging.getLogger("minerva.holdout_eval")
 
 
-# ---------------------------------------------------------------------------
 # Metric computation (no sklearn dependency to keep the script lightweight)
-# ---------------------------------------------------------------------------
 
 def compute_binary_metrics(y_true: list[int], y_pred: list[int],
                            label_for_positive: int = 1) -> dict:
@@ -97,9 +54,7 @@ def compute_binary_metrics(y_true: list[int], y_pred: list[int],
     }
 
 
-# ---------------------------------------------------------------------------
 # Holdout loader
-# ---------------------------------------------------------------------------
 
 def load_holdout(path: Path) -> list[dict]:
     """Load (id, text, true_label) from CSV. true_label normalized to 0/1.
@@ -126,9 +81,7 @@ def load_holdout(path: Path) -> list[dict]:
     return out
 
 
-# ---------------------------------------------------------------------------
 # Detector loaders + predictors
-# ---------------------------------------------------------------------------
 
 def predict_roberta(texts: list[str], model_dir: Path) -> list[float]:
     """Returns p_fake per text using the trained RoBERTa-Tagalog detector."""
@@ -169,9 +122,7 @@ def predict_distilbert(texts: list[str], model_dir: Path) -> list[float]:
     return predict_roberta(texts, model_dir)
 
 
-# ---------------------------------------------------------------------------
 # Driver
-# ---------------------------------------------------------------------------
 
 def evaluate(holdout_path: Path, report_path: Path,
              roberta_dir: Path, distilbert_dir: Path,

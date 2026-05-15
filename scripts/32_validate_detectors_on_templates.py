@@ -1,58 +1,5 @@
 #!/usr/bin/env python3
-"""
-32_validate_detectors_on_templates.py  (NEW v2.6-final)
-========================================================
-
-Validates that the detection models (RoBERTa, DistilBERT, DE-GNN,
-ensemble) still classify v2.6-final template-generated cards
-correctly. The models were trained on JCBlaise (real news), and
-v2.6-final templates produce a slightly different distribution
-(short, on-tactic, structured). This script answers the panel-defense
-question: "Do your detectors still work after the architectural
-shift to templates?"
-
-WHAT THIS DOES
---------------
-1. Loads the curated pool (output of script 24).
-2. For each card, reads the synthetic detector scores written by
-   script 30 (these encode the template's intended verdict).
-3. Compares against the card's verdict label.
-4. Computes: per-detector accuracy, ensemble accuracy, per-tactic
-   accuracy, per-tier accuracy, confusion matrix.
-5. Writes a JSON report with all numbers, plus a markdown summary
-   suitable for the thesis defense appendix.
-
-LIMITATIONS
------------
-- This validates the *synthetic* detector scores written by the
-  template generator, not a fresh inference from the trained models.
-  For full ground-truth validation, run the trained models against
-  pool.json directly (the inference script is in scripts/15
-  if/when models are loaded).
-- Template-generated cards are deliberately well-formed; the
-  detectors' real challenge is messy real-world content. This
-  script answers "do the labels match what the templates intended,"
-  not "would the detectors generalize to noisy data."
-- For thesis-defense rigor, this script should be paired with
-  scripts/15_evaluate_detectors.py run on a held-out test split.
-
-USAGE
------
-  python scripts/32_validate_detectors_on_templates.py \\
-      --pool_file generated/unity_cards_pool.json \\
-      --report_out reports/detector_validation_report.json \\
-      --markdown_out reports/detector_validation_summary.md
-
-CITATIONS
----------
-- Powers, D. M. W. (2011). Evaluation: from precision, recall and
-  F-measure to ROC, informedness, markedness and correlation.
-  *Journal of Machine Learning Technologies, 2*(1), 37-63. — basis
-  for the per-detector metrics computed here.
-- Modirrousta-Galian & Higham (2023). *Journal of Experimental
-  Psychology: Applied*. — motivates the per-tier validation
-  (tier-specific calibration matters for the credible-card quota).
-"""
+"""Sanity-check detector predictions on template cards (internal consensus metric only)."""
 
 from __future__ import annotations
 

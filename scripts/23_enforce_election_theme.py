@@ -1,36 +1,5 @@
 #!/usr/bin/env python3
-"""
-23_enforce_election_theme.py  (REFACTORED v2.0)
-===============================================
-
-Reject cards whose content is not electoral, with a structured
-rejection log that becomes a thesis-defensibility artefact.
-
-WHAT CHANGED FROM v1
---------------------
-v1 used a simple keyword filter that allowed transport-strike posts
-(Grab) and utility-rate posts (Meralco) to leak through, even
-though those are off-topic for the M.I.N.E.R.V.A. electoral theme.
-
-v2.0:
-  * Two-stage filter: (a) keyword baseline (deterministic, fast),
-    (b) optional DistilBERT-multilingual classifier head (the
-    transformer is already loaded for detection — we reuse it).
-  * Hard-negative awareness: transport, utilities, sports, K-pop,
-    weather get an explicit downweight.
-  * Neutral-volume policy: cards that are clearly off-theme but
-    contain NO misinformation patterns can pass through tagged
-    `is_neutral_volume=True`, providing the Chattr feed with realistic
-    volume and variety per user requirement.
-  * Structured rejection log (JSONL) attached to reports/.
-
-PIPELINE POSITION
------------------
-Reads:  generated/unity_cards_balanced.json   (or pseudonymized)
-Writes: generated/unity_cards_themed.json
-        reports/theme_filter_report.json
-        reports/theme_rejection_log.jsonl
-"""
+"""Reject cards whose content is not on-theme for the 2025 election scenario."""
 
 from __future__ import annotations
 

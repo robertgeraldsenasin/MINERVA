@@ -37,9 +37,7 @@ def _load_module():
 m = _load_module()
 
 
-# ----------------------------------------------------------------------
 # recover_truncated_text
-# ----------------------------------------------------------------------
 
 class TestRecoverTruncatedText:
     def test_already_clean_text_unchanged(self):
@@ -77,9 +75,7 @@ class TestRecoverTruncatedText:
         assert status == "unrecoverable"
 
 
-# ----------------------------------------------------------------------
 # passes_quality_filter — handles dict-shaped truncation_flag
-# ----------------------------------------------------------------------
 
 class TestQualityFilter:
     def test_accepts_recoverable_truncation(self):
@@ -109,9 +105,7 @@ class TestQualityFilter:
         assert "too_short" in reason
 
 
-# ----------------------------------------------------------------------
 # remap_to_allowlist
-# ----------------------------------------------------------------------
 
 class TestRemapToAllowlist:
     def test_remaps_two_distinct_codes(self):
@@ -158,9 +152,7 @@ class TestRemapToAllowlist:
         assert mp == {}
 
 
-# ----------------------------------------------------------------------
 # passes_candidate_filter — runs after remap
-# ----------------------------------------------------------------------
 
 class TestCandidateFilter:
     def test_passes_after_remap(self):
@@ -180,9 +172,7 @@ class TestCandidateFilter:
         assert "foreign_candidate_codes" in reason
 
 
-# ----------------------------------------------------------------------
 # gpt2_card_to_template_shape
-# ----------------------------------------------------------------------
 
 class TestSchemaMapping:
     def test_produces_all_template_keys(self):
@@ -234,9 +224,7 @@ class TestSchemaMapping:
         assert card["candidate"] == "C-B"
 
 
-# ----------------------------------------------------------------------
 # End-to-end merge
-# ----------------------------------------------------------------------
 
 class TestEndToEndMerge:
     def test_merges_templates_with_promoted_gpt2(self, tmp_path):
@@ -309,9 +297,7 @@ class TestEndToEndMerge:
         assert "Candidate XYZ" not in merged[1]["text"]
 
 
-# ----------------------------------------------------------------------
 # Static check: notebook references the merge script
-# ----------------------------------------------------------------------
 
 class TestScriptExistence:
     def test_script_29_is_executable(self):

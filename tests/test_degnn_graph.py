@@ -46,9 +46,7 @@ def degmod():
     return mod
 
 
-# --------------------------------------------------------------------------
 # L2 normalize
-# --------------------------------------------------------------------------
 
 class TestL2Normalize:
     def test_l2_unit_norm(self, degmod):
@@ -71,9 +69,7 @@ class TestL2Normalize:
         np.testing.assert_array_almost_equal(out[1], [1.0, 0.0])
 
 
-# --------------------------------------------------------------------------
 # kNN graph construction
-# --------------------------------------------------------------------------
 
 class TestBuildKnnGraphEdges:
     def test_basic_shape(self, degmod):
@@ -123,9 +119,7 @@ class TestBuildKnnGraphEdges:
         np.testing.assert_array_equal(e1, e2)
 
 
-# --------------------------------------------------------------------------
 # GraphSAGE forward
-# --------------------------------------------------------------------------
 
 class TestGraphSAGE:
     def test_forward_shape(self, degmod):

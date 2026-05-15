@@ -1,25 +1,5 @@
 #!/usr/bin/env python3
-"""
-27_response_bank_versioning.py  (NEW)
-=====================================
-
-Utility script for managing response-bank versions across runs.
-
-Use cases
----------
-* Stamp every card in a finalised deck with the current bank hash so
-  later A/B comparisons (Werner Axelsson 2024 dialogic-feedback
-  evaluation) are reproducible.
-* Diff two banks (v1 vs v2) and report which entries changed.
-* Re-render a deck with a new bank version without re-running the
-  full 13→26 pipeline (saves wall-clock during student-testing
-  iteration cycles).
-
-Subcommands:
-  stamp     — attach bank_version + bank_hash to every card
-  diff      — compare two bank exports
-  rerender  — rebuild explanations for an existing deck under a new bank
-"""
+"""Stamp the response bank version + hash into the pipeline for audit provenance."""
 
 from __future__ import annotations
 
@@ -41,7 +21,7 @@ from minerva_candidates import REGISTRY
 logger = logging.getLogger(__name__)
 
 def _load_cards_or_pool(path: str) -> list:
-    """v2.3: accept either a flat list of cards or a pool doc
+    """accept either a flat list of cards or a pool doc
     {"_metadata": ..., "cards": [...]}.
     """
     import json

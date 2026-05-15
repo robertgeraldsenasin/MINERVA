@@ -1,40 +1,5 @@
-"""
-candidate_config.py - Editable candidate configuration for M.I.N.E.R.V.A.
-=========================================================================
-
-This is the SINGLE EDITABLE FILE for the three game candidates.
-
-Per BATB section 1.5 Limitation #2 and the v2.6.final user direction
-(2026-05-04): cards mention candidates ONLY by their generic codes
-(Candidate A, Candidate B, Candidate C). NO personal names appear in
-card text. This is the most legally defensible configuration.
-
-DESIGN PRINCIPLES (v2.6.final)
-------------------------------
-1. CODES ONLY in card text. No "Aurelia", "Santos", "Bruno", "Villanueva",
-   "Celia", "Navarro", or any other personal name.
-
-2. Per Garbe & Frischlich (2023, PLoS ONE 18(4)) and Crawford & Brandt
-   (2019, Personality and Social Psychology Bulletin), named-candidate
-   stimuli produce different judgment patterns than coded-candidate
-   stimuli. Using only codes eliminates name-based stereotyping bias.
-
-3. Per Roozenbeek & van der Linden (2019, Palgrave Communications 5(1)),
-   the Bad News inoculation game uses fictional examples throughout.
-   v2.6.final goes one step further: even the fictional names are
-   replaced with codes to avoid coincidental real-name matches.
-
-4. Per Arugay & Baquisal (2022, Pacific Affairs 95(3)), the three
-   archetypes - DYNASTIC, REFORMIST, POPULIST - are preserved because
-   they are the disinformation-pattern carriers. Only the surface
-   identity layer changes.
-
-5. SINGLE SOURCE OF TRUTH. The pipeline imports from this file.
-   v2.6.final's strict allowlist enforcer (script 33) reads from this
-   file and treats only the `display_name` ("Candidate A/B/C") as
-   allowed. Aliases here are kept for legacy compatibility with older
-   scripts but personal names are intentionally NOT in the alias list.
-"""
+#!/usr/bin/env python3
+"""Configuration for the fictional candidates (Candidate A/B/C profiles)."""
 
 CANDIDATES_CONFIG = [
     {
@@ -99,9 +64,7 @@ CANDIDATES_CONFIG = [
 ]
 
 
-# ============================================================================
 # DERIVED helpers - do not edit
-# ============================================================================
 
 def full_name(c: dict) -> str:
     """Return the display name (codes-only mode)."""
@@ -156,9 +119,7 @@ def all_aliases() -> set[str]:
     return out
 
 
-# ============================================================================
 # Sanity checks on import
-# ============================================================================
 
 _codes = [c["code"] for c in CANDIDATES_CONFIG]
 if len(_codes) != len(set(_codes)):

@@ -1,32 +1,5 @@
 #!/usr/bin/env python3
-"""
-M.I.N.E.R.V.A. v2.8.4 — Script 08: Train symbolic-regression equation
-for QLattice scoring.
-
-Strategy (revised after feyn install issues):
-
-  Tier 1: feyn (canonical, paper-aligned QLattice symbolic regression)
-          Produces an equation like:
-              logreg(0.371*dpca1 + 0.339*rpca0 + 0.852*exp(0.533*dpca3) - 0.69)
-          ~3 minutes on CPU. Wheels exist for Python 3.9–3.12.
-          The PRIOR v2.8 silently 'return'-ed on feyn import failure;
-          v2.8.4 raises so the failure is visible.
-
-  Tier 2: sklearn LogisticRegression fallback (NEW in v2.8.4)
-          If feyn cannot be imported (e.g., wheel unavailable for the
-          installed Python version), fit a logistic regression on the
-          same feature columns and emit it in the same logreg(...)
-          format the QLattice evaluator (minerva_qlattice.py) expects.
-          This is a degraded fallback — the resulting equation is
-          purely linear, no nonlinear interactions — but it lets the
-          rest of the pipeline (scripts 13, 18, 10b/11b) run.
-
-The output file (models/qlattice_equation.txt) is consumed by:
-  - minerva_qlattice.py  (the safe evaluator)
-  - 13_score_generated_with_qlattice.py  (scoring)
-  - 18_verdict_explain.py  (explainability)
-  - 10b_prepare_gpt2_neurosymbolic.py  (control-token corpus build)
-"""
+"""Fit a QLattice (feyn) symbolic-regression equation over detector + GNN signals."""
 
 from __future__ import annotations
 
@@ -59,9 +32,7 @@ QL_DIR.mkdir(parents=True, exist_ok=True)
 LOG_DIR.mkdir(exist_ok=True)
 
 
-# ----------------------------------------------------------------------
 # Utilities
-# ----------------------------------------------------------------------
 
 def _print_banner() -> None:
     print("=" * 60)
@@ -86,9 +57,7 @@ def _sanitize_name(name: str) -> str:
     return out
 
 
-# ----------------------------------------------------------------------
 # Tier 1 — feyn QLattice (canonical)
-# ----------------------------------------------------------------------
 
 def _try_feyn(train_df: pd.DataFrame, feature_cols: list) -> Optional[str]:
     """Run the canonical feyn QLattice symbolic regression.
@@ -132,9 +101,7 @@ def _try_feyn(train_df: pd.DataFrame, feature_cols: list) -> Optional[str]:
         return None
 
 
-# ----------------------------------------------------------------------
 # Tier 2 — sklearn LogisticRegression fallback
-# ----------------------------------------------------------------------
 
 def build_logreg_equation(train_df: pd.DataFrame, feature_cols: list) -> str:
     """Fit logistic regression and emit a `logreg(...)` equation.
@@ -203,9 +170,7 @@ def _logreg_fallback(train_df: pd.DataFrame, feature_cols: list) -> str:
     return eq
 
 
-# ----------------------------------------------------------------------
 # Main
-# ----------------------------------------------------------------------
 
 def main() -> None:
     _print_banner()

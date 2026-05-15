@@ -1,33 +1,5 @@
-"""
-minerva_response_bank.py
-========================
-
-Indicator-fired, tiered response bank that replaces the static
-"Verdict: REAL/FAKE … The decision comes from the stored Qlattice
-equation applied to detector/embedding features." boilerplate of
-the legacy pipeline.
-
-Design rationale
-----------------
-* Each indicator (12 total — see minerva_indicators.py) has multiple
-  phrasing variants per tier (novice / proficient / advanced).
-* Selection is DETERMINISTIC per card via stable hash so the SAME
-  card always gets the SAME explanation, but the COHORT-WIDE
-  distribution is varied — preserving faithfulness (Longo et al.
-  2024 Open Problem 7) while delivering pedagogically meaningful
-  variety (Dehghanzadeh et al. 2024).
-* Each variant ends with a SIFT move (Caulfield 2019;
-  Caulfield & Wineburg 2023): Stop / Investigate / Find / Trace.
-* Credible cards get explicit POSITIVE feedback, addressing the
-  conservative-response-bias risk identified by Modirrousta-Galian
-  & Higham (2023).
-* Bank is versioned (bank_version = "1.0") and the hash is stamped
-  in every card's provenance for A/B comparability.
-
-Citations: Barzilai & Stadtler (2025); Roozenbeek & van der Linden
-(2019); Khosravi et al. (2022); Athira et al. (2023); Liu, Ye & Li
-(2024); Bautista (2021).
-"""
+#!/usr/bin/env python3
+"""Response bank lookup (TL + EN phrases per indicator x tier x role)."""
 
 from __future__ import annotations
 
@@ -40,9 +12,7 @@ logger = logging.getLogger(__name__)
 BANK_VERSION = "1.1"
 
 
-# ---------------------------------------------------------------------------
 # SIFT moves (Caulfield 2019)
-# ---------------------------------------------------------------------------
 SIFT_MOVES = {
     "stop":       "Stop and breathe before sharing.",
     "investigate": "Investigate the source — who is publishing this?",
@@ -51,9 +21,7 @@ SIFT_MOVES = {
 }
 
 
-# ---------------------------------------------------------------------------
 # Bank entries
-# ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class BankEntry:
     code: str          # indicator code
@@ -70,11 +38,9 @@ def _e(code: str, tier: str, idx: int, phrase: str, sift: str) -> BankEntry:
                      bank_id=bank_id)
 
 
-# ---------------------------------------------------------------------------
 # The bank — 12 indicators × 3 tiers × 2-3 variants ≈ 78 entries
-# ---------------------------------------------------------------------------
 BANK: dict[str, list[BankEntry]] = {
-    # ============================== EMO ==============================
+    # EMO
     "EMO": [
         _e("EMO", "novice", 1,
            "Notice the heated words like *betrayed* and *outraged*. Strong "
@@ -107,7 +73,7 @@ BANK: dict[str, list[BankEntry]] = {
            SIFT_MOVES["trace"]),
     ],
 
-    # ============================== URG ==============================
+    # URG
     "URG": [
         _e("URG", "novice", 1,
            "ALL CAPS and *SHARE NOW* are pressure tactics. Real news doesn't "
@@ -138,7 +104,7 @@ BANK: dict[str, list[BankEntry]] = {
            SIFT_MOVES["stop"]),
     ],
 
-    # ============================== ANON =============================
+    # ANON
     "ANON": [
         _e("ANON", "novice", 1,
            "*'Sources say'* with no name is not a source. Real reporters "
@@ -165,7 +131,7 @@ BANK: dict[str, list[BankEntry]] = {
            SIFT_MOVES["find"]),
     ],
 
-    # ============================== MISS =============================
+    # MISS
     "MISS": [
         _e("MISS", "novice", 1,
            "There's no link, no document, no photo with caption — the claim "
@@ -189,7 +155,7 @@ BANK: dict[str, list[BankEntry]] = {
            SIFT_MOVES["find"]),
     ],
 
-    # ============================== FAB ==============================
+    # FAB
     "FAB": [
         _e("FAB", "novice", 1,
            "A direct quote from a public figure with no video, transcript, "
@@ -212,7 +178,7 @@ BANK: dict[str, list[BankEntry]] = {
            SIFT_MOVES["trace"]),
     ],
 
-    # ============================== POL ==============================
+    # POL
     "POL": [
         _e("POL", "novice", 1,
            "*Real Filipinos vs traitors* — that's an us-vs-them frame. "
@@ -235,7 +201,7 @@ BANK: dict[str, list[BankEntry]] = {
            SIFT_MOVES["investigate"]),
     ],
 
-    # ============================== CONS =============================
+    # CONS
     "CONS": [
         _e("CONS", "novice", 1,
            "*'They don't want you to know'* — this builds a secret-cabal "
@@ -260,7 +226,7 @@ BANK: dict[str, list[BankEntry]] = {
            SIFT_MOVES["find"]),
     ],
 
-    # ============================== DISC =============================
+    # DISC
     "DISC": [
         _e("DISC", "novice", 1,
            "This attacks the person, not the policy. Even if the insult "
@@ -285,7 +251,7 @@ BANK: dict[str, list[BankEntry]] = {
            SIFT_MOVES["investigate"]),
     ],
 
-    # ============================== IMP ==============================
+    # IMP
     "IMP": [
         _e("IMP", "novice", 1,
            "The logo looks like a real news brand, but the URL is off by "
@@ -303,7 +269,7 @@ BANK: dict[str, list[BankEntry]] = {
            SIFT_MOVES["find"]),
     ],
 
-    # ============================== REV ==============================
+    # REV
     "REV": [
         _e("REV", "novice", 1,
            "Claims about a *golden age* that contradict textbooks and "
@@ -328,7 +294,7 @@ BANK: dict[str, list[BankEntry]] = {
            SIFT_MOVES["find"]),
     ],
 
-    # ============================== ENDO =============================
+    # ENDO
     "ENDO": [
         _e("ENDO", "novice", 1,
            "*'85% of Filipinos already support…'* — but who counted? "
@@ -351,7 +317,7 @@ BANK: dict[str, list[BankEntry]] = {
            SIFT_MOVES["find"]),
     ],
 
-    # ============================== RECF =============================
+    # RECF
     "RECF": [
         _e("RECF", "novice", 1,
            "An invented project or fake award attached to a candidate "
@@ -377,12 +343,10 @@ BANK: dict[str, list[BankEntry]] = {
 }
 
 
-# ---------------------------------------------------------------------------
 # Credible-card affirmations (Modirrousta-Galian & Higham 2023 mandate)
 # may not actually verify (e.g. "verifiable date", "named outlet"). Instead
 # focus on the absence of misinformation cues — which is what we can
 # actually attest to from rule-based detection.
-# ---------------------------------------------------------------------------
 CREDIBLE_AFFIRMATIONS = [
     BankEntry(code="CREDIBLE", tier="novice",
               phrase="Good news — this post does not raise any of our 12 "
@@ -409,9 +373,7 @@ CREDIBLE_AFFIRMATIONS = [
 ]
 
 
-# ---------------------------------------------------------------------------
 # Selection logic
-# ---------------------------------------------------------------------------
 def _stable_index(seed_str: str, n: int) -> int:
     h = hashlib.sha256(seed_str.encode("utf-8")).hexdigest()
     return int(h[:8], 16) % max(n, 1)
@@ -623,9 +585,7 @@ def bank_stats() -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
 # Self-test
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     print("Bank stats:", bank_stats())

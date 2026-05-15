@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Extract CLS embeddings from both detectors, apply PCA (64 components), emit tabular features."""
+
 from __future__ import annotations
 
 # This file needs to be modified for refining of features.

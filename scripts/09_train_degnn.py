@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Train GraphSAGE on a kNN similarity graph of dual-embedding features."""
+
 from __future__ import annotations
 
 from pathlib import Path

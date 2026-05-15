@@ -1,25 +1,5 @@
-"""
-minerva_schemas.py
-==================
-
-Pydantic v2 data contracts for inter-script handoff in the
-M.I.N.E.R.V.A. pipeline (scripts 13 -> 18 -> 21 -> 22 -> 23 -> 24 -> 25).
-
-Why schemas:
-  * The legacy pipeline passes raw dicts between scripts. A single
-    script that drops or renames a key silently corrupts every
-    downstream stage. The static-explanation problem and the
-    pseudonym chaos both have this root cause: untyped handoffs.
-  * Pydantic v2 gives us validation at script boundaries, JSON
-    schema export for the Unity client, and clear error messages at
-    thesis defence ("which stage produced this malformed card?").
-  * This satisfies the white-box-testing requirement of §3.7.1 of
-    the thesis: the Decision Layer's internal logic is now
-    schema-checkable.
-
-Refs: Khosravi et al. 2022 (auditability); Longo et al. 2024
-(faithfulness boundary).
-"""
+#!/usr/bin/env python3
+"""Pydantic schemas for every JSON output in the pipeline. extra=forbid throughout."""
 
 from __future__ import annotations
 
@@ -29,9 +9,7 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-# ---------------------------------------------------------------------------
 # Verdict and indicator types
-# ---------------------------------------------------------------------------
 Verdict = Literal["FAKE", "REAL", "UNCERTAIN"]
 DifficultyBin = Literal["easy", "medium", "hard"]
 ExplanationTier = Literal["novice", "proficient", "advanced"]
@@ -55,9 +33,7 @@ INDICATOR_CODES = [
 ]
 
 
-# ---------------------------------------------------------------------------
 # Sub-models
-# ---------------------------------------------------------------------------
 class IndicatorDetail(BaseModel):
     """A single indicator's detection result for one card."""
     model_config = ConfigDict(extra="forbid")
@@ -145,9 +121,7 @@ class ThemeFlags(BaseModel):
     classifier_label: str = "unknown"
 
 
-# ---------------------------------------------------------------------------
 # Top-level card
-# ---------------------------------------------------------------------------
 class UnityCard(BaseModel):
     """
     The single canonical card schema consumed by the Unity Chattr,
@@ -173,7 +147,7 @@ class UnityCard(BaseModel):
     indicator_details: dict[str, IndicatorDetail] = Field(default_factory=dict)
     named_features: dict[str, float] = Field(default_factory=dict)
 
-    # --- Detector outputs ---
+    # Detector outputs
     qlattice: QlatticeBlock
     detectors: DetectorBlock
     heuristics: dict[str, float] = Field(default_factory=dict)
@@ -182,11 +156,11 @@ class UnityCard(BaseModel):
     theme_flags: ThemeFlags
     explanation: ExplanationBlock
 
-    # --- Provenance ---
+    # Provenance
     provenance: ProvenanceBlock
     metadata: dict[str, Any] = Field(default_factory=dict)
 
-    # --- Validators ---
+    # Validators
     @field_validator("fired_indicators")
     @classmethod
     def _validate_indicator_codes(cls, v: list[str]) -> list[str]:
@@ -267,9 +241,7 @@ class CandidateProfile(BaseModel):
     references: list[str] = Field(default_factory=list)
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 def validate_card_dict(d: dict) -> tuple[UnityCard | None, str | None]:
     """Try-validate a raw dict. Returns (card, error_msg)."""
     try:

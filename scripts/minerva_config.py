@@ -1,31 +1,5 @@
-"""
-M.I.N.E.R.V.A. v2.9.3 — Centralized hyperparameter configuration
-
-This module is the SINGLE SOURCE OF TRUTH for all training hyperparameters used
-across the pipeline. Both the notebook and the per-script CLIs default to these
-values; importing from here ensures no drift between what the notebook does and
-what the scripts do.
-
-Citations supporting each value are inline below — these are panel-defense ammo.
-
-Override at runtime by setting environment variables (handy for quick experiments
-without code changes):
-
-    MINERVA_TRAIN_SEEDS="13,29,47,89,127"      # comma-separated seeds
-    MINERVA_TRAIN_EPOCHS=3                     # detector epochs
-    MINERVA_GPT2_EPOCHS=8                      # GPT-2 fine-tune epochs
-    MINERVA_GPT2_TRAIN_BATCH=8                 # GPT-2 per-device batch (A100)
-    MINERVA_DETECTOR_BATCH=8                   # detector per-device batch
-    MINERVA_GRAD_ACCUM=4                       # gradient accumulation steps
-    MINERVA_DETECTOR_LR=2e-5                   # detector learning rate
-    MINERVA_GPT2_LR=5e-5                       # GPT-2 learning rate
-
-Usage in a script:
-    from minerva_config import CONFIG
-    print(CONFIG.train_seeds)         # → [13, 29, 47, 89, 127]
-    print(CONFIG.detector_batch)      # → 8
-    print(CONFIG.effective_batch)     # → 32 (8 × 4 grad_accum)
-"""
+#!/usr/bin/env python3
+"""Centralized hyperparameters and GPU-aware batch sizing for the full pipeline."""
 
 from __future__ import annotations
 
@@ -34,9 +8,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 
-# ============================================================================
 # DEFAULT VALUES (override via env vars; see module docstring)
-# ============================================================================
 
 # ---- Random seeds for detector training (RoBERTa + DistilBERT × 5 seeds) ----
 # Standard: 5 seeds (Liu et al. 2019 RoBERTa: "median over five runs").
@@ -101,9 +73,7 @@ DEFAULT_GPT2_MAX_NEW_TOKENS      = 200
 DEFAULT_RNG_SEED = 1729
 
 
-# ============================================================================
 # CONFIG LOADER (env-var aware)
-# ============================================================================
 
 def _env_int(key: str, default: int) -> int:
     val = os.environ.get(key)
@@ -240,9 +210,7 @@ def load_config() -> MinervaConfig:
 CONFIG: MinervaConfig = load_config()
 
 
-# ============================================================================
 # Hardware-aware adjustment helpers
-# ============================================================================
 
 def gpt2_train_batch_for_gpu(gpu_name: str | None = None) -> int:
     """Return the right GPT-2 per-device batch given GPU memory.

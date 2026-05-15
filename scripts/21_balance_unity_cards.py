@@ -1,30 +1,5 @@
 #!/usr/bin/env python3
-"""
-21_balance_unity_cards.py  (REFACTORED v2.0; config-aware in v2.6-final)
-========================================================================
-
-Balance the unity_cards.json across:
-  * verdicts (FAKE / REAL / UNCERTAIN)
-  * candidates (codes from candidate_config.py — v2.6-final)
-  * indicator coverage (ensure all 12 are represented)
-  * difficulty (easy / medium / hard)
-
-WHAT CHANGED FROM v1
---------------------
-v1 only filtered for de-duplication and basic verdict balance. It
-did not balance across candidates (because there were no real
-candidates) and did not check indicator coverage (because there
-were no real indicators).
-
-v2.0 introduces all four balance dimensions and emits a balance
-report.
-
-PIPELINE POSITION
------------------
-Reads:  generated/unity_cards.json   (script 18 output)
-Writes: generated/unity_cards_balanced.json
-        reports/balance_report.json
-"""
+"""Bucket-fill cards across indicator x tier x verdict targets with pydantic schema validation."""
 
 from __future__ import annotations
 

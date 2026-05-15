@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Fine-tune distilbert-base-multilingual-cased on JCBlaise. Called per seed by script 17."""
+
 from __future__ import annotations
 
 import os

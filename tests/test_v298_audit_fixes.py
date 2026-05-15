@@ -1,4 +1,4 @@
-"""Regression tests for v2.9.8: GENERIC_REAL_MARKERS for REAL-credibility cards in faithfulness audit."""
+"""Regression tests for GENERIC_REAL_MARKERS for REAL-credibility cards in faithfulness audit."""
 from __future__ import annotations
 
 import sys
@@ -24,12 +24,10 @@ def _load_module(name, path):
     return m
 
 
-# ----------------------------------------------------------------------
 # Fix #1 — script 33 allowlist expansion (closes 98.05% → 99%+)
-# ----------------------------------------------------------------------
 
 class TestAllowlistEdgeCasesV298:
-    """v2.9.7 run zip showed 13 new edge cases. v2.9.8 covers them."""
+    """run zip showed 13 new edge cases. v2.9.8 covers them."""
 
     def test_generic_role_titles_allowed(self):
         m = _load_module("m33_v298", "33_strict_name_allowlist.py")
@@ -59,9 +57,7 @@ class TestAllowlistEdgeCasesV298:
             assert term in allowed, f"{term!r} should be allowed in v2.9.8"
 
 
-# ----------------------------------------------------------------------
 # Fix #2 — script 26 GENERIC_REAL_MARKERS (closes 87.52% → ≥99% faithfulness)
-# ----------------------------------------------------------------------
 
 class TestGenericRealMarkersV298:
     """v2.9.7's 102 indicator_phrase_mismatch failures were all REAL-credibility
@@ -82,7 +78,7 @@ class TestGenericRealMarkersV298:
         # Should pass for any indicator since it's a generic real-cred phrase
         for code in ["MISS", "FAB", "URG", "ANON", "IMP"]:
             assert m._mentions_indicator(phrase, code), (
-                f"v2.9.8: 'malinis sa palatandaang' should satisfy {code} check"
+                f"'malinis sa palatandaang' should satisfy {code} check"
             )
 
     def test_mentions_indicator_accepts_magandang_sign(self):

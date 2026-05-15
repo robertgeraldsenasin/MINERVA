@@ -40,9 +40,7 @@ def qlmod():
     return mod
 
 
-# --------------------------------------------------------------------------
 # _sigmoid stability
-# --------------------------------------------------------------------------
 
 class TestSigmoid:
     def test_sigmoid_zero(self, qlmod):
@@ -68,9 +66,7 @@ class TestSigmoid:
         assert out.shape == x.shape
 
 
-# --------------------------------------------------------------------------
 # SAFE_FUNCS whitelist
-# --------------------------------------------------------------------------
 
 class TestSafeFuncs:
     def test_safe_funcs_includes_logreg_alias(self, qlmod):
@@ -95,9 +91,7 @@ class TestSafeFuncs:
         assert qlmod.SAFE_FUNCS["maximum"] is np.maximum
 
 
-# --------------------------------------------------------------------------
 # Name handling
-# --------------------------------------------------------------------------
 
 class TestSanitizeColumnName:
     def test_sanitize_basic(self, qlmod):
@@ -135,9 +129,7 @@ class TestExtractVariableNames:
         assert names == {"dpca1", "rpca3"}
 
 
-# --------------------------------------------------------------------------
 # build_feature_locals
-# --------------------------------------------------------------------------
 
 class TestBuildFeatureLocals:
     def test_build_basic(self, qlmod):
@@ -169,9 +161,7 @@ class TestBuildFeatureLocals:
         assert bundle.locals["logreg"] is qlmod._sigmoid
 
 
-# --------------------------------------------------------------------------
 # Evaluation end-to-end
-# --------------------------------------------------------------------------
 
 class TestEvaluation:
     def test_compile_simple(self, qlmod):
@@ -215,9 +205,7 @@ class TestEvaluation:
         assert np.all(out == 0.5)
 
 
-# --------------------------------------------------------------------------
 # Sandbox security — the most important set
-# --------------------------------------------------------------------------
 
 class TestSandbox:
     def test_sandbox_blocks_builtins(self, qlmod):

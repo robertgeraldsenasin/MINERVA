@@ -425,3 +425,95 @@ The full pipeline requires torch + transformers (~3 GB install on Colab). Local 
 - For the holdout validation strategy decision: read `docs/HOLDOUT_VALIDATION_STRATEGY.md`
 - For the BATB paper alignment story: read `docs/V2.9.0_AUDIT_RESPONSE.md`
 - For paper-to-code naming reconciliation (DE-GNN): see §5 above + README's "A note on the 'DE-GNN' naming"
+
+---
+
+## §17 — Notebook walkthrough (what each section does)
+
+The canonical notebook is `notebooks/MINERVA_Run_Colab.ipynb`. It runs end-to-end on Colab A100 + High-RAM in ~30 minutes. Section-by-section purpose:
+
+### Section 1 — Configuration
+Sets pipeline mode (`PIPELINE_MODE`), GPT-2 flag (`USE_GPT2`), repo URL, and branch. Edit these constants only if you need a different run mode (the defaults are correct for a full retrain).
+
+### Section 2 — Mount Google Drive (optional)
+Mounts Drive for backup persistence. Skipped gracefully if Drive auth fails or you're running without it.
+
+### Section 3 — Clone the repo
+Shallow-clones the production branch into the Colab workspace.
+
+### Section 4 — Verify required files arrived
+Sanity checks that the response bank, blocklists, and candidate profiles are present after clone.
+
+### Section 5 — Install dependencies
+Single `pip install -r requirements.txt`. Takes ~30 seconds on Colab A100.
+
+### Section 6 — Working folders
+Creates `data/`, `models/`, `generated/`, `reports/`, `logs/` if absent.
+
+### Section 6b — Environment capture
+Writes `reports/_environment.json` snapshotting Python, torch, transformers, CUDA, host. Pineau (2021) compliance.
+
+### Section 7 — Run unit tests
+Smoke-checks the codebase before running the pipeline. 311 tests in ~3 seconds. Fail-fast.
+
+### Section 7a — Pre-flight dataset download verification
+Runs script 01 to fetch the JCBlaise dataset and verifies its arrival.
+
+### Section 7b — Detector training pipeline
+Stages 7b.1 → 7b.6 train and evaluate both detectors plus secondary models:
+- **7b.1:** scripts 01/02/03 — data preparation and stratified split
+- **7b.2:** script 17 — 5-prime-seed training of RoBERTa + DistilBERT
+- **7b.2.1:** seed-statistics summary (mean ± std)
+- **7b.3:** script 06 — feature extraction (CLS + PCA)
+- **7b.4:** script 08 — QLattice symbolic regression
+- **7b.5:** script 09 — GraphSAGE training
+- **7b.6:** script 15 — JCBlaise test-set evaluation, best-by-val export
+
+### Sections 8 → 8b → 8b.5 — Card generation
+- **8:** script 30 generates template cards deterministically
+- **8b (optional, gated on `USE_GPT2`):** scripts 10b/11b/12b/13 — neuro-symbolic GPT-2 fine-tune + generation + QLattice scoring
+- **8b.5:** script 29 — merge GPT-2 candidates into the template stream
+
+### Sections 9 → 9b → 10 → 11 → 12 — Curation
+- **9:** script 31 — person-name pseudonymization
+- **9b:** script 35 — place-name pseudonymization (260+ blocklist)
+- **10:** script 21 — balance verdicts × candidates × indicators; pydantic schema validate
+- **11:** script 23 — reject off-theme content
+- **12:** script 24 — final teaching-card curation
+
+### Sections 13 → 14 → 15 → 16 — Safety chain + evaluation
+- **13:** script 28 — draw 8 user-specific 56-card decks
+- **14:** script 26 — faithfulness audit (re-extracts indicators, asserts set equality)
+- **15:** script 32 — detector validation on templates (internal consensus metric)
+- **16:** script 33 — STRICT ALLOWLIST ENFORCER (last line of defense)
+
+### Section 16b — Optional held-out detector evaluation
+Deferred to external Filipino fact-checker validation per `docs/HOLDOUT_VALIDATION_STRATEGY.md`. Kept here as a scaffold; default `--use_internal_pseudo_labels=False`.
+
+### Section 16c → 17 → 17b — Export and verification
+- **16c:** script 40 exports the pilot pack (HTML + CSV + JSON)
+- **17:** final-dashboard cell — reads all reports and prints headline metrics
+- **17b:** asserts every paper success criterion (faithfulness ≥98, allowlist ≥99, schema drops = 0)
+
+### Sections 18 → 19 → 20 — Samples and backup
+- **18:** displays 6 sample cards from a user deck
+- **19:** previews 3 cards from the pilot pack
+- **20:** saves all outputs to Drive (or downloads as zip if Drive unavailable)
+
+### Optional: Refresh JCBlaise blocklist
+Run-once cell that re-extracts surface forms from the JCBlaise dataset and rebuilds `templates/jcblaise_real_names_blocklist.txt`. Only needed when the upstream dataset changes.
+
+---
+
+## §18 — Defense-day demo flow
+
+For a panel demo without re-running the full 30-minute pipeline:
+
+1. **Live inference example** — load a saved best-by-val detector and run `model(text)` on a sample post (see §10 inference template).
+2. **Open `reports/faith.json`** — show the `pass_rate: 100.0` line.
+3. **Open `reports/strict_allowlist.json`** — show `pass_rate_pct: 99.09`.
+4. **Open `reports/detectors_5seed_summary_v28_panel.json`** — show the 5-seed mean ± std.
+5. **Open one card from `generated/unity_cards_pool_strict.json`** — show its verdict + indicators + Tagalog explanation + verifier action.
+6. **Run `pytest tests/ -q`** — 311 tests in 3 seconds.
+
+If a panelist asks how the system catches real political names, point to the 6 rejected cards in `reports/strict_allowlist.json` — 1 of them is "pacquiao" (a real PH senator), correctly blocked by the safety chain.

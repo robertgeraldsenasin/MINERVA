@@ -45,9 +45,7 @@ def _load_module():
 m = _load_module()
 
 
-# ----------------------------------------------------------------------
 # compute_percentile_thresholds
-# ----------------------------------------------------------------------
 
 class TestComputePercentileThresholds:
     def test_returns_low_below_high(self):
@@ -153,9 +151,7 @@ class TestComputePercentileThresholds:
         assert t_high > t_low
 
 
-# ----------------------------------------------------------------------
 # compute_percentile_margin_thresholds
-# ----------------------------------------------------------------------
 
 class TestComputePercentileMarginThresholds:
     def test_returns_proficient_below_novice(self):
@@ -201,9 +197,7 @@ class TestComputePercentileMarginThresholds:
         assert (t_proficient, t_novice) == (0.10, 0.30)
 
 
-# ----------------------------------------------------------------------
 # Static check: the script uses bin_strategy="percentile" by default
-# ----------------------------------------------------------------------
 
 class TestScriptDefaults:
     def test_bin_strategy_default_is_percentile(self):

@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""GraphSAGE implementation (mean aggregator, two layers) with kNN-graph artifact persistence."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,7 +16,6 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 
 
-# -----------------------------------------------------------------------------
 # Model
 
 
@@ -62,7 +64,6 @@ class GraphSAGE(nn.Module):
         return self.out(h)
 
 
-# -----------------------------------------------------------------------------
 # Artifacts
 
 

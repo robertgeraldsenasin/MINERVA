@@ -1,84 +1,5 @@
 #!/usr/bin/env python3
-"""
-30_template_scenario_generator.py  (NEW in v2.6)
-================================================
-
-Template-based card generator producing high-quality, coherent posts
-in Filipino electoral disinformation idiom. Replaces ~90% of GPT-2's
-output with rule-constrained scenarios derived from documented
-Philippine disinformation tactics.
-
-WHY THIS EXISTS
----------------
-The thesis paper (§Definitions, p.12) defines:
-
-  "Rule-Constrained Content Generation: A controlled method of
-   generating or templating fictional posts/scenarios using
-   extracted misinformation patterns while enforcing constraints
-   that support ethical use, consistency, and testability."
-
-This is the missing piece. v2.0-v2.5 relied on raw GPT-2 generations
-that produced nonsensical text (93.5% truncation, 40.9% name-jamming,
-random English fragments mid-Tagalog). The v2.4 audit confirmed even
-post-processing couldn't rescue cards built on incoherent GPT-2 output.
-
-TEMPLATE TAXONOMY
------------------
-Drawing from:
-  - DEPICT (Roozenbeek & van der Linden, 2019): Discrediting,
-    Emotion, Polarization, Impersonation, Conspiracy, Trolling
-  - Bad News + Harmony Square (Roozenbeek 2020): scripted-scenario
-    inoculation methodology used in Cambridge research
-  - Arugay & Baquisal (2022): Philippine election disinformation
-    archetypes (dynastic, reformist, populist)
-  - Schipper (2025): Philippine 2025 election disinformation playbook
-  - Ong & Cabañes (2018): Philippine political trolling architecture
-  - Ong/PCIJ (2022): historical revisionism as primary narrative
-
-Each template is keyed to:
-  * candidate archetype (DYNASTIC / REFORMIST / POPULIST)
-  * misinformation tactic (one of 8 Filipino-specific tactics)
-  * indicators that should fire (subset of MINERVA's 12 cues)
-  * tier (novice/proficient/advanced)
-
-GENERATION STRATEGY
--------------------
-For each (verdict × candidate × tactic × tier) combination, a small
-inventory of templates with slot-filled variables. Slots include:
-  - {candidate_full}, {candidate_short}: the 3 fictional candidates
-  - {generic_official}, {generic_critic}, {generic_witness}, etc.:
-    placeholder roles instead of real names
-  - {place}, {date}, {amount}, {percentage}: parameterized data
-
-Output is identical schema to GPT-2 generations so the rest of the
-pipeline (scripts 13, 18, 22, 23, 24, 28) consumes them unchanged.
-
-CITATIONS (for thesis defense)
-------------------------------
-- Roozenbeek, J., & van der Linden, S. (2019). Fake news game confers
-  psychological resistance against online misinformation. Humanities
-  and Social Sciences Communications, 5(1), 1-10.
-- Roozenbeek, J., & van der Linden, S. (2020). Breaking Harmony Square:
-  A game that "inoculates" against political misinformation. HKS
-  Misinformation Review, 1(8).
-- Basol, M., Roozenbeek, J., & van der Linden, S. (2020). Good news
-  about Bad News: Gamified inoculation boosts confidence and cognitive
-  immunity against fake news. Journal of Cognition, 3(1).
-- Arugay, A. A., & Baquisal, J. K. A. (2022). Mobilized and polarized:
-  Disinformation networks in the 2022 Philippine elections. Pacific
-  Affairs, 95(3), 463-485.
-- Schipper, B. C. (2025). Disinformation by design: Leveraging solutions
-  to combat misinformation in the Philippines' 2025 election. Data &
-  Policy, 7.
-- Ong, J. C., & Cabañes, J. V. A. (2018). Architects of networked
-  disinformation: Behind the scenes of troll accounts and fake news
-  production in the Philippines. Newton Tech4Dev Network.
-- Modirrousta-Galian, A., & Higham, P. A. (2023). Conservative response
-  bias in misinformation training. Journal of Experimental Psychology:
-  Applied (credible-card mandate).
-- Caulfield, M. (2019). SIFT (the four moves). Hapgood blog (verification
-  framework integrated into VERIdict feedback).
-"""
+"""Deterministic template-based card generation over the 12-indicator x 3-tier matrix."""
 
 from __future__ import annotations
 
@@ -99,9 +20,7 @@ from minerva_indicators import indicator_summary_for_card
 
 logger = logging.getLogger(__name__)
 
-# ===========================================================================
 # SLOT VOCABULARIES — Filipino electoral idiom, generic roles only
-# ===========================================================================
 
 GENERIC_ROLES_TL = {
     # Generic political / institutional figures (no real names)
@@ -159,9 +78,7 @@ NEWS_PREFIXES = [
 ]
 
 
-# ===========================================================================
 # TEMPLATE INVENTORY — by tactic × archetype
-# ===========================================================================
 # Format: {
 #   "tactic": str,                # one of 8 documented tactics
 #   "verdict": "FAKE"|"REAL"|"UNCERTAIN",
@@ -172,10 +89,8 @@ NEWS_PREFIXES = [
 # }
 
 TEMPLATES = [
-    # =========================================================
     # 1. HISTORICAL REVISIONISM (FAKE) — Marcos-Duterte playbook
     #    Source: Ong/PCIJ 2022; Arugay 2022; Schipper 2025
-    # =========================================================
     {
         "tactic": "historical_revisionism",
         "verdict": "FAKE",
@@ -229,10 +144,8 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 2. RED-TAGGING (FAKE) — Robredo/critic playbook
     #    Source: Snoqap 2023; Arugay 2022; ICHRP
-    # =========================================================
     {
         "tactic": "red_tagging",
         "verdict": "FAKE",
@@ -260,10 +173,8 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 3. EMOTIONAL APPEAL / CELEBRITY ENDORSEMENT (FAKE)
     #    Source: Roozenbeek DEPICT (Emotion); Schipper 2025
-    # =========================================================
     {
         "tactic": "fake_celebrity_endorsement",
         "verdict": "FAKE",
@@ -290,9 +201,7 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 4. URGENCY / SHARING PRESSURE (FAKE) — DEPICT trolling
-    # =========================================================
     {
         "tactic": "urgency_sharing",
         "verdict": "FAKE",
@@ -316,9 +225,7 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 5. UNVERIFIED SURVEY / NUMBER CLAIM (FAKE)
-    # =========================================================
     {
         "tactic": "fake_survey",
         "verdict": "FAKE",
@@ -343,9 +250,7 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 6. CREDIBLE NEWS — REAL (per Modirrousta-Galian quota)
-    # =========================================================
     {
         "tactic": "credible_policy_announcement",
         "verdict": "REAL",
@@ -376,9 +281,7 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 7. UNCERTAIN — claim with mixed indicators
-    # =========================================================
     {
         "tactic": "ambiguous_allegation",
         "verdict": "UNCERTAIN",
@@ -406,9 +309,7 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 8. CONSPIRACY THEORY (FAKE) — DEPICT
-    # =========================================================
     {
         "tactic": "conspiracy_theory",
         "verdict": "FAKE",
@@ -436,11 +337,9 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 9. POLARIZATION (FAKE) — DEPICT 'P' indicator
     # Source: Roozenbeek 2020 Harmony Square ("trolling" + "emotion"
     # scenarios — turn an ostensibly neutral issue into a heated debate)
-    # =========================================================
     {
         "tactic": "polarization_us_vs_them",
         "verdict": "FAKE",
@@ -467,12 +366,10 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 10. DISCREDITING OPPONENTS (FAKE) — DEPICT 'D' indicator
     # Source: Roozenbeek 2019 ("deflecting blame, discrediting opponents")
     # Tier: novice — personal-attack patterns are recognizable to
     # first-time voters because the rhetorical move is overt.
-    # =========================================================
     {
         "tactic": "discrediting_personal_attack",
         "verdict": "FAKE",
@@ -501,12 +398,10 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 11. IMPERSONATION (FAKE) — DEPICT 'I' indicator
     # Source: Roozenbeek 2019 ("impersonating people through fake accounts")
     # Filipino-specific: Ong & Cabañes 2018 documents organized
     # impersonation networks in PH political trolling
-    # =========================================================
     {
         "tactic": "fake_account_impersonation",
         "verdict": "FAKE",
@@ -534,11 +429,9 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 12. RECYCLED CONTENT (FAKE) — RECF indicator
     # Source: Schipper 2025 (Philippine 2025 election playbook
     # documents recycled-content-as-tactic for the 2025 cycle)
-    # =========================================================
     {
         "tactic": "recycled_old_content",
         "verdict": "FAKE",
@@ -565,11 +458,9 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 13. DEEPFAKE / SYNTHETIC MEDIA CLAIM (FAKE)
     # Source: Schipper 2025 (Philippine 2025 — deepfake/AI-generated
     # content explicitly named as a primary 2025 disinformation vector)
-    # =========================================================
     {
         "tactic": "deepfake_video_claim",
         "verdict": "FAKE",
@@ -596,11 +487,9 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 14. FAKE FACT-CHECKER (FAKE) — IMP variant
     # Source: Tsipursky 2024 — fake fact-checker accounts as a 2024+
     # tactic for legitimizing disinformation
-    # =========================================================
     {
         "tactic": "fake_fact_checker_authority",
         "verdict": "FAKE",
@@ -628,11 +517,9 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 15. MANUFACTURED OUTRAGE / ASTROTURFING (FAKE) — POL variant
     # Source: Ong & Cabañes 2018 — coordinated outrage cycles as
     # documented Filipino political trolling tactic
-    # =========================================================
     {
         "tactic": "coordinated_outrage_campaign",
         "verdict": "FAKE",
@@ -659,10 +546,8 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 16. CREDIBLE VERIFICATION (REAL) — additional REAL variety
     # Adds tier diversity to balance the 40/35/25 ratio target
-    # =========================================================
     {
         "tactic": "credible_verification_response",
         "verdict": "REAL",
@@ -688,12 +573,10 @@ TEMPLATES = [
         ],
     },
 
-    # =========================================================
     # 17. UNCERTAIN — SECOND VARIANT (UNCERTAIN diversity)
     # Backed by Schafer et al. 2024 ElectionRumors2022 dataset:
     # rumors that begin unverified and may resolve either way
     # Tier: novice — surface uncertainty is visible from the language
-    # =========================================================
     {
         "tactic": "developing_situation_unverified",
         "verdict": "UNCERTAIN",
@@ -721,9 +604,7 @@ TEMPLATES = [
 ]
 
 
-# ===========================================================================
 # GENERATOR
-# ===========================================================================
 
 def fill_slots(template: str, candidate_code: str, rng: random.Random) -> str:
     """Fill all {slot} placeholders with concrete values."""

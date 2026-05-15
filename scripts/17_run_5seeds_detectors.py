@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""Orchestrate detector training across 5 prime seeds [13, 29, 47, 89, 127] (Liu et al. 2019)."""
+
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import argparse

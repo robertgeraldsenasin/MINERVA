@@ -1,4 +1,4 @@
-"""Regression tests for v2.9.9: allowlist closure (8 generic edge cases + tondo to places_blocklist)."""
+"""Regression tests for allowlist closure (8 generic edge cases + tondo to places_blocklist)."""
 from __future__ import annotations
 
 import sys
@@ -20,7 +20,7 @@ def _load_module(name, path):
 
 
 class TestV299AllowlistFinalClosure:
-    """v2.9.8 run zip surfaced 11 generic unknown_name rejections; v2.9.9 covers all."""
+    """run zip surfaced 11 generic unknown_name rejections; v2.9.9 covers all."""
 
     def test_tagalog_role_titles_allowed(self):
         m = _load_module("m33_v299", "33_strict_name_allowlist.py")

@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Render training-curve visualizations into reports/figures/."""
+
 from __future__ import annotations
 
 import argparse

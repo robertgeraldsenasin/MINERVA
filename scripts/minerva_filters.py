@@ -1,20 +1,5 @@
-"""
-minerva_filters.py
-==================
-
-Four content gates that reject non-conforming cards at generation
-time, addressing the issues observed in the legacy unity_cards.json:
-  1. Off-theme content (Grab/Meralco/transport leaks).
-  2. Truncated GPT-2 generations (mid-sentence cut-offs).
-  3. Cards that do not mention any of the three fictional candidates.
-  4. Pseudonym-integrity failures (random codes leaking through).
-
-Each gate emits a structured RejectionLog entry that becomes part of
-the audit trail (Khosravi et al. 2022 — auditability requirement).
-
-Citations: Source2Synth-style curation patterns; Hu et al. (2024)
-ARG safety; Wenzek et al. (2020) CRISP perplexity gating.
-"""
+#!/usr/bin/env python3
+"""Multi-stage acceptance filters used by the merge and curation pipeline."""
 
 from __future__ import annotations
 
@@ -25,9 +10,7 @@ from dataclasses import dataclass
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
 # Theme keyword bank
-# ---------------------------------------------------------------------------
 # Positive: electoral / political-race vocabulary.
 # Negative (hard negatives): topics that have been observed leaking
 # through the legacy keyword filter — transport, utilities, sports,
@@ -127,9 +110,7 @@ def keyword_score(text: str) -> tuple[float, dict]:
     return score, {"pos": pos, "neg": neg, "len": len(text)}
 
 
-# ---------------------------------------------------------------------------
 # Truncation detection
-# ---------------------------------------------------------------------------
 _TERMINAL_CHARS = set(".!?\"\u201d)]…")
 
 
@@ -163,9 +144,7 @@ def is_truncated(text: str) -> tuple[bool, str]:
     return False, "ok"
 
 
-# ---------------------------------------------------------------------------
 # Pseudonym-integrity check
-# ---------------------------------------------------------------------------
 # v2.6.final: 'Candidate A/B/C' are the CANONICAL display names per the
 # generic-only naming policy. They must NOT be flagged as legacy.
 # Other placeholders (Candidate D-Z, Entity X, Person X) ARE still flagged
@@ -191,9 +170,7 @@ def has_legacy_pseudonyms(text: str) -> tuple[bool, list[str]]:
     return bool(offenders), offenders
 
 
-# ---------------------------------------------------------------------------
 # Candidate-mention check
-# ---------------------------------------------------------------------------
 def mentions_one_of_three(text: str, candidate_codes: list[str]) -> tuple[bool, str | None]:
     """Returns (mentions_at_least_one, the_code_mentioned)."""
     if not text:
@@ -210,9 +187,7 @@ def mentions_one_of_three(text: str, candidate_codes: list[str]) -> tuple[bool, 
     return False, None
 
 
-# ---------------------------------------------------------------------------
 # The full gate
-# ---------------------------------------------------------------------------
 @dataclass
 class GateResult:
     accepted: bool
@@ -292,9 +267,7 @@ def run_all_gates(
     )
 
 
-# ---------------------------------------------------------------------------
 # Self-test
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     import sys, os
     sys.path.insert(0, os.path.dirname(__file__))

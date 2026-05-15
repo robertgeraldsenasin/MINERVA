@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Stratified 70/15/15 train/val/test split with fixed seed."""
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Normalize the JCBlaise raw CSVs into the canonical processed schema."""
+
 from __future__ import annotations
 
 from pathlib import Path

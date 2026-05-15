@@ -1,34 +1,5 @@
 #!/usr/bin/env python3
-"""
-25_build_candidate_scenarios.py  (REFACTORED v2.0)
-==================================================
-
-Build per-candidate VERIdex profile cards: each profile contains the
-candidate's archetype-grounded biography, platform planks,
-indicator-susceptibility heatmap, and counter-narrative anchors.
-
-WHAT CHANGED FROM v1
---------------------
-v1 emitted random "Candidate XXX" profiles populated from a small
-hand-written list. There was no archetype grounding and no link to
-the misinformation indicators the candidate was likely to attract.
-
-v2.0:
-  * Profiles drawn directly from minerva_candidates.REGISTRY.
-  * Each profile lists indicator susceptibility (which misinformation
-    cues this candidate's posts have most-frequently triggered) so
-    that VERIdex can show learners "this is what to watch for when
-    you scroll a Marquez/Bantayan/Salonga rumor".
-  * Counter-narrative anchors: documented, verifiable real-evidence
-    types the learner could use to fact-check rumors about this
-    candidate (Mendoza et al. 2023; Caulfield 2019 — SIFT 'Find').
-
-PIPELINE POSITION
------------------
-Reads:  generated/story_cards.json (for the empirical cue counts)
-        templates/candidate_profiles_three_candidates.json (registry)
-Writes: generated/candidate_scenarios.json
-"""
+"""Build per-candidate scenario fixtures used by template generation."""
 
 from __future__ import annotations
 
@@ -46,7 +17,7 @@ from minerva_candidates import REGISTRY
 logger = logging.getLogger(__name__)
 
 def _load_cards_or_pool(path: str) -> list:
-    """v2.3: accept either a flat list of cards or a pool doc
+    """accept either a flat list of cards or a pool doc
     {"_metadata": ..., "cards": [...]}.
     """
     import json

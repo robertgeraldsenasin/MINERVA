@@ -1,4 +1,4 @@
-"""Regression tests for v2.9.6: IndicatorPhrase extra fields (phrase_en, verifier_action)."""
+"""Regression tests for IndicatorPhrase extra fields (phrase_en, verifier_action)."""
 from __future__ import annotations
 
 import sys
@@ -74,7 +74,7 @@ class TestIndicatorPhraseExtraFields:
 
 
 class TestScript21CategorizationRecognizesExtraForbidden:
-    """v2.9.6: script 21's invalid_by_reason categorization must
+    """script 21's invalid_by_reason categorization must
     recognize extra_forbidden as its own category, not lump it under
     other or invalid_indicator."""
 

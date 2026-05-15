@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Fine-tune jcblaise/roberta-tagalog-base on the JCBlaise train split. Called per seed by script 17."""
+
 from __future__ import annotations
 
 import os
