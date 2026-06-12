@@ -1,6 +1,6 @@
 # M.I.N.E.R.V.A. — Final Release (`v2.9.9`)
 
-**M**isinformation **I**dentification through **N**euro-symbolic **E**valuation, **R**easoning, and **V**erifiable **A**nalytics
+**M**isinformation **I**nvestigation through **N**etworked **E**mbeddings for **R**umor **V**erification and **A**wareness
 
 A Tagalog-language educational content pipeline that combines hybrid credibility detection (Graph Neural Network + Random Forest + RoBERTa/DistilBERT ensemble), QLattice symbolic regression, and a CTRL-style conditioned GPT-2 generator to produce, score, and curate a teaching pool of Filipino electoral-misinformation cards for senior high school media literacy.
 
