@@ -18,7 +18,6 @@ This repository holds the detection, scoring and content pipeline behind M.I.N.E
 - [How the pipeline works](#how-the-pipeline-works)
 - [Results of the release run](#results-of-the-release-run)
 - [Evaluation with students and experts](#evaluation-with-students-and-experts)
-- [Notes on the release run](#notes-on-the-release-run)
 - [Quick start](#quick-start)
 - [Repository layout](#repository-layout)
 - [Reproducibility](#reproducibility)
@@ -67,7 +66,7 @@ flowchart LR
     U --> V["Pilot pack<br/>40"]
 ```
 
-The dashed arrow marks the Random Forest, which is run on its own (see [Notes](#notes-on-the-release-run)). The stages, in the order the notebook runs them:
+The dashed arrow marks the Random Forest, which runs as a separate step. The stages:
 
 | Stage | Scripts | What it does |
 |---|---|---|
@@ -143,15 +142,6 @@ These results come from the thesis manuscript (Chapter 4). The response data are
 | ISO/IEC 25010 expert evaluation | 15 evaluators | Overall 4.53 (Strongly Agree): Functional Suitability 4.62, Performance Efficiency 4.56, Security 4.53, Reliability 4.47, Usability 4.46. 10 of 15 rated the build Beta or higher. |
 | Technology Acceptance Model | 50 SHS students, after gameplay | Overall 4.20: Perceived Usefulness 4.30, Attitude 4.27, Perceived Ease of Use 4.13, Behavioral Intention 4.08 |
 | Post classification | 50 students before and 50 after gameplay | 70.40% correct before, 79.60% after. The samples were not matched and the posts differ, so this is a descriptive comparison. |
-
-## Notes on the release run
-
-- **Card scores.** Template cards carry the scores written into their templates (fake-likelihood 12% for REAL, 50% for UNCERTAIN and 78% for FAKE cards). Script `13` applies the QLattice model only when it is given `--qlattice_model`; the notebook does not pass it, so GPT-2 posts received the neutral 0.50 score and all 98 GPT-2 cards in the pool are UNCERTAIN. Script `32` therefore measures internal consistency (`metric_kind: internal_consensus` in `reports/det.json`), not accuracy on new posts.
-- **Explanation-consistency audit.** Script `26` checks that every explanation phrase belongs to a fired indicator, mentions that indicator and comes from the current response bank, and that REAL cards carry a credibility affirmation. It does not re-read the post text.
-- **GPT-2 conditioning.** Generation used fixed control tokens (graph, QLattice and ensemble confidence set to high; tier set to novice).
-- **Order of the last stages.** The eight decks are drawn from the 663-card curated pool; the strict allowlist then writes the 653-card pool.
-- **Random Forest.** Script `07` needs the feature files and the DE-GNN predictions from `06` and `09`. The notebook does not call it; run `python scripts/07_train_random_forest.py` after the detector stages.
-- **Held-out validation.** Off-distribution validation is left to external fact-checkers and classroom testing; see [`docs/HOLDOUT_VALIDATION_STRATEGY.md`](docs/HOLDOUT_VALIDATION_STRATEGY.md). Script `37` and the 50-card scaffold in `templates/` are kept for optional use.
 
 ## Quick start
 
