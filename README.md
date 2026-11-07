@@ -1,278 +1,235 @@
-# M.I.N.E.R.V.A. — Final Release (`v2.9.9`)
+# M.I.N.E.R.V.A.
 
 **M**isinformation **I**nvestigation through **N**etworked **E**mbeddings for **R**umor **V**erification and **A**wareness
 
-A Tagalog-language educational content pipeline that combines hybrid credibility detection (Graph Neural Network + Random Forest + RoBERTa/DistilBERT ensemble), QLattice symbolic regression, and a CTRL-style conditioned GPT-2 generator to produce, score, and curate a teaching pool of Filipino electoral-misinformation cards for senior high school media literacy.
+[![release](https://img.shields.io/badge/release-v2.9.9-blue)](CHANGELOG.md)
+[![python](https://img.shields.io/badge/python-3.11-blue)](requirements.txt)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/robertgeraldsenasin/MINERVA/blob/main/notebooks/MINERVA_Run_Colab.ipynb)
 
-[![tests](https://img.shields.io/badge/tests-311%20passed-brightgreen)]() [![python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)]() [![colab](https://img.shields.io/badge/runtime-Colab%20A100-orange)]() [![release](https://img.shields.io/badge/release-v2.9.9-blue)]() [![faithfulness](https://img.shields.io/badge/faithfulness-100%25-brightgreen)]() [![allowlist](https://img.shields.io/badge/allowlist-99.09%25-brightgreen)]()
+This repository holds the detection, scoring and content pipeline behind M.I.N.E.R.V.A., an educational electoral rumor detection simulator that helps Filipino senior high school (SHS) students build misinformation literacy. The pipeline trains Tagalog fake-news detectors, fits an interpretable QLattice scoring equation, generates fictional election posts with GPT-2, and curates them into the card decks the Android game plays.
 
----
+> **Release v2.9.9** is the version presented at the **FEU Tech Student Research Colloquium 2026** and at **CS Expo 2026**.
+> B.S. Computer Science with specialization in Software Engineering thesis, FEU Institute of Technology.
 
-## Citation
+## Contents
 
-> Senasin, R. G. A., Salva, A. J. B., Yapchulay, A. C., & Lola, J. K. (2026). M.I.N.E.R.V.A.: An Educational Electoral Rumor Detection Simulator using Symbolic Rule Engine via DE-GNN and Qlattice Symbolic Regression for SHS Misinformation Literacy. B.S. Computer Science (Software Engineering) thesis. FEU Institute of Technology.
+- [The study](#the-study)
+- [What this repository contains](#what-this-repository-contains)
+- [How the pipeline works](#how-the-pipeline-works)
+- [Results of the release run](#results-of-the-release-run)
+- [Evaluation with students and experts](#evaluation-with-students-and-experts)
+- [Notes on the release run](#notes-on-the-release-run)
+- [Quick start](#quick-start)
+- [Repository layout](#repository-layout)
+- [Reproducibility](#reproducibility)
+- [Versions](#versions)
+- [Citation](#citation)
+- [Team and acknowledgements](#team-and-acknowledgements)
 
----
+## The study
 
-## Thesis 2 scope (this repository)
+M.I.N.E.R.V.A. pairs an explainable credibility engine with a gamified, fictional social-media feed. The study has four objectives:
 
-This repository delivers the **content-and-scoring pipeline plus the curated card pool** — the upstream feedstock for the Unity Android game. The Unity build itself, the 50-respondent SHS pilot study, and the 5-evaluator ISO 25010 review are scoped to **Thesis 3** per BATB §1.5.
+1. **Detect.** Label and score posts with a hybrid pipeline: two transformer detectors, a Dual-Embedding Graph Neural Network (DE-GNN) and a Random Forest decision layer.
+2. **Explain.** Turn the score into a closed-form QLattice equation, and give learners reasons through a rule layer of 12 named misinformation indicators tied to SIFT verification moves.
+3. **Play.** Deliver the cards in a Unity Android game: players read posts in **Chattr** (Trust, Report or Ignore), see consequences in **VERIdex**, and get the verdict, the fired cues and the explanation in **VERIdict**.
+4. **Evaluate.** Test the engine, the students' acceptance and accuracy, and expert-rated software quality (ISO/IEC 25010).
 
+All posts in the game are fictional. Real people are replaced by Candidate A, B and C, and real places by placeholders such as City W and Province L.
 
+## What this repository contains
 
-### What runs end-to-end on Colab A100 in ~30 minutes
+| Included | Not included |
+|---|---|
+| Detector training (RoBERTa-Tagalog, multilingual DistilBERT), feature extraction, DE-GNN, Random Forest and QLattice scripts | The Unity Android game |
+| GPT-2 Tagalog generation, template cards, pseudonymization, curation, safety audits and deck drawing | Run outputs (`data/`, `models/`, `generated/`, `reports/` are created when the pipeline runs) |
+| The Colab notebook of the release run, with its printed output | Survey and expert-evaluation responses |
+| Unit tests and documentation | |
 
-1. Trains **RoBERTa-Tagalog** (`jcblaise/roberta-tagalog-base`) and **DistilBERT-multilingual** fake-news detectors on the JCBlaise dataset using a **5-prime-seed protocol** [13, 29, 47, 89, 127] per Liu et al. (2019), with best-by-validation export.
-2. Trains a **GraphSAGE** graph neural network over dual-embedding (RoBERTa-PCA + DistilBERT-PCA) features on a kNN similarity graph.
-3. Fits a **QLattice** symbolic-regression equation over detector confidence + GNN signal for interpretable scoring.
-4. Fine-tunes `jcblaise/gpt2-tagalog` with **18 Keskar-style control tokens** conditioning on (label × graph confidence × QLattice confidence × ensemble confidence × tier). Training seed 1729 per Picard (2021).
-5. Generates, scores, pseudonymizes, and curates a **658-card teaching pool** with 12 misinformation indicators tied to SIFT verification moves.
-6. Pseudonymizes all real Filipino political figures (people **and** places) into Candidate A/B/C and City W/X/Y/Z placeholders.
-7. Audits faithfulness (**100%** pass), strict allowlist (**99.09%** pass), and indicator coverage end-to-end.
-8. Draws **8 user-specific 56-card decks** for the downstream Unity game build.
+## How the pipeline works
 
+```mermaid
+flowchart LR
+    A["JCBlaise dataset<br/>01-03"] --> B["Detectors, 5 seeds<br/>17 (04, 05), 15"]
+    B --> C["Features<br/>06"]
+    C --> D["QLattice<br/>08"]
+    C --> E["DE-GNN<br/>09"]
+    E -.-> F["Random Forest<br/>07"]
+    D --> G["GPT-2 Tagalog<br/>10b, 11b, 12b, 13"]
+    E --> G
+    T["Template cards<br/>30"] --> M["Merge<br/>29"]
+    G --> M
+    M --> P["Pseudonymize<br/>31, 35"]
+    P --> Q["Balance, theme, curate<br/>21, 23, 24"]
+    Q --> R["8 decks<br/>28"]
+    Q --> S["Audits<br/>26, 32"]
+    Q --> U["Strict allowlist<br/>33"]
+    U --> V["Pilot pack<br/>40"]
+```
 
+The dashed arrow marks the Random Forest, which is run on its own (see [Notes](#notes-on-the-release-run)). The stages, in the order the notebook runs them:
+
+| Stage | Scripts | What it does |
+|---|---|---|
+| Data | `01`, `02`, `03` | Downloads `jcblaise/fake_news_filipino`, normalizes it and makes a stratified 70/15/15 split |
+| Detectors | `17` (runs `04`, `05`), `export_best_detectors_by_val.py`, `15` | Fine-tunes `jcblaise/roberta-tagalog-base` and `distilbert-base-multilingual-cased` on five seeds, exports the best seed by validation F1 and evaluates it on the test split |
+| Features | `06` | 16 PCA components of each detector's embeddings, both detectors' fake probabilities and five surface features (39 columns) |
+| QLattice | `08` | Symbolic regression to a closed-form logistic equation (`models/qlattice_equation.txt`); falls back to scikit-learn logistic regression if `feyn` is missing |
+| DE-GNN | `09` | GraphSAGE over a cosine k-nearest-neighbour graph (k = 10) of the dual-embedding features |
+| Random Forest | `07` | Random Forest on the tabular features plus the DE-GNN probability |
+| GPT-2 | `10b`, `11b`, `12b`, `13` | Builds a control-token corpus, fine-tunes `jcblaise/gpt2-tagalog`, generates fake and real posts, and scores them |
+| Templates | `30` | 18 scenario templates expanded into 900 cards |
+| Merge | `29` | Adds GPT-2 posts that pass the length and truncation checks, mention at most three distinct entities, reference a fictional candidate and have response-bank coverage for their indicators |
+| Pseudonymize | `31`, `35` | Replaces real people and real places |
+| Curate | `21`, `23`, `24` | Balances verdicts and candidates (700 cards, schema-validated), keeps on-theme election cards and builds the teaching pool |
+| Decks | `28` | Draws eight 56-card decks (7 in-game days × 8 cards) |
+| Audits | `26`, `32` | Explanation-consistency audit; consistency check of the stored detector scores |
+| Allowlist | `33` | Rejects cards that contain a blocklisted real name or any name not on the allowlist, and writes `generated/unity_cards_pool_strict.json` |
+| Pilot pack | `40` | A 30-card pack stratified by verdict, tier, candidate and tactic |
+
+Method details are in [`docs/CODEBOOK.md`](docs/CODEBOOK.md) and [`docs/architecture.md`](docs/architecture.md).
+
+## Results of the release run
+
+Release v2.9.9, run on 15 May 2026 (run ID `v28_panel`, `full_retrain` mode, NVIDIA A100 80 GB). All figures below are printed in [`notebooks/MINERVA_Run_Colab.ipynb`](notebooks/MINERVA_Run_Colab.ipynb) or written to its reports.
+
+### Data
+
+| | Count |
+|---|---|
+| Rows downloaded | 3,206 |
+| Rows after normalization | 3,005 (1,496 real, 1,509 fake) |
+| Train / validation / test | 2,103 / 451 / 451 |
+
+### Detection and scoring
+
+| Model | Test-split result |
+|---|---|
+| RoBERTa-Tagalog, mean of 5 seeds | F1 94.82% (SD 1.21) |
+| DistilBERT multilingual, mean of 5 seeds | F1 91.73% (SD 0.65) |
+| RoBERTa-Tagalog vs DistilBERT | paired *t*(4) = 3.961, *p* = .0167 |
+| Exported RoBERTa-Tagalog checkpoint (seed 127) | F1 95.96% |
+| Exported DistilBERT checkpoint (seed 47) | F1 91.47% |
+| DE-GNN (single seed) | F1 94.55%, precision 97.20%, recall 92.04%, accuracy 94.68% |
+
+The QLattice equation, fitted on the 2,103 training rows and 39 features:
+
+```
+P(fake) = logreg(9.11136·p_roberta_fake + 2.43479·p_distil_fake + 0.555212·d_pca_4 − 0.385122·r_pca_5 − 5.88038)
+```
+
+### Content and safety
+
+| Stage | Result |
+|---|---|
+| Template cards | 900 |
+| GPT-2 posts reaching the merge | 839 of 1,000 generated (421 fake, 418 real) |
+| GPT-2 posts promoted | 525 (259 fake, 266 real); 314 rejected (295 over the entity limit, 19 without a candidate) |
+| Names replaced | 1,061, in 397 GPT-2 cards |
+| Places replaced | 370, in 207 cards |
+| Election-theme filter | 663 of 700 kept (17 off-theme, 17 without a candidate, 3 truncated) |
+| Curated pool | 663 cards: 437 FAKE, 118 UNCERTAIN, 108 REAL; 565 template and 98 GPT-2; all 12 indicators covered |
+| Explanation-consistency audit | 663 of 663 passed |
+| Strict allowlist | 653 of 663 kept (98.49%); the 10 rejected cards include one blocklist match for a real politician's surname |
+| Decks | 8 × 56 cards; mean pairwise overlap 12.05% (3.57% to 19.64%) |
+| Unit tests | 325 passed |
+
+## Evaluation with students and experts
+
+These results come from the thesis manuscript (Chapter 4). The response data are not in this repository.
+
+| Instrument | Respondents | Result |
+|---|---|---|
+| ISO/IEC 25010 expert evaluation | 15 evaluators | Overall 4.53 (Strongly Agree): Functional Suitability 4.62, Performance Efficiency 4.56, Security 4.53, Reliability 4.47, Usability 4.46. 10 of 15 rated the build Beta or higher. |
+| Technology Acceptance Model | 50 SHS students, after gameplay | Overall 4.20: Perceived Usefulness 4.30, Attitude 4.27, Perceived Ease of Use 4.13, Behavioral Intention 4.08 |
+| Post classification | 50 students before and 50 after gameplay | 70.40% correct before, 79.60% after. The samples were not matched and the posts differ, so this is a descriptive comparison. |
+
+## Notes on the release run
+
+- **Card scores.** Template cards carry the scores written into their templates (fake-likelihood 12% for REAL, 50% for UNCERTAIN and 78% for FAKE cards). Script `13` applies the QLattice model only when it is given `--qlattice_model`; the notebook does not pass it, so GPT-2 posts received the neutral 0.50 score and all 98 GPT-2 cards in the pool are UNCERTAIN. Script `32` therefore measures internal consistency (`metric_kind: internal_consensus` in `reports/det.json`), not accuracy on new posts.
+- **Explanation-consistency audit.** Script `26` checks that every explanation phrase belongs to a fired indicator, mentions that indicator and comes from the current response bank, and that REAL cards carry a credibility affirmation. It does not re-read the post text.
+- **GPT-2 conditioning.** Generation used fixed control tokens (graph, QLattice and ensemble confidence set to high; tier set to novice).
+- **Order of the last stages.** The eight decks are drawn from the 663-card curated pool; the strict allowlist then writes the 653-card pool.
+- **Random Forest.** Script `07` needs the feature files and the DE-GNN predictions from `06` and `09`. The notebook does not call it; run `python scripts/07_train_random_forest.py` after the detector stages.
+- **Held-out validation.** Off-distribution validation is left to external fact-checkers and classroom testing; see [`docs/HOLDOUT_VALIDATION_STRATEGY.md`](docs/HOLDOUT_VALIDATION_STRATEGY.md). Script `37` and the 50-card scaffold in `templates/` are kept for optional use.
+
+## Quick start
+
+### Run the tests (no GPU)
+
+```bash
+git clone https://github.com/robertgeraldsenasin/MINERVA.git
+cd MINERVA
+python -m venv .venv
+source .venv/bin/activate          # Windows PowerShell: .\.venv\Scripts\Activate.ps1
+pip install -r dev-requirements.txt
+python -m pytest tests/ -q
+```
+
+`dev-requirements.txt` leaves out torch, transformers and feyn, so tests that need them are skipped. Install `requirements.txt` to run the full suite.
+
+### Reproduce the release run on Colab
+
+1. Open the notebook with the **Open in Colab** badge above, or in Colab choose **File → Open notebook → GitHub**, enter `robertgeraldsenasin/MINERVA`, branch `main`, and pick `notebooks/MINERVA_Run_Colab.ipynb`.
+2. Choose **Runtime → Change runtime type → A100 GPU** with **High-RAM**.
+3. In the configuration cell, keep `PIPELINE_MODE = "full_retrain"` and `USE_GPT2 = True` (the release settings). `templates_only` runs in a few minutes without a GPU; `full_cached` reuses detector artifacts saved in Drive.
+4. Choose **Runtime → Run all**. The release run took about an hour on an A100.
+5. The last section saves `generated/`, `reports/` and the QLattice equation files to Google Drive (`MINERVA_outputs`), or downloads them as a zip if Drive is off.
+
+Python 3.11 is the tested version (3.10 and 3.12 are supported). `feyn` has no Python 3.13 wheels, so on 3.13 script `08` uses its logistic-regression fallback.
 
 ## Repository layout
 
 ```
 .
-├── scripts/                                # 44 active scripts + 8 helper modules
-│   ├── 01_download_dataset.py              # JCBlaise dataset → data/raw/
-│   ├── 02_prepare_dataset.py               # → data/processed/
-│   ├── 03_split_dataset.py                 # 70/15/15 stratified split
-│   ├── 04_train_robertaMINERVA.py          # detector driver
-│   ├── 05_train_distilbertMINERVA.py
-│   ├── 06_extract_features.py              # CLS + PCA → tabular features
-│   ├── 07_train_random_forest.py           # RF baseline
-│   ├── 08_train_qlattice.py                # symbolic regression
-│   ├── 09_train_degnn.py                   # GraphSAGE on kNN graph
-│   ├── 10b_prepare_gpt2_neurosymbolic.py   # Keskar control tokens
-│   ├── 11b_train_gpt2_neurosymbolic.py     # GPT-2 fine-tune (seed 1729)
-│   ├── 12b_generate_gpt2_neurosymbolic.py
-│   ├── 13_score_generated_with_qlattice.py
-│   ├── 14_train_baseline_tfidf_logreg.py   # baseline reference
-│   ├── 15_evaluate_detectors.py
-│   ├── 16_train_transformer_classifier.py
-│   ├── 17_run_5seeds_detectors.py          # prime-seed protocol
-│   ├── 18_verdict_explain.py
-│   ├── 19_plot_training_graphs.py
-│   ├── 21_balance_unity_cards.py           # schema validation (v2.9.6 fix)
-│   ├── 23_enforce_election_theme.py
-│   ├── 24_curate_teaching_cards.py
-│   ├── 25_build_candidate_scenarios.py
-│   ├── 26_faithfulness_audit.py            # v2.9.8 GENERIC_REAL_MARKERS
-│   ├── 27_response_bank_versioning.py
-│   ├── 28_draw_user_deck.py
-│   ├── 29_merge_gpt2_into_pool.py          # diversity rotation v2.9.4
-│   ├── 30_template_scenario_generator.py
-│   ├── 31_universal_pseudonymize.py        # people pseudonymizer (v2.9.0+)
-│   ├── 32_validate_detectors_on_templates.py
-│   ├── 33_strict_name_allowlist.py         # safety chain (v2.9.9: 130+ allowed orgs)
-│   ├── 34_extract_jcblaise_names.py
-│   ├── 35_pseudonymize_places.py           # places pseudonymizer (v2.9.0 NEW)
-│   ├── 37_holdout_detector_eval.py         # deferred to external validators (v2.9.6 strategy)
-│   ├── 38_ablation_no_conditioning.py      # scaffolded; runs deferred to Thesis 3 publication
-│   ├── 40_export_pilot_pack.py
-│   ├── candidate_config.py
+├── scripts/
+│   ├── 01_…40_*.py                    # 36 pipeline stages, numbered as in the tables above
+│   ├── minerva_*.py                   # 9 shared modules (config, schemas, DE-GNN, QLattice, filters, …)
+│   ├── candidate_config.py            # fictional Candidate A/B/C profiles
 │   ├── export_best_detectors_by_val.py
-│   ├── minerva_candidates.py
-│   ├── minerva_config.py                   # centralized config (v2.9.3 NEW)
-│   ├── minerva_degnn.py                    # GraphSAGE implementation
-│   ├── minerva_filters.py
-│   ├── minerva_indicators.py
-│   ├── minerva_privacy.py
-│   ├── minerva_qlattice.py
-│   ├── minerva_response_bank.py
-│   ├── minerva_schemas.py                  # pydantic schemas (v2.9.6 fix landed here)
-│   └── legacy/                             # superseded scripts retained for reference
-│       ├── 20_pseudonymize_entities.py     # superseded by 31
-│       └── 22_pseudonymize_entities.py     # superseded by 31
-├── tests/                                  # 311 passed, 1 skipped (~3 sec)
-│   ├── test_v295_audit_fixes.py            # version stamps, Picard seed, schema diagnostics
-│   ├── test_v296_schema_fix.py             # IndicatorPhrase extra fields
-│   ├── test_v297_audit_fixes.py            # bank_ref regex + 25+ allowlist entries
-│   ├── test_v298_audit_fixes.py            # GENERIC_REAL_MARKERS
-│   ├── test_v299_audit_fixes.py            # 8 generic edge cases + tondo
-│   ├── test_v2_9_10_audit_fixes.py         # optional polish coverage
-│   └── ... (17 core tests covering schemas, percentile binning, pseudonymization,
-│           response bank, merge logic, holdout eval, strict allowlist)
-├── templates/                              # Hand-curated content artifacts
+│   └── legacy/                        # two superseded pseudonymization scripts, kept for reference
+├── templates/
 │   ├── candidate_profiles_three_candidates.json
-│   ├── jcblaise_real_names_blocklist.txt   # real PH political dynasty surnames
-│   ├── places_blocklist.txt                # 260+ entries (all PH HUCs + districts)
-│   ├── response_bank_v2.json               # 225 phrases × 3 tiers × TL+EN
-│   ├── holdout_gpt2_labeled.csv            # 50-card scaffold (DEFERRED to external validators)
-│   └── holdout_gpt2_labeled.README.md
+│   ├── jcblaise_real_names_blocklist.txt   # real names that must never reach a card
+│   ├── places_blocklist.txt                # Philippine places to pseudonymize
+│   ├── response_bank_v2.json               # 225 explanation phrases across 75 keys
+│   └── holdout_gpt2_labeled.csv / .README.md   # optional, unlabeled 50-card scaffold
 ├── notebooks/
-│   ├── MINERVA_Run_Colab.ipynb      # ← canonical (current)
-│   └── legacy/                             # historical reference; do not run
-│       ├── MINERVA_Run_Colab_v2.8.7.ipynb
-│       ├── MINERVA_Run_Colab_v2.9.0.ipynb
-│       ├── MINERVA_Run_Colab_v2.9.3.ipynb
-│       └── MINERVA_Run_Colab_v2.9.4.ipynb
+│   └── MINERVA_Run_Colab.ipynb        # release notebook, with the output of the 15 May 2026 run
+├── tests/                             # 23 test files
 ├── docs/
-│   ├── HOLDOUT_VALIDATION_STRATEGY.md      # v2.9.6 NEW — external-validator strategy
-│   ├── V2.9.0_RELEASE_NOTES.md
-│   ├── V2.9.0_AUDIT_RESPONSE.md
-│   ├── V2.9.1_HOTFIX_NOTES.md
-│   └── V2.9.1_STEP_BY_STEP_FIX.md
-├── requirements.txt                        # full pipeline runtime (~3 GB on Colab)
-├── dev-requirements.txt                    # lightweight (~150 MB; for local pytest)
-├── CHANGELOG.md                            # complete v2.6 → v2.9.9 history
-├── Makefile                                # `make test`, `make pipeline`, etc.
-├── .gitignore                              # includes *.zip (v2.9.9)
-└── README.md                               # this file
+│   ├── CODEBOOK.md                    # methods and configuration
+│   ├── architecture.md                # one-page overview
+│   └── HOLDOUT_VALIDATION_STRATEGY.md
+├── data/, models/                     # empty; filled when the pipeline runs
+├── requirements.txt                   # full pipeline (Colab)
+├── dev-requirements.txt               # tests only
+├── Makefile                           # make test, make install, make install-dev
+└── CHANGELOG.md
 ```
 
-Empty `data/`, `logs/`, `models/`, `generated/`, `reports/` directories are kept with `.gitkeep` markers because the pipeline scripts write into them at runtime.
+## Reproducibility
 
----
+- **Seeds.** Detectors use five prime seeds (13, 29, 47, 89, 127), following the multi-run reporting of Liu et al. (2019); GPT-2 fine-tuning uses seed 1729 instead of the common 42, following Picard (2021); generation uses seeds 13 (fake) and 27 (real).
+- **Model selection.** The exported detector checkpoints are chosen on validation F1. Scalers and PCA are fitted on the training split only.
+- **Early stopping.** Detector training stops when validation F1 stops improving, and GPT-2 fine-tuning when validation loss does.
+- **Environment.** Each run writes `reports/_environment.json` (Python, PyTorch, CUDA, GPU and package versions).
+- **Provenance.** The pool hash and run ID are logged in the reports. The release run printed pool hash `fded092b49b1f55e`.
 
-## Headline results (v2.9.9 — actual values from May 14, 2026 Colab run)
+## Versions
 
-| Metric | Paper target | v2.9.9 actual | Status |
-|---|---|---|---|
-| Faithfulness pass rate | ≥98% | **100.00%** (658/658) | ✓ exceeded |
-| Strict allowlist pass rate | ≥99% | **99.09%** (652/658) | ✓ met |
-| Schema-invalid drops at balance | ≈ 0 | **0** | ✓ exact |
-| RoBERTa F1 (5-seed mean ± std) | ~95.6% | **95.30% ± 0.40%** | ✓ within 1σ |
-| DistilBERT F1 (5-seed) | ~91.0% | **91.73% ± 0.65%** | ✓ exceeded |
-| Pool size | ~668 cards | **658 cards** | ✓ close (1.5% under) |
-| GPT-2 contribution to pool | > 0 | **90 cards (13.8%)** | ✓ met |
-| 8 user-specific 56-card decks | yes | yes | ✓ |
-| Pseudonymized people | yes | 789 replacements / run | ✓ |
-| Pseudonymized places (6 categories) | yes | 387 replacements / run | ✓ |
+**v2.9.9 is the release.** The release run cloned commit `2959c51`; the commits after it add the notebook's printed output and update this README, with no change to the code. The allowlist entries listed under v2.9.10 in [`CHANGELOG.md`](CHANGELOG.md) were already in that commit, and the run is stamped v2.9.9. The changelog has the full history from v2.6.
 
-The 6 remaining allowlist rejections include **1 correct safety block** (Pacquiao — real PH senator that the strict allowlist correctly removed). The remaining 5 are documented generic agency terms (election board, national bureau, etc.).
+## Citation
 
-Full audit trajectory: **v2.8.7 baseline 68/100 → v2.9.9 final 96/100** through 9 successive iterative audit cycles, locked in by **311 regression tests**.
+Lola, J. K. P., Salva, A. J. B., Senasin, R. G. A., & Yapchulay, A. C. M. (2026). *M.I.N.E.R.V.A.: An educational electoral rumor detection simulator using symbolic rule engine via DE-GNN and Qlattice symbolic regression for SHS misinformation literacy* [Bachelor's thesis, FEU Institute of Technology].
 
----
+## Team and acknowledgements
 
-## Quickstart
+**Boys at the Back**, FEU Institute of Technology: John Kerby P. Lola, Adrian Joseph B. Salva, Robert Gerald A. Senasin and Andrei Collin M. Yapchulay.
 
-### Local test suite (recommended for development; no GPU needed)
+Thesis Mentor Dr. Hazel San L. Patilano, Thesis Adviser Elisa V. Malasaga and Internal Co-Adviser Alexander Hernandez.
 
-```bash
-git clone -b final_ver_branch https://github.com/robertgeraldsenasin/MINERVA.git
-cd MINERVA
-python -m venv .venv
-source .venv/bin/activate          # Linux/Mac
-# .\.venv\Scripts\Activate.ps1     # Windows PowerShell
-pip install -r dev-requirements.txt
-python -m pytest tests/ -q
-# Expected: 311 passed, 1 skipped in ~3s
-```
+The project builds on the JCBlaise Filipino fake-news dataset and the RoBERTa-Tagalog and GPT-2 Tagalog models, Hugging Face Transformers, PyTorch, scikit-learn and Abzu's QLattice (`feyn`).
 
-The 1 skipped test is `test_degnn_graph.py` skipping cleanly because torch isn't in the dev dependencies. **This is the correct behavior** — install `requirements.txt` if you need torch.
-
-### WHAT WE DID: Full pipeline run (Colab A100 + High-RAM)
-
-1. Open Colab → **File** → **Open notebook** → **GitHub** tab
-2. Repo: `robertgeraldsenasin/MINERVA` · Branch: `final_ver_branch`
-3. Pick `notebooks/MINERVA_Run_Colab.ipynb` (the current canonical notebook)
-4. **Runtime** → **Change runtime type** → **A100 GPU** + **High-RAM**
-5. **Runtime** → **Run all**
-6. ~30 minutes later, retrieve the artifacts via the final cells
-
-The notebook self-checks: cell 67 verifies all v2.9.x fixes are present in the output reports.
-
-### Re-running only the post-merge tail (after a code patch, ~5 min, no GPU)
-
-```bash
-python scripts/35_pseudonymize_places.py [args]    # if places_blocklist.txt changed
-python scripts/21_balance_unity_cards.py [args]
-python scripts/23_enforce_election_theme.py [args]
-python scripts/24_curate_teaching_cards.py [args]
-python scripts/33_strict_name_allowlist.py [args]
-python scripts/26_faithfulness_audit.py [args]
-python scripts/28_draw_user_deck.py [args]
-```
-
-The Colab notebook caches model weights so this re-run path skips all GPU work.
-
----
-
-## Pipeline architecture (full 23-stage chain)
-
-```mermaid
-flowchart TD
-    A["01 Download JCBlaise"] --> B["02 Prepare CSVs"]
-    B --> C["03 Train/Val/Test 70/15/15"]
-    C --> D["17 Train detectors × 5 prime seeds"]
-    D --> E["15 Evaluate (best-by-val export)"]
-    D --> F["06 Extract features (CLS + PCA)"]
-    F --> G["07 Random Forest baseline"]
-    F --> H["08 QLattice symbolic regression"]
-    F --> I["09 Train GNN (GraphSAGE on kNN)"]
-    I --> J["10b GPT-2 corpus + Keskar tokens"]
-    J --> K["11b Fine-tune GPT-2 (seed 1729)"]
-    K --> L["12b Generate 500 FAKE + 500 REAL"]
-    L --> M["13 Score with QLattice"]
-    M --> N["29 Merge GPT-2 + templates"]
-    N --> O["31 Pseudonymize PEOPLE"]
-    O --> P["35 Pseudonymize PLACES"]
-    P --> Q["21 Balance + schema validate"]
-    Q --> R["23 Theme enforce"]
-    R --> S["24 Curate teaching cards"]
-    S --> T["33 Strict allowlist gate"]
-    T --> U["26 Faithfulness audit"]
-    U --> V["28 Draw 8 user decks × 56"]
-    V --> W["40 Export pilot pack"]
-```
-
-### Safety chain (last 4 stages — critical for defense)
-
-```mermaid
-flowchart LR
-    A["Cards from curate (24)"] --> B["33 Strict allowlist"]
-    B -- "99.09% pass" --> C["26 Faithfulness audit"]
-    C -- "100% pass" --> D["28 Deck draw"]
-    D --> E["Game-ready pool"]
-    B -- "0.91% rejected" --> F["pacquiao etc.<br/>(real political names)<br/>CORRECTLY blocked"]
-```
-
----
-
-## Reproducibility guarantees
-
-- **Deterministic seeds:** detector training uses **5 prime seeds [13, 29, 47, 89, 127]** per Liu et al. (2019); GPT-2 training uses **seed 1729** per Picard (2021); all components call `set_seed()` from `transformers`.
-- **Environment capture:** every run writes `reports/_environment.json` with Python, PyTorch, transformers, CUDA, and host versions per Pineau et al. (2021).
-- **Hash provenance:** pool hash, response-bank hash, and run_id are logged in every report.
-- **No test leakage:** train-only `StandardScaler.fit()`, sealed test split, best-by-validation export.
-- **EarlyStoppingCallback:** prevents over-training (added v2.9.3).
-- **GPU-aware batching:** A100 / V100 / T4 detected at runtime (v2.9.3).
-- **311 unit tests:** pydantic schema validation, percentile binning, pseudonymization round-trips, response-bank coverage, merge logic, holdout eval, strict-allowlist defense-in-depth.
-
----
-
-## The v2.8.7 → v2.9.9 trajectory (recent developnent)
-
-| Version | Composite | Headline change |
-|---|---|---|
-| v2.8.7 | 68 | Baseline (buggy) |
-| v2.9.0 | 88 | Audit response: versioning, percentile binning, places pseudonymizer |
-| v2.9.3 | 89 | Statistical validity (prime seeds, env capture, paired t-test) |
-| v2.9.4 | 87 | Version harmonization, diversity rotation |
-| v2.9.5 | 89 | Picard 1729 seed, audit diagnostics, det.json caveat |
-| v2.9.6 | 84 | Schema fix unlocked GPT-2 cards (regressions surfaced) |
-| v2.9.7 | 88 | Allowlist expansion + faithfulness bank_ref regex |
-| v2.9.8 | 92 | `GENERIC_REAL_MARKERS` — 100% faithfulness hit |
-| **v2.9.9** | **96** | **Final closure — every paper target met** |
-
-See `CHANGELOG.md` for complete history.
-
----
-
-## License
-
-Academic use. See thesis paper for full citation.
-
----
-
-## Acknowledgements
-
-- **JCBlaise** for the Filipino fake-news dataset and the RoBERTa-Tagalog + GPT-2-Tagalog base models.
-- **HuggingFace Transformers** for the training infrastructure.
-- **FEU Institute of Technology** thesis program and Adviser Elisa V. Malasaga; Mentor Hazel San Patilano; Internal Co-Adviser Alexander Hernandez
+The code is shared for academic use.
